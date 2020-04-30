@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{2E4C7B1C-5770-49F1-B6EC-CCA27DF19EA9}</ProjectGuid>
-    <RootNamespace>ToyLang</RootNamespace>
+    <RootNamespace>PuhuLang</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

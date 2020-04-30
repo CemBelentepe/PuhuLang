@@ -1,7 +1,8 @@
 void main(){
 	double startTime = clock();
-	println(fibb(30));
+	int x = fibb(30);
 	double elapsed = clock() - startTime;
+	println(x);
 	print("Elapsed time: ");
 	println(elapsed);
 }

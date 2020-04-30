@@ -11,11 +11,6 @@
 
 using namespace std;
 
-int func(int a)
-{
-	return a;
-}
-
 void run(string& source)
 {
 	Scanner scanner(source);
