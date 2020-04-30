@@ -1,0 +1,13 @@
+void main(){
+	double startTime = clock();
+	println(fibb(30));
+	double elapsed = clock() - startTime;
+	print("Elapsed time: ");
+	println(elapsed);
+}
+
+int fibb(int n){
+	if(n > 1)
+		return fibb(n-1) + fibb(n-2);
+	return 1;
+}
