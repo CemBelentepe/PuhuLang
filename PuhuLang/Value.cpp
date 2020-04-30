@@ -25,6 +25,9 @@ std::ostream& operator<<(std::ostream& os, const Value& val)
 		else
 			os << "false";
 		break;
+	case ValueType::CHAR:
+		os << *((char*)val.data);
+		break;
 	case ValueType::STRING:
 		os << *(std::string*)val.data;
 		break;

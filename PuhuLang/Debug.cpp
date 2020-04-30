@@ -161,10 +161,12 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printLocalInstruction("GET_LOCAL", chunk, offset);
 	case OpCode::JUMP:
 		return printJumpInstruction("JUMP", chunk, offset, 1);
-	case OpCode::JUMP_NT:
-		return printJumpInstruction("JUMP_NT", chunk, offset, 1);
+	case OpCode::JUMP_NT_POP:
+		return printJumpInstruction("JUMP_NT_POP", chunk, offset, 1);
 	case OpCode::LOOP:
 		return printJumpInstruction("LOOP", chunk, offset, -1);
+	case OpCode::JUMP_NT:
+		return printJumpInstruction("JUMP_NT", chunk, offset, 1);
 	case OpCode::CALL:
 		return printLocalInstruction("CALL", chunk, offset);
 	case OpCode::NATIVE_CALL:

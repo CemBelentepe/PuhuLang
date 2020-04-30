@@ -1,14 +1,7 @@
 void main(){
-	double startTime = clock();
-	int x = fibb(30);
-	double elapsed = clock() - startTime;
-	println(x);
-	print("Elapsed time: ");
-	println(elapsed);
-}
-
-int fibb(int n){
-	if(n > 1)
-		return fibb(n-1) + fibb(n-2);
-	return 1;
+	int x = 3;
+	int y = 5;
+	if(!(x > y || x != 3)){
+		print("Oleey");
+	}
 }

@@ -232,8 +232,8 @@ void VM::run(OpCode code)
 
 		Value* a = this->stack.back();
 		this->stack.pop_back();
-		double b = !(*((double*)a->data));
-		this->stack.push_back(new Value(new double(b), ValueType::DOUBLE));
+		bool b = !(*((bool*)a->data));
+		this->stack.push_back(new Value(new bool(b), ValueType::BOOL));
 		break;
 	}
 	case OpCode::LOGIC_AND:
@@ -359,7 +359,7 @@ void VM::run(OpCode code)
 		this->ip += offset;
 		break;
 	}
-	case OpCode::JUMP_NT:
+	case OpCode::JUMP_NT_POP:
 	{
 		uint8_t offset = advance();
 		Value* cond = this->stack.back();
@@ -372,6 +372,14 @@ void VM::run(OpCode code)
 	{
 		uint8_t offset = advance();
 		this->ip -= offset;
+		break;
+	}
+	case OpCode::JUMP_NT:
+	{
+		uint8_t offset = advance();
+		Value* cond = this->stack.back();
+		if (!(*(bool*)(cond->data)))
+			this->ip += offset;
 		break;
 	}
 	case OpCode::CALL:

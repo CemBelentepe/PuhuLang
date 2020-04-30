@@ -368,7 +368,7 @@ void Compiler::ifStatement()
 		typeError("If statement expects boolean in its expression.");
 	consume(TokenType::CLOSE_PAREN, "Expect ')' after if expression.");
 
-	addCode(OpCode::JUMP_NT);
+	addCode(OpCode::JUMP_NT_POP);
 	addCode(0);
 	size_t jmp_pos_if = compilingChunk->code.size();
 	statement();
@@ -397,7 +397,7 @@ void Compiler::whileStatement()
 	if (expr.type != ValueType::BOOL)
 		typeError("If statement expects boolean in its expression.");
 	consume(TokenType::CLOSE_PAREN, "Expect ')' after while expression.");
-	addCode(OpCode::JUMP_NT);
+	addCode(OpCode::JUMP_NT_POP);
 	addCode(0);
 	size_t loopPos = this->compilingChunk->code.size() - 1;
 	statement();
@@ -440,7 +440,7 @@ void Compiler::forStatement()
 		addCode(OpCode::CONSTANT);
 		addCode(compilingChunk->addConstant(Value(new bool(true), ValueType::BOOL)));
 	}
-	addCode(OpCode::JUMP_NT);
+	addCode(OpCode::JUMP_NT_POP);
 	addCode(0);
 	size_t jnt_out = this->compilingChunk->code.size() - 1;
 	addCode(OpCode::JUMP);
@@ -567,9 +567,18 @@ DataType Compiler::logic_or()
 	if (a == ValueType::ERROR) return a;
 	while (match(TokenType::OR))
 	{
+		addCode(OpCode::JUMP_NT);
+		addCode(2);
+		addCode(OpCode::JUMP);
+		addCode(0);
+		size_t jmp1 = this->compilingChunk->code.size() - 1;
+		addCode(OpCode::POP);
 		DataType b = logic_and();
 		if (b == ValueType::BOOL && a == b)
-			addCode(OpCode::LOGIC_OR);
+		{
+			size_t here = this->compilingChunk->code.size() - 1;
+			this->compilingChunk->code[jmp1] = here - jmp1;
+		}
 		else
 			return typeError("Both operands of '||' must be a type of 'bool'.");
 	}
@@ -582,9 +591,16 @@ DataType Compiler::logic_and()
 	if (a == ValueType::ERROR) return a;
 	while (match(TokenType::AND))
 	{
+		addCode(OpCode::JUMP_NT);
+		addCode(0);
+		size_t jmp1 = this->compilingChunk->code.size() - 1;
+		addCode(OpCode::POP);
 		DataType b = bit_or();
 		if (b == ValueType::BOOL && a == b)
-			addCode(OpCode::LOGIC_AND);
+		{
+			size_t here = this->compilingChunk->code.size() - 1;
+			this->compilingChunk->code[jmp1] = here - jmp1;
+		}
 		else
 			return typeError("Both operands of '&&' must be a type of 'bool'.");
 	}
@@ -1129,7 +1145,7 @@ DataType Compiler::primary()
 
 	case TokenType::CHAR_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new char(token.getChar()), ValueType::STRING)));
+		addCode(this->compilingChunk->addConstant(Value(new char(token.getChar()), ValueType::CHAR)));
 		return ValueType::CHAR;
 
 	case TokenType::OPEN_PAREN:
