@@ -10,7 +10,7 @@ static size_t printInstruction(const char* name, size_t offset)
 
 static size_t printConstantInstruction(const char* name, Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << *(chunk->getConstant(chunk->code[++offset])) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (chunk->getConstant(chunk->code[++offset])) << std::endl;
 	return offset;
 }
 
@@ -37,7 +37,7 @@ void printStack(VM& vm)
 	std::cout << "\t";
 	for (const Value* val : vm.getStack())
 	{
-		std::cout << "[" << (*val) << "]";
+		std::cout << "[" << (val) << "]";
 	}
 	std::cout << std::endl;
 }

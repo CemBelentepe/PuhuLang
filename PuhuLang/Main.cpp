@@ -27,7 +27,7 @@ void run(string& source)
 		if (func.second->type.type == ValueType::FUNCTION)
 		{
 			cout << func.first << ":" << endl;
-			dissableChunk((Chunk*)func.second->data);
+			dissableChunk(((FuncValue*)func.second)->chunk);
 			cout << "----" << endl;
 		}
 	}

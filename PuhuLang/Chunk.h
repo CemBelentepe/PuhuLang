@@ -37,9 +37,9 @@ class Chunk
 public:
 	Chunk();
 	std::vector<uint8_t> code;
-	std::vector<Value> constants;
+	std::vector<Value*> constants;
 
-	size_t addConstant(Value value);
+	size_t addConstant(Value* value);
 	Value* getConstant(size_t addr);
 };
 

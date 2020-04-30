@@ -26,161 +26,202 @@ void VM::run(OpCode code)
 	dissambleInstruction(currentChunk, this->ip - 1);
 #endif // DEBUG_CODE_TRACE
 
-#define BINARY_OP(op, type, dataType)\
-    do{\
-    Value* b = this->stack.back();\
-    this->stack.pop_back();\
-    Value* a = this->stack.back();\
-    this->stack.pop_back();\
-    type c = (*(type*)a->data) op (*(type*)b->data);\
-    this->stack.push_back(new Value(new type(c), dataType));\
-    }while(false)\
+	// #define BINARY_OP(op, type, dataType)\
+	//     do{\
+	//     Value* b = this->stack.back();\
+	//     this->stack.pop_back();\
+	//     Value* a = this->stack.back();\
+	//     this->stack.pop_back();\
+	//     type c = (*(type*)a->data) op (*(type*)b->data);\
+	//     this->stack.push_back(new Value(new type(c), dataType));\
+	//     }while(false)\
 
 	switch (code)
 	{
 	case OpCode::CONSTANT:
 	{
 		Value* constant = currentChunk->getConstant(advance());
-		this->stack.push_back(constant);
+		push_to_stack(constant);
 		break;
 	}
 	case OpCode::IADD:
 	{
-		BINARY_OP(+, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt += b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::ISUB:
 	{
-		BINARY_OP(-, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt -= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::IMUL:
 	{
-		BINARY_OP(*, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt *= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::IDIV:
 	{
-		BINARY_OP(/ , int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt /= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::INEG:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		int b = -(*((int*)a->data));
-		this->stack.push_back(new Value(new int(b), ValueType::INTEGER));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valInt *= -1;
 		break;
 	}
 	case OpCode::MOD:
 	{
-		BINARY_OP(%, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt %= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::FADD:
 	{
-		BINARY_OP(+, float, ValueType::FLOAT);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valFloat += b->data.valFloat;
+		delete b;
 		break;
 	}
 	case OpCode::FSUB:
 	{
-		BINARY_OP(-, float, ValueType::FLOAT);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valFloat -= b->data.valFloat;
+		delete b;
 		break;
 	}
 	case OpCode::FMUL:
 	{
-		BINARY_OP(*, float, ValueType::FLOAT);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valFloat *= b->data.valFloat;
+		delete b;
 		break;
 	}
 	case OpCode::FDIV:
 	{
-		BINARY_OP(/ , float, ValueType::FLOAT);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valFloat /= b->data.valFloat;
+		delete b;
 		break;
 	}
 	case OpCode::FNEG:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		float b = -(*((float*)a->data));
-		this->stack.push_back(new Value(new float(b), ValueType::FLOAT));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valFloat *= -1;
 		break;
 	}
 	case OpCode::DADD:
 	{
-		BINARY_OP(+, double, ValueType::DOUBLE);
+		Value8b* b = (Value8b*)this->stack.back();
+		this->stack.pop_back();
+		((Value8b*)this->stack.back())->data.valDouble += b->data.valDouble;
+		delete b;
 		break;
 	}
 	case OpCode::DSUB:
 	{
-		BINARY_OP(-, double, ValueType::DOUBLE);
+		Value8b* b = (Value8b*)this->stack.back();
+		this->stack.pop_back();
+		((Value8b*)this->stack.back())->data.valDouble -= b->data.valDouble;
+		delete b;
 		break;
 	}
 	case OpCode::DMUL:
 	{
-		BINARY_OP(*, double, ValueType::DOUBLE);
+		Value8b* b = (Value8b*)this->stack.back();
+		this->stack.pop_back();
+		((Value8b*)this->stack.back())->data.valDouble *= b->data.valDouble;
+		delete b;
 		break;
 	}
 	case OpCode::DDIV:
 	{
-		BINARY_OP(/, double, ValueType::DOUBLE);
+		Value8b* b = (Value8b*)this->stack.back();
+		this->stack.pop_back();
+		((Value8b*)this->stack.back())->data.valDouble /= b->data.valDouble;
+		delete b;
 		break;
 	}
 	case OpCode::DNEG:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		double b = -(*((double*)a->data));
-		this->stack.push_back(new Value(new double(b), ValueType::DOUBLE));
+		Value8b* a = (Value8b*)(this->stack.back());
+		a->data.valDouble *= -1;
 		break;
 	}
 	case OpCode::BIT_NOT:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		int32_t b = ~(*((int32_t*)a->data));
-		this->stack.push_back(new Value(new int32_t(b), ValueType::INTEGER));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valInt = ~a->data.valInt;
 		break;
 	}
 	case OpCode::BIT_AND:
 	{
-		BINARY_OP(&, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt &= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::BIT_OR:
 	{
-		BINARY_OP(|, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt |= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::BIT_XOR:
 	{
-		BINARY_OP(^, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt ^= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::BITSHIFT_LEFT:
 	{
-		BINARY_OP(<< , int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt <<= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::BITSHIFT_RIGHT:
 	{
-		BINARY_OP(>>, int32_t, ValueType::INTEGER);
+		Value4b* b = (Value4b*)this->stack.back();
+		this->stack.pop_back();
+		((Value4b*)this->stack.back())->data.valInt >>= b->data.valInt;
+		delete b;
 		break;
 	}
 	case OpCode::IPRE_INC:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		int32_t b = (*((int32_t*)a->data)) + 1;
-		this->stack.push_back(new Value(new int32_t(b), ValueType::INTEGER));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valInt++;
 		break;
 	}
 	case OpCode::IPRE_DEC:
 	{
-
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		int32_t b = (*((int32_t*)a->data)) - 1;
-		this->stack.push_back(new Value(new int32_t(b), ValueType::INTEGER));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valInt--;
 		break;
 	}
 	case OpCode::IPOST_INC:
@@ -189,18 +230,14 @@ void VM::run(OpCode code)
 		break;
 	case OpCode::FPRE_INC:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		float b = (*((float*)a->data)) + 1;
-		this->stack.push_back(new Value(new float(b), ValueType::FLOAT));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valFloat++;
 		break;
 	}
 	case OpCode::FPRE_DEC:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		float b = (*((float*)a->data)) - 1;
-		this->stack.push_back(new Value(new float(b), ValueType::FLOAT));
+		Value4b* a = (Value4b*)(this->stack.back());
+		a->data.valFloat--;
 		break;
 	}
 	case OpCode::FPOST_INC:
@@ -209,18 +246,14 @@ void VM::run(OpCode code)
 		break;
 	case OpCode::DPRE_INC:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		double b = (*((double*)a->data)) + 1;
-		this->stack.push_back(new Value(new double(b), ValueType::DOUBLE));
+		Value8b* a = (Value8b*)(this->stack.back());
+		a->data.valDouble++;
 		break;
 	}
 	case OpCode::DPRE_DEC:
 	{
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		double b = (*((double*)a->data)) - 1;
-		this->stack.push_back(new Value(new double(b), ValueType::DOUBLE));
+		Value8b* a = (Value8b*)(this->stack.back());
+		a->data.valDouble--;
 		break;
 	}
 	case OpCode::DPOST_INC:
@@ -229,113 +262,126 @@ void VM::run(OpCode code)
 		break;
 	case OpCode::LOGIC_NOT:
 	{
-
-		Value* a = this->stack.back();
-		this->stack.pop_back();
-		bool b = !(*((bool*)a->data));
-		this->stack.push_back(new Value(new bool(b), ValueType::BOOL));
-		break;
-	}
-	case OpCode::LOGIC_AND:
-	{
-		BINARY_OP(&&, bool, ValueType::BOOL);
-		break;
-	}
-	case OpCode::LOGIC_OR:
-	{
-		BINARY_OP(|| , bool, ValueType::BOOL);
+		Value1b* a = (Value1b*)(this->stack.back());
+		a->data.valBool = !a->data.valBool;
 		break;
 	}
 	case OpCode::LESS:
 	{
-		Value* b = this->stack.back();
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) < (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble < b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::GREAT:
 	{
-		Value* b = this->stack.back();
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) > (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble > b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::LESS_EQUAL:
 	{
-		Value* b = this->stack.back();
+
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) <= (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble <= b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::GREAT_EQUAL:
 	{
-		Value* b = this->stack.back();
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) >= (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble >= b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::IS_EQUAL:
 	{
-		Value* b = this->stack.back();
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) == (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble == b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::NOT_EQUAL:
 	{
-		Value* b = this->stack.back();
+		Value8b* b = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		Value* a = this->stack.back();
+		Value8b* a = (Value8b*)this->stack.back();
 		this->stack.pop_back();
-		bool c = (*(double*)a->data) != (*(double*)b->data);
-		this->stack.push_back(new Value(new bool(c), ValueType::BOOL));
+
+		Value1b* c = new Value1b(a->data.valDouble != b->data.valDouble);
+		this->stack.push_back(c);
+		delete b;
+		delete a;
 		break;
 	}
 	case OpCode::CAST:
 	{
 		ValueType to = (ValueType)advance();
-		Value* a = new Value(*this->stack.back());
+		Value* a = this->stack.back();
 		this->stack.pop_back();
 		this->stack.push_back(typeCast(a, to));
+		delete a;
 		break;
 	}
 	case OpCode::POP:
 	{
+		Value* a = (Value*)this->stack.back();
 		this->stack.pop_back();
+		delete a;
 		break;
 	}
 	case OpCode::POPN:
 	{
 		int toPop = advance();
-		this->stack.resize(this->stack.size() - toPop);
+		for (int i = 0; i < toPop; i++)
+		{
+			delete this->stack.back();
+			this->stack.pop_back();
+		}
 		break;
 	}
 	case OpCode::SET_GLOBAL:
 	{
-		std::string* name = (std::string*)(currentChunk->getConstant(advance())->data);
-		Value* val = this->stack.back();
-		this->globals[*name]->data = val->data;
+		std::string& name = ((StrValue*)(currentChunk->getConstant(advance())))->data;
+		const Value* val = this->stack.back();
+		this->globals[name]->setValue(val);
 		break;
 	}
 	case OpCode::GET_GLOBAL:
 	{
-		std::string* name = (std::string*)(currentChunk->getConstant(advance())->data);
-		this->stack.push_back(this->globals[*name]);
+		std::string& name = ((StrValue*)(currentChunk->getConstant(advance())))->data;
+		push_to_stack(this->globals[name]);
 		break;
 	}
 	case OpCode::SET_LOCAL:
@@ -343,14 +389,14 @@ void VM::run(OpCode code)
 		Value* newVal = this->stack.back();
 		uint8_t slot = advance();
 		Value* local = this->stack[slot + this->frames.back().frameStart];
-		local->setData(newVal->data);
+		local->setValue(newVal);
 		break;
 	}
 	case OpCode::GET_LOCAL:
 	{
 		uint8_t slot = advance();
 		Value* val = this->stack[slot + this->frames.back().frameStart];
-		this->stack.push_back(val);
+		push_to_stack(val);
 		break;
 	}
 	case OpCode::JUMP:
@@ -362,10 +408,11 @@ void VM::run(OpCode code)
 	case OpCode::JUMP_NT_POP:
 	{
 		uint8_t offset = advance();
-		Value* cond = this->stack.back();
-		this->stack.pop_back();
-		if(!(*(bool*)(cond->data)))
+		Value1b* cond = (Value1b*)this->stack.back();
+		if (!cond->data.valBool)
 			this->ip += offset;
+		this->stack.pop_back();
+		delete cond;
 		break;
 	}
 	case OpCode::LOOP:
@@ -377,8 +424,8 @@ void VM::run(OpCode code)
 	case OpCode::JUMP_NT:
 	{
 		uint8_t offset = advance();
-		Value* cond = this->stack.back();
-		if (!(*(bool*)(cond->data)))
+		Value1b* cond = (Value1b*)this->stack.back();
+		if (!cond->data.valBool)
 			this->ip += offset;
 		break;
 	}
@@ -388,16 +435,23 @@ void VM::run(OpCode code)
 		FuncValue* func = (FuncValue*)this->stack[this->stack.size() - 1 - argc];
 		this->frames.push_back(Frame(ip, currentChunk, this->stack.size() - func->arity - 1));
 
-		this->currentChunk = (Chunk*)(func->data);
+		this->currentChunk = (Chunk*)(func->chunk);
 		this->ip = 0;
 		break;
 	}
 	case OpCode::NATIVE_CALL:
 	{
 		uint8_t argc = advance();
-		NativeFn func = (NativeFn)(stack[this->stack.size() - 1 - argc]->data);
+		NativeFn func = ((NativeFunc*)(stack[this->stack.size() - 1 - argc]))->func;
 		Value* result = func(argc, argc > 0 ? (&(this->stack[this->stack.size() - argc])) : nullptr);
-		this->stack.resize(this->stack.size() - argc - 1);
+
+		for (int i = 0; i < argc + 1; i++)
+		{
+			if (this->stack.back()->type.type != ValueType::FUNCTION)
+				delete this->stack.back();
+			this->stack.pop_back();
+		}
+
 		if (result->type != ValueType::VOID)
 			this->stack.push_back(result);
 		break;
@@ -409,7 +463,20 @@ void VM::run(OpCode code)
 		auto frame = this->frames.back();
 		this->frames.pop_back();
 
-		this->stack.resize(frame.frameStart);
+		for (int i = this->stack.size() - 1; i > frame.frameStart; i--)
+		{
+			if (this->stack.back()->type.type != ValueType::FUNCTION)
+				delete this->stack.back();
+			this->stack.pop_back();
+		}
+		if (frame.frameStart != 0)
+		{
+			if (this->stack.back()->type.type != ValueType::FUNCTION)
+				delete this->stack.back();
+			this->stack.pop_back();
+		}
+
+		// this->stack.resize(frame.frameStart);
 
 		this->ip = frame.ip;
 		this->currentChunk = frame.chunk;
@@ -426,64 +493,109 @@ uint8_t VM::advance()
 
 Value* VM::typeCast(Value* val, ValueType to)
 {
-#define CAST(y)   \
-    switch (to)\
-    {\
-    case ValueType::INTEGER:\
-        val->data = new int32_t(*((y*)val->data));\
-        break;\
-    case ValueType::FLOAT:\
-        val->data = new float(*((y*)val->data));\
-        break;\
-    case ValueType::DOUBLE:\
-        val->data = new double(*((y*)val->data));\
-        break;\
-    case ValueType::BOOL:\
-        val->data = new bool(*((y*)val->data));\
-        break;\
-    case ValueType::CHAR:\
-        val->data = new char(*((y*)val->data));\
-        break;\
-    default:\
-        val->data = nullptr;\
-        break;\
-    }\
+#define CAST(type, valType, valName)   \
+    type data = ((valType*)val)->data.valName;\
+	switch (to)\
+	{\
+	case ValueType::INTEGER:\
+		ret = new Value4b((int32_t)data);\
+		break;\
+	case ValueType::FLOAT:\
+		ret = new Value4b((float)data);\
+		break;\
+	case ValueType::DOUBLE:\
+		ret = new Value8b((double)data);\
+		break;\
+	case ValueType::BOOL:\
+		ret = new Value1b((bool)data);\
+		break;\
+	case ValueType::CHAR:\
+		ret = new Value1b((char)data);\
+		break;\
+	default:\
+		ret = new Value();\
+		break;\
+	}\
 
+	Value* ret;
 
 	switch (val->type.type)
 	{
 	case ValueType::INTEGER:
 	{
-		CAST(int);
+		CAST(int, Value4b, valInt);
 		break;
 	}
 	case ValueType::FLOAT:
 	{
-		CAST(float);
+		CAST(float, Value4b, valFloat);
 		break;
 	}
 	case ValueType::DOUBLE:
 	{
-		CAST(double);
+		CAST(double, Value8b, valDouble);
 		break;
 	}
 	case ValueType::BOOL:
 	{
-		CAST(bool);
+		CAST(bool, Value1b, valBool);
 		break;
 	}
 	case ValueType::CHAR:
 	{
-		CAST(char);
+		CAST(char, Value1b, valChar);
 		break;
 	}
 	default:
 	{
-		CAST(char);
+		ret = new Value();
+		std::cout << "Casting error" << std::endl;
 		break;
 	}
 	}
 
-	val->type = to;
-	return val;
+	return ret;
+}
+
+inline void VM::push_to_stack(Value* val)
+{
+	Value* ret;
+	switch (val->type.type)
+	{
+	case ValueType::INTEGER:
+		ret = new Value4b(((Value4b*)val)->data.valInt);
+		break;
+	case ValueType::FLOAT:
+		ret = new Value4b(((Value4b*)val)->data.valFloat);
+		break;
+	case ValueType::DOUBLE:
+		ret = new Value8b(((Value8b*)val)->data.valDouble);
+		break;
+	case ValueType::BOOL:
+		ret = new Value1b(((Value1b*)val)->data.valBool);
+		break;
+	case ValueType::CHAR:
+		ret = new Value1b(((Value1b*)val)->data.valChar);
+		break;
+	case ValueType::STRING:
+		ret = new StrValue(((StrValue*)val)->data);
+		break;
+	case ValueType::NULL_TYPE:
+		ret = new Value(ValueType::NULL_TYPE);
+		break;
+	case ValueType::VOID:
+		ret = new Value(ValueType::VOID);
+		break;
+	case ValueType::FUNCTION:
+		ret = val;// new FuncValue(((FuncValue*)val)->chunk, ((FuncValue*)val)->type.intrinsicType, ((FuncValue*)val)->arity);
+		break;
+	case ValueType::NATIVE:
+		ret = new NativeFunc(((NativeFunc*)val)->func, ((NativeFunc*)val)->type.intrinsicType, ((NativeFunc*)val)->arity);
+		break;
+	default:
+		std::cout << "Unknown type!";
+		break;
+	}
+
+	this->stack.push_back(ret);
 }

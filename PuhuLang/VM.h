@@ -38,5 +38,6 @@ private:
 	void run(OpCode code);
 	uint8_t advance();
 	Value* typeCast(Value* val, ValueType to);
+	inline void push_to_stack(Value* val);
 };
 

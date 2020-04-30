@@ -6,91 +6,32 @@ std::ostream& operator<<(std::ostream& os, const DataType& type)
 	return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Value& val)
+std::ostream& operator<<(std::ostream& os, const Value* val)
 {
-	switch (val.type.type)
+	switch (val->type.type)
 	{
-	case ValueType::INTEGER:
-		os << *((int*)val.data);
+	case ValueType::BOOL:
+	case ValueType::CHAR:
+		os << *(Value1b*)val;
 		break;
+	case ValueType::INTEGER:
 	case ValueType::FLOAT:
-		os <<*((float*)val.data) << "f";
+		os << *(Value4b*)val;
 		break;
 	case ValueType::DOUBLE:
-		os << *((double*)val.data) << "d";
-		break;
-	case ValueType::BOOL:
-		if (*((bool*)val.data))
-			os << "true";
-		else
-			os << "false";
-		break;
-	case ValueType::CHAR:
-		os << *((char*)val.data);
+		os << *(Value8b*)val;
 		break;
 	case ValueType::STRING:
-		os << *(std::string*)val.data;
+		os << *(StrValue*)val;
+		break;
+	case ValueType::NULL_TYPE:
+		os << "NULL";
 		break;
 	case ValueType::VOID:
-		os << "void";
-		break;
-	default:
-		os << val.data;
+		os << "VOID";
 		break;
 	}
 	return os;
-}
-
-void Value::DeleteValue()
-{
-	switch (type.type)
-	{
-	case ValueType::INTEGER:
-		delete (int*)data;
-		break;
-	case ValueType::FLOAT:
-		delete (float*)data;
-		break;
-	case ValueType::DOUBLE:
-		delete (double*)data;
-		break;
-	case ValueType::BOOL:
-		delete (bool*)data;
-		break;
-	case ValueType::STRING:
-		delete (std::string*)data;
-		break;
-	case ValueType::CHAR:
-		delete (char*)data;
-		break;
-	}
-}
-
-void Value::setData(void* newData)
-{
-	switch (type.type)
-	{
-	case ValueType::INTEGER:
-		*(int*)this->data = *(int*)newData;
-		break;
-	case ValueType::FLOAT:
-		*(float*)this->data = *(float*)newData;
-		break;
-	case ValueType::DOUBLE:
-		*(double*)this->data = *(double*)newData;
-		break;
-	case ValueType::BOOL:
-		*(bool*)this->data = *(bool*)newData;
-		break;
-	case ValueType::STRING:
-		*(std::string*)this->data = *(std::string*)newData;
-		break;
-	case ValueType::CHAR:
-		*(char*)this->data = *(char*)newData;
-		break;
-	default:
-		this->data = newData;
-	}
 }
 
 bool DataType::operator==(const DataType& type)
@@ -108,4 +49,30 @@ bool DataType::operator==(const DataType& type)
 bool DataType::operator!=(const DataType& type)
 {
 	return !(*this == type);
+}
+
+void Value::setValue(const Value* value)
+{
+	switch (value->type.type)
+	{
+	case ValueType::BOOL:
+		((Value1b*)this)->data.valBool = ((Value1b*)value)->data.valBool;
+		break;
+	case ValueType::CHAR:
+		((Value1b*)this)->data.valChar = ((Value1b*)value)->data.valChar;
+		break;
+	case ValueType::INTEGER:
+		((Value4b*)this)->data.valInt = ((Value4b*)value)->data.valInt;
+		break;
+	case ValueType::FLOAT:
+		((Value4b*)this)->data.valFloat = ((Value4b*)value)->data.valFloat;
+		break;
+	case ValueType::DOUBLE:
+		((Value8b*)this)->data.valDouble = ((Value8b*)value)->data.valDouble;
+		break;
+	case ValueType::STRING:
+		((StrValue*)this)->data = ((StrValue*)value)->data;
+		break;
+	}
+
 }

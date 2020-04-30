@@ -23,7 +23,7 @@ Chunk* Compiler::compile()
 	}
 
 	addCode(OpCode::GET_GLOBAL);
-	addCode(compilingChunk->addConstant(Value(new std::string("main"), ValueType::STRING)));
+	addCode(compilingChunk->addConstant(new StrValue("main")));
 	addCode(OpCode::CALL);
 	addCode(0);
 
@@ -100,7 +100,7 @@ void Compiler::parseFunctionDeclaration()
 
 void Compiler::parseGlobalDeclaration(DataType type, Token name)
 {
-	vm.globals[name.getString()] = new GlobalVariable(nullptr, type);
+	vm.globals[name.getString()] = new GlobalVariable(type);
 	while (peek().type != TokenType::SEMI_COLON)
 		advance();
 	advance();
@@ -310,7 +310,7 @@ void Compiler::functionDecleration(DataType type)
 	Chunk* enclosing = compilingChunk;
 	std::string funcName = advance().getString();
 	compilingChunk = new Chunk();
-	vm.globals[funcName]->data = compilingChunk;
+	((FuncValue*)vm.globals[funcName])->chunk = compilingChunk;
 
 	int frameStart = this->locals.size();
 	this->frame = frameStart;
@@ -337,7 +337,7 @@ void Compiler::functionDecleration(DataType type)
 	this->scopeDepth--;
 
 	addCode(OpCode::CONSTANT);
-	addCode(compilingChunk->addConstant(Value(nullptr, ValueType::VOID)));
+	addCode(compilingChunk->addConstant(new Value(ValueType::VOID)));
 	addCode(OpCode::RETURN);
 
 	this->locals.resize(frameStart);
@@ -438,7 +438,7 @@ void Compiler::forStatement()
 	else
 	{
 		addCode(OpCode::CONSTANT);
-		addCode(compilingChunk->addConstant(Value(new bool(true), ValueType::BOOL)));
+		addCode(compilingChunk->addConstant(new Value1b(true)));
 	}
 	addCode(OpCode::JUMP_NT_POP);
 	addCode(0);
@@ -472,7 +472,7 @@ void Compiler::forStatement()
 
 uint8_t Compiler::identifierConstant(std::string& name)
 {
-	return this->compilingChunk->addConstant(Value(new std::string(name), DataType(ValueType::STRING)));
+	return this->compilingChunk->addConstant(new StrValue(name));
 }
 
 void Compiler::beginScope()
@@ -537,7 +537,7 @@ DataType Compiler::compileExpression()
 				if (expType != type)
 					emitCast(expType, type);
 				addCode(OpCode::SET_GLOBAL);
-				addCode(compilingChunk->addConstant(Value(new std::string(token.getString()), ValueType::STRING)));
+				addCode(compilingChunk->addConstant(new StrValue(token.getString())));
 			}
 			// DNE
 			else
@@ -1110,42 +1110,42 @@ DataType Compiler::primary()
 	{
 	case TokenType::TRUE:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new bool(true), ValueType::BOOL)));
+		addCode(this->compilingChunk->addConstant(new Value1b(true)));
 		return ValueType::BOOL;
 
 	case TokenType::FALSE:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new bool(false), ValueType::BOOL)));
+		addCode(this->compilingChunk->addConstant(new Value1b(false)));
 		return ValueType::BOOL;
 
 	case TokenType::NULL_TOKEN:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(nullptr, ValueType::NULL_TYPE)));
+		addCode(this->compilingChunk->addConstant(new Value()));
 		return ValueType::NULL_TYPE;
 
 	case TokenType::INTEGER_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new int32_t(token.getInteger()), ValueType::INTEGER)));
+		addCode(this->compilingChunk->addConstant(new Value4b(token.getInteger())));
 		return ValueType::INTEGER;
 
 	case TokenType::FLOAT_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new float(token.getFloat()), ValueType::FLOAT)));
+		addCode(this->compilingChunk->addConstant(new Value4b(token.getFloat())));
 		return ValueType::FLOAT;
 
 	case TokenType::DOUBLE_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new double(token.getDouble()), ValueType::DOUBLE)));
+		addCode(this->compilingChunk->addConstant(new Value8b(token.getDouble())));
 		return ValueType::DOUBLE;
 
 	case TokenType::STRING_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new std::string(token.getString()), ValueType::STRING)));
+		addCode(this->compilingChunk->addConstant(new StrValue(token.getString())));
 		return ValueType::STRING;
 
 	case TokenType::CHAR_LITERAL:
 		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(Value(new char(token.getChar()), ValueType::CHAR)));
+		addCode(this->compilingChunk->addConstant(new Value1b(token.getChar())));
 		return ValueType::CHAR;
 
 	case TokenType::OPEN_PAREN:
@@ -1177,7 +1177,7 @@ DataType Compiler::primary()
 			if (it != vm.globals.end())
 			{
 				addCode(OpCode::GET_GLOBAL);
-				addCode(compilingChunk->addConstant(Value(new std::string(token.getString()), ValueType::STRING)));
+				addCode(compilingChunk->addConstant(new StrValue(token.getString())));
 				return vm.globals[token.getString()]->type;
 			}
 			// DNE
