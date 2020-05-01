@@ -1,6 +1,6 @@
-#include "Common.h"
 #include "VM.h"
-#ifdef DEBUG_CODE_TRACE
+
+#ifdef _DEBUG
 #include "Debug.h"
 #endif // DEBUG_CODE_TRACE
 

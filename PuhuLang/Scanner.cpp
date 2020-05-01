@@ -1,4 +1,6 @@
 #include "Scanner.h"
+#include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <string_view>
 #include <iomanip>
