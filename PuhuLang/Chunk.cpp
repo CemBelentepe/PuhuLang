@@ -3,6 +3,14 @@
 Chunk::Chunk()
 {}
 
+Chunk::~Chunk()
+{
+	for (auto& val : constants)
+	{
+		delete val;
+	}
+}
+
 size_t Chunk::addConstant(Value* value)
 {
 	// TODO: check before add

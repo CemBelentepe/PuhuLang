@@ -22,6 +22,7 @@ class VM
 {
 public:
 	VM();
+	~VM();
 	bool interpret(Chunk* entryChunk);
 
 	inline const std::vector<Value*>& getStack() const { return this->stack; }

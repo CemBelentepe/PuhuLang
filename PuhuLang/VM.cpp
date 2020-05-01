@@ -9,6 +9,14 @@ VM::VM()
 	:ip(0)
 {}
 
+VM::~VM()
+{
+	for (int i = 0; i < stack.size(); i++)
+	{
+		delete stack[i];
+	}
+}
+
 bool VM::interpret(Chunk* entryChunk)
 {
 	this->currentChunk = entryChunk;
@@ -452,8 +460,8 @@ void VM::run(OpCode code)
 			this->stack.pop_back();
 		}
 
-		if (result->type != ValueType::VOID)
-			this->stack.push_back(result);
+		this->stack.push_back(result);
+
 		break;
 	}
 	case OpCode::RETURN:
@@ -587,7 +595,7 @@ inline void VM::push_to_stack(Value* val)
 		ret = new Value(ValueType::VOID);
 		break;
 	case ValueType::FUNCTION:
-		ret = val;// new FuncValue(((FuncValue*)val)->chunk, ((FuncValue*)val)->type.intrinsicType, ((FuncValue*)val)->arity);
+		ret = val; // new FuncValue(((FuncValue*)val)->chunk, ((FuncValue*)val)->type.intrinsicType, ((FuncValue*)val)->arity);
 		break;
 	case ValueType::NATIVE:
 		ret = new NativeFunc(((NativeFunc*)val)->func, ((NativeFunc*)val)->type.intrinsicType, ((NativeFunc*)val)->arity);

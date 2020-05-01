@@ -36,6 +36,7 @@ class Chunk
 {
 public:
 	Chunk();
+	~Chunk();
 	std::vector<uint8_t> code;
 	std::vector<Value*> constants;
 
