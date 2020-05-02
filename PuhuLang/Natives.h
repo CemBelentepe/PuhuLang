@@ -2,33 +2,39 @@
 #include "Value.h"
 #include <ctime>
 
-Value* native_print(int argc, Value** args)
+uint8_t* native_print(int argc, uint8_t* args)
 {
-	std::cout << (args[0]);
-	return new Value(ValueType::VOID);
+	std::cout << *(char**)(args);
+	return nullptr;
 }
 
-Value* native_println(int argc, Value** args)
+uint8_t* native_println(int argc, uint8_t* args)
 {
-	std::cout << (args[0]) << std::endl;
-	return new Value(ValueType::VOID);
+	puts(*(char**)(args));
+	return nullptr;
 }
 
-Value* native_input(int argc, Value** args)
+uint8_t* native_printlnDouble(int argc, uint8_t* args)
 {
-	std::string* in = new std::string();
-	getline(std::cin, *in);
-	return new StrValue(*in);
+	std::cout << *(double*)args << "\n";
+	return nullptr;
 }
 
-Value* native_inputInt(int argc, Value** args)
+uint8_t* native_input(int argc, uint8_t* args)
 {
-	int32_t* i = new int32_t();
-	std::cin >> *i;
-	return new Value4b(*i);
+	std::string in;
+	getline(std::cin, in);
+	return StrValue(in).cloneData();
 }
 
-Value* native_clock(int argc, Value** args)
+uint8_t* native_inputInt(int argc, uint8_t* args)
 {
-	return new Value8b((double)clock() / CLOCKS_PER_SEC);
+	int32_t i;
+	std::cin >> i;
+	return Value(i).cloneData();
+}
+
+uint8_t* native_clock(int argc, uint8_t* args)
+{
+	return Value((double)clock() / CLOCKS_PER_SEC).cloneData();
 }

@@ -22,18 +22,15 @@ void run(string& source)
 
 #ifdef _DEBUG
 	dissableChunk(chunk);
-	for (auto& func : vm.globals)
+	for (auto& func : vm.globalFuncs)
 	{
-		if (func.second->type.type == ValueType::FUNCTION)
-		{
-			cout << func.first << ":" << endl;
-			dissableChunk(((FuncValue*)func.second)->chunk);
-			cout << "----" << endl;
-		}
+		cout << func.first << ":" << endl;
+		dissableChunk(**func.second);
+		cout << "----" << endl;
 	}
 #endif // DEBUG
 
- 	vm.interpret(chunk);
+	vm.interpret(chunk);
 }
 
 void runRepl()

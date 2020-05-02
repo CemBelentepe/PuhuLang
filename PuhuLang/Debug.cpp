@@ -10,13 +10,19 @@ static size_t printInstruction(const char* name, size_t offset)
 
 static size_t printConstantInstruction(const char* name, Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (chunk->getConstant(chunk->code[++offset])) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << "\t" << (void*)chunk->getConstant(chunk->code[++offset]) << std::endl;
+	return offset;
+}
+
+static size_t printPopInstruction(const char* name, Chunk* chunk, size_t offset)
+{
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << std::endl;
 	return offset;
 }
 
 static size_t printLocalInstruction(const char* name, Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << " " << (unsigned int)chunk->code[++offset] << std::endl;
 	return offset;
 }
 
@@ -28,16 +34,17 @@ static size_t printJumpInstruction(const char* name, Chunk* chunk, size_t offset
 
 static size_t printCastInstruction(Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "       to " << (int)(chunk->code[++offset]) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "       from " << (int)(chunk->code[++offset]) << " to " << (int)(chunk->code[++offset]) << std::endl;
 	return offset;
 }
 
 void printStack(VM& vm)
 {
 	std::cout << "\t";
-	for (const Value* val : vm.getStack())
+	for (const uint8_t val : vm.getStack())
 	{
-		std::cout << "[" << (val) << "]";
+		// std::cout << "[" << (void*)(val) << "]";
+		printf("[%.2X]", val);
 	}
 	std::cout << std::endl;
 }
@@ -129,10 +136,6 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printInstruction("DPOST_DEC", offset);
 	case OpCode::LOGIC_NOT:
 		return printInstruction("LOGIC_NOT", offset);
-	case OpCode::LOGIC_AND:
-		return printInstruction("LOGIC_AND", offset);
-	case OpCode::LOGIC_OR:
-		return printInstruction("LOGIC_OR", offset);
 	case OpCode::LESS:
 		return printInstruction("LESS", offset);
 	case OpCode::GREAT:
@@ -147,10 +150,8 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printInstruction("NOT_EQUAL", offset);
 	case OpCode::CAST:
 		return printCastInstruction(chunk, offset);
-	case OpCode::POP:
-		return printInstruction("POP", offset); 
 	case OpCode::POPN:
-		return printLocalInstruction("POPN", chunk, offset);
+		return printPopInstruction("POPN", chunk, offset);
 	case OpCode::SET_GLOBAL:
 		return printConstantInstruction("SET_GLOBAL", chunk, offset);
 	case OpCode::GET_GLOBAL:
@@ -159,6 +160,10 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printLocalInstruction("SET_LOCAL", chunk, offset);
 	case OpCode::GET_LOCAL:
 		return printLocalInstruction("GET_LOCAL", chunk, offset);
+	case OpCode::SET_GLOBAL_POP:
+		return printConstantInstruction("SET_GLOBAL_POP", chunk, offset);
+	case OpCode::SET_LOCAL_POP:
+		return printLocalInstruction("SET_LOCAL_POP", chunk, offset);
 	case OpCode::JUMP:
 		return printJumpInstruction("JUMP", chunk, offset, 1);
 	case OpCode::JUMP_NT_POP:
@@ -168,11 +173,11 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 	case OpCode::JUMP_NT:
 		return printJumpInstruction("JUMP_NT", chunk, offset, 1);
 	case OpCode::CALL:
-		return printLocalInstruction("CALL", chunk, offset);
+		return printPopInstruction("CALL", chunk, offset);
 	case OpCode::NATIVE_CALL:
-		return printLocalInstruction("NATIVE", chunk, offset);
+		return printPopInstruction("NATIVE", chunk, offset);
 	case OpCode::RETURN:
-		return printInstruction("RETURN", offset);
+		return printPopInstruction("RETURN", chunk, offset);
 	default:
 		return printInstruction("UNKNOWN", offset);
 	}

@@ -1,36 +1,9 @@
 #include "Value.h"
+#include "Chunk.h"
 
 std::ostream& operator<<(std::ostream& os, const DataType& type)
 {
 	// TODO: insert return statement here
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const Value* val)
-{
-	switch (val->type.type)
-	{
-	case ValueType::BOOL:
-	case ValueType::CHAR:
-		os << *(Value1b*)val;
-		break;
-	case ValueType::INTEGER:
-	case ValueType::FLOAT:
-		os << *(Value4b*)val;
-		break;
-	case ValueType::DOUBLE:
-		os << *(Value8b*)val;
-		break;
-	case ValueType::STRING:
-		os << *(StrValue*)val;
-		break;
-	case ValueType::NULL_TYPE:
-		os << "NULL";
-		break;
-	case ValueType::VOID:
-		os << "VOID";
-		break;
-	}
 	return os;
 }
 
@@ -51,28 +24,90 @@ bool DataType::operator!=(const DataType& type)
 	return !(*this == type);
 }
 
-void Value::setValue(const Value* value)
+size_t DataType::getSize()
 {
-	switch (value->type.type)
+	switch (type)
 	{
-	case ValueType::BOOL:
-		((Value1b*)this)->data.valBool = ((Value1b*)value)->data.valBool;
-		break;
-	case ValueType::CHAR:
-		((Value1b*)this)->data.valChar = ((Value1b*)value)->data.valChar;
-		break;
 	case ValueType::INTEGER:
-		((Value4b*)this)->data.valInt = ((Value4b*)value)->data.valInt;
+		return sizeof(int32_t);
+	case ValueType::FLOAT:
+		return sizeof(float);
+	case ValueType::DOUBLE:
+		return sizeof(double);
+	case ValueType::BOOL:
+		return sizeof(bool);
+	case ValueType::CHAR:
+		return sizeof(char);
+	case ValueType::STRING:
+		return sizeof(const char**);
+	case ValueType::NULL_TYPE:
+		return 0;
+	case ValueType::VOID:
+		return 0;
+	case ValueType::FUNCTION:
+		return sizeof(Chunk*);
+	case ValueType::NATIVE:
+		return sizeof(NativeFunc*);
+	}
+	return 0;
+}
+
+uint8_t* Value::cloneData()
+{
+	uint8_t* clone = new uint8_t[type.getSize()];
+	switch (type.type)
+	{
+	case ValueType::INTEGER:
+		*(int32_t*)clone = data.valInt;
 		break;
 	case ValueType::FLOAT:
-		((Value4b*)this)->data.valFloat = ((Value4b*)value)->data.valFloat;
+		*(float*)clone = data.valFloat;
 		break;
 	case ValueType::DOUBLE:
-		((Value8b*)this)->data.valDouble = ((Value8b*)value)->data.valDouble;
+		*(double*)clone = data.valDouble;
 		break;
-	case ValueType::STRING:
-		((StrValue*)this)->data = ((StrValue*)value)->data;
+	case ValueType::BOOL:
+		*(bool*)clone = data.valBool;
+		break;
+	case ValueType::CHAR:
+		*(char*)clone = data.valChar;
+		break;
+	default:
+		std::cout << "Unknown type cloning";
 		break;
 	}
+		return clone;
+}
 
+uint8_t* StrValue::cloneData()
+{
+	char** clone = new char* ();
+	*clone = new char[data.size() + 1];
+	strcpy_s(*clone, data.size() + 1, data.c_str());
+	return (uint8_t*)(clone);
+}
+
+uint8_t* FuncValue::cloneData()
+{
+#ifdef _DEBUG
+	std::cout << "Chunk: " << chunk << std::endl;
+#endif // _DEBUG
+
+	Chunk*** clone = new Chunk**();
+	*clone = new Chunk*();
+	**clone = chunk;
+	return (uint8_t*)(clone);
+}
+
+uint8_t* NativeFunc::cloneData()
+{
+	NativeFunc*** clone = new NativeFunc**();
+	*clone = new NativeFunc *();
+	**clone = new NativeFunc(this->func, this->type, this->arity);
+	(**clone)->type = this->type;
+#ifdef _DEBUG
+	std::cout << "Native: " << **clone << "\n";
+#endif // _DEBUG
+
+	return (uint8_t*)(clone);
 }

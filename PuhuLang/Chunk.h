@@ -17,13 +17,14 @@ enum class OpCode
 	FPRE_INC, FPRE_DEC, FPOST_INC, FPOST_DEC,
 	DPRE_INC, DPRE_DEC, DPOST_INC, DPOST_DEC,
 
-	LOGIC_NOT, LOGIC_AND, LOGIC_OR, LESS, GREAT, 
+	LOGIC_NOT, LESS, GREAT,
 	LESS_EQUAL, GREAT_EQUAL, IS_EQUAL, NOT_EQUAL,
 
 	CAST,
 
-	POP, POPN,
+	POPN,
 	SET_GLOBAL, GET_GLOBAL, SET_LOCAL, GET_LOCAL,
+	SET_GLOBAL_POP, SET_LOCAL_POP,
 
 	JUMP, JUMP_NT_POP, LOOP,
 	JUMP_NT,
@@ -38,9 +39,8 @@ public:
 	Chunk();
 	~Chunk();
 	std::vector<uint8_t> code;
-	std::vector<Value*> constants;
+	std::vector<uint8_t*> constants;
 
-	size_t addConstant(Value* value);
-	Value* getConstant(size_t addr);
+	size_t addConstant(uint8_t* value, size_t valueSize);
+	uint8_t* getConstant(size_t addr);
 };
-

@@ -19,6 +19,7 @@ private:
 	int scopeDepth;
 	int frame;
 	std::vector<LocalVariable> locals;
+	std::unordered_map<std::string, Value*> globals;
 
 	void addNatives();
 
@@ -33,7 +34,6 @@ private:
 	void consume(TokenType type, const char* message);
 	void consumeNext(TokenType type, const char* message);
 
-
 	void statement();
 	void decleration();
 	void variableDecleration(DataType type);
@@ -46,6 +46,7 @@ private:
 	uint8_t identifierConstant(std::string& name);
 	void beginScope();
 	void endScope();
+	void addLocal(DataType type, std::string name, int depth);
 
 	DataType compileExpression();
 	DataType logic_or();
@@ -84,6 +85,8 @@ private:
 	bool matchCast();
 	DataType getCast();
 	void addCode(OpCode code);
+	void addCode(OpCode code1, uint8_t code2);
+	void addCode(OpCode code1, uint8_t code2, uint8_t code3);
 	void addCode(uint8_t code);
 	void emitCast(DataType from, DataType to);
 	void emitCast(DataType from, DataType to, size_t pos);
