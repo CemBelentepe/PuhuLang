@@ -36,133 +36,66 @@ public:
 	bool operator==(const DataType& type);
 	bool operator!=(const DataType& type);
 	inline bool isPrimitive() const { return type <= ValueType::VOID; }
+
+	size_t getSize();
 };
 
 class Value
 {
 public:
 	DataType type;
-
-	Value()
-		:type(ValueType::ERROR)
-	{}
-
-	Value(DataType type)
-		: type(type)
-	{}
-
-	virtual ~Value() {}
-
-	friend std::ostream& operator<<(std::ostream& os, const Value* val);
-
-	void setValue(const Value* value);
-};
-
-class Value1b : public Value
-{
-public:
-	union u_data
+	union Data
 	{
 		bool valBool;
 		char valChar;
-	} data;
+		int32_t valInt;
+		float valFloat;
+		double valDouble;
+	}data;
 
-	Value1b(bool value)
-		: Value(ValueType::BOOL)
+	Value()
+		:type(ValueType::ERROR), data({ 0 })
+	{}
+
+	Value(DataType type)
+		: type(type), data({ 0 })
+	{}
+
+	Value(bool value)
+		: type(ValueType::BOOL)
 	{
 		data.valBool = value;
 	}
 
-	Value1b(char value)
-		: Value(ValueType::CHAR)
+	Value(char value)
+		: type(ValueType::CHAR)
 	{
 		data.valChar = value;
 	}
 
-	virtual ~Value1b() {}
-
-	friend std::ostream& operator<<(std::ostream& os, const Value1b& val)
-	{
-		switch (val.type.type)
-		{
-		case ValueType::BOOL:
-			if (val.data.valBool)
-				os << "true";
-			else
-				os << "false";
-			break;
-		case ValueType::CHAR:
-			os << val.data.valChar;
-			break;
-		}
-		return os;
-	}
-};
-
-class Value4b : public Value
-{
-public:
-	union u_data
-	{
-		float valFloat;
-		int32_t valInt;
-	} data;
-
-	Value4b(float value)
-		: Value(ValueType::FLOAT)
-	{
-		data.valFloat = value;
-	}
-
-	Value4b(int32_t value)
-		: Value(ValueType::INTEGER)
+	Value(int32_t value)
+		: type(ValueType::INTEGER)
 	{
 		data.valInt = value;
 	}
 
-	virtual ~Value4b() {}
-
-	friend std::ostream& operator<<(std::ostream& os, const Value4b& val)
+	Value(float value)
+		: type(ValueType::FLOAT)
 	{
-		switch (val.type.type)
-		{
-		case ValueType::FLOAT:
-			os << val.data.valFloat;
-			break;
-		case ValueType::INTEGER:
-			os << val.data.valInt;
-			break;
-		}
-		return os;
+		data.valFloat = value;
 	}
-};
 
-class Value8b : public Value
-{
-public:
-	union u_data
-	{
-		double valDouble;
-	} data;
-
-	Value8b(double value)
-		: Value(ValueType::DOUBLE)
+	Value(double value)
+		: type(ValueType::DOUBLE)
 	{
 		data.valDouble = value;
 	}
 
-	virtual ~Value8b() {}
+	virtual ~Value() {}
 
-	friend std::ostream& operator<<(std::ostream& os, const Value8b& val)
-	{
-		switch (val.type.type)
-		{
-		case ValueType::DOUBLE:
-			os << val.data.valDouble;
-			break;
-		}
-		return os;
-	}
+	friend std::ostream& operator<<(std::ostream& os, const Value& val);
+
+	virtual uint8_t* cloneData(); // Turns data into an array
 };
 
 class StrValue : public Value
@@ -185,6 +118,8 @@ public:
 		os << val.data;
 		return os;
 	}
+
+	virtual uint8_t* cloneData();
 };
 
 class FuncValue : public Value
@@ -206,9 +141,11 @@ public:
 		// Delete it?
 		// delete chunk;
 	}
+
+	virtual uint8_t* cloneData();
 };
 
-typedef Value* (*NativeFn)(int, Value**);
+typedef uint8_t* (*NativeFn)(int, uint8_t*);
 class NativeFunc : public Value
 {
 public:
@@ -223,7 +160,9 @@ public:
 		:Value(DataType(ValueType::NATIVE, returnType)), arity(arity), func(func)
 	{}
 
-	virtual ~NativeFunc() {	}
+	virtual ~NativeFunc() {}
+
+	virtual uint8_t* cloneData();
 };
 
 class GlobalVariable : public Value
@@ -248,12 +187,11 @@ public:
 	DataType type;
 	std::string name;
 	int depth;
+	size_t startPos;
 
-	LocalVariable()
-		: type(), name(), depth(0)
-	{}
+	LocalVariable(){}
 
-	LocalVariable(DataType type, std::string name, int depth)
-		: type(type), name(name), depth(depth)
+	LocalVariable(DataType type, std::string name, int depth, size_t startPos)
+		: type(type), name(name), depth(depth), startPos(startPos)
 	{}
 };

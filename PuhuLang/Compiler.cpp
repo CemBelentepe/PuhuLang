@@ -13,30 +13,37 @@ Chunk* Compiler::compile()
 	firstPass();
 	this->currentToken = 0;
 
-	// compileExpression();
 	while (!match(TokenType::EOF_TOKEN))
 	{
+		// compileExpression();
 		decleration();
-		// beginScope();
-		// block();
-		// endScope();
 	}
 
-	addCode(OpCode::GET_GLOBAL);
-	addCode(compilingChunk->addConstant(new StrValue("main")));
-	addCode(OpCode::CALL);
-	addCode(0);
+	addCode(OpCode::GET_GLOBAL, sizeof(std::string*));
+	addCode(compilingChunk->addConstant(StrValue("main").cloneData(), sizeof(char*)));
+	addCode(OpCode::CALL, 0);
+
+	for (auto& var : globals)
+	{
+		vm.globals[var.first] = var.second->cloneData();
+#ifdef _DEBUG
+		if (var.second->type.type == ValueType::FUNCTION)
+			vm.globalFuncs[var.first] = (Chunk***)var.second->cloneData();
+#endif // _DEBUG
+
+	}
 
 	return compilingChunk;
 }
 
 void Compiler::addNatives()
 {
-	vm.globals["print"] = new NativeFunc(&native_print, ValueType::VOID, 1);
-	vm.globals["println"] = new NativeFunc(&native_println, ValueType::VOID, 1);
-	vm.globals["input"] = new NativeFunc(&native_input, ValueType::STRING, 0);
-	vm.globals["inputInt"] = new NativeFunc(&native_inputInt, ValueType::INTEGER, 0);
-	vm.globals["clock"] = new NativeFunc(&native_clock, ValueType::DOUBLE, 0);
+	globals["print"] = new NativeFunc(native_print, ValueType::VOID, 1);
+	globals["println"] = new NativeFunc(native_println, ValueType::VOID, 1);
+	globals["printlnDouble"] = new NativeFunc(native_printlnDouble, ValueType::VOID, 1);
+	globals["input"] = new NativeFunc(native_input, ValueType::STRING, 0);
+	globals["inputInt"] = new NativeFunc(native_inputInt, ValueType::INTEGER, 0);
+	globals["clock"] = new NativeFunc(native_clock, ValueType::DOUBLE, 0);
 }
 
 void Compiler::firstPass()
@@ -65,22 +72,20 @@ void Compiler::parseFunctionDeclaration()
 		std::stringstream signiture;
 		signiture << name.getString();
 		advance();
-		int arity = 0;
+		size_t argSize = 0;
 		if (peek().type != TokenType::CLOSE_PAREN)
 		{
-			arity++;
-			parseTypeName();
+			argSize += parseTypeName().getSize();
 			advance();
 		}
 		while (!match(TokenType::CLOSE_PAREN))
 		{
-			arity++;
 			// signiture << "::" << parseTypeName();
 			consume(TokenType::COMMA, "Expect ',' between parameters.");
-			parseTypeName();
+			argSize += parseTypeName().getSize();
 			advance();
 		}
-		vm.globals[signiture.str()] = new FuncValue(nullptr, type, arity);
+		globals[signiture.str()] = new FuncValue(nullptr, type, argSize);
 		consume(TokenType::OPEN_BRACE, "Expect '{' at function start."); // Opening {
 		size_t blocks = 1;
 		while (blocks > 0)
@@ -100,7 +105,7 @@ void Compiler::parseFunctionDeclaration()
 
 void Compiler::parseGlobalDeclaration(DataType type, Token name)
 {
-	vm.globals[name.getString()] = new GlobalVariable(type);
+	globals[name.getString()] = new GlobalVariable(type);
 	while (peek().type != TokenType::SEMI_COLON)
 		advance();
 	advance();
@@ -229,9 +234,9 @@ void Compiler::statement()
 	else if (token == TokenType::RETURN)
 	{
 		advance();
-		compileExpression();
+		size_t size = compileExpression().getSize();
 		consume(TokenType::SEMI_COLON, "Expect ';' after an expression statement.");
-		addCode(OpCode::RETURN);
+		addCode(OpCode::RETURN, size);
 	}
 	else
 	{
@@ -271,7 +276,7 @@ void Compiler::variableDecleration(DataType type)
 	std::string name = advance().getString();
 
 	if (this->scopeDepth == 0)
-		((GlobalVariable*)vm.globals[name])->initialized = true;
+		((GlobalVariable*)globals[name])->initialized = true;
 	else
 	{
 		for (int i = this->locals.size() - 1; i >= this->frame; i--)
@@ -282,7 +287,7 @@ void Compiler::variableDecleration(DataType type)
 			if (local.name == name)
 				error("Variable with this name is already declared on this scope.");
 		}
-		this->locals.push_back(LocalVariable(type, name, scopeDepth));
+		addLocal(type, name, scopeDepth);
 	}
 
 	if (match(TokenType::EQUAL))
@@ -292,13 +297,14 @@ void Compiler::variableDecleration(DataType type)
 			emitCast(eqType, type);
 		if (this->scopeDepth == 0)
 		{
-			addCode(OpCode::SET_GLOBAL);
+			addCode(OpCode::SET_GLOBAL, eqType.getSize());
 			addCode(identifierConstant(name));
 		}
 		else
 		{
 			addCode(OpCode::SET_LOCAL);
-			addCode(this->locals.size() - 1);
+			addCode(locals[locals.size() - 1].startPos);
+			addCode(eqType.getSize());
 		}
 	}
 
@@ -310,7 +316,7 @@ void Compiler::functionDecleration(DataType type)
 	Chunk* enclosing = compilingChunk;
 	std::string funcName = advance().getString();
 	compilingChunk = new Chunk();
-	((FuncValue*)vm.globals[funcName])->chunk = compilingChunk;
+	((FuncValue*)globals[funcName])->chunk = compilingChunk;
 
 	int frameStart = this->locals.size();
 	this->frame = frameStart;
@@ -318,27 +324,25 @@ void Compiler::functionDecleration(DataType type)
 	advance(); // OPEN_PAREN
 
 	beginScope();
-	this->locals.push_back(LocalVariable(ValueType::FUNCTION, "", this->scopeDepth));
+	addLocal(ValueType::FUNCTION, "", this->scopeDepth);
 	if (peek().type != TokenType::CLOSE_PAREN)
 	{
 		DataType type = parseTypeName();
 		std::string name = advance().getString();
-		this->locals.push_back(LocalVariable(type, name, scopeDepth));
+		addLocal(type, name, scopeDepth);
 	}
 	while (!match(TokenType::CLOSE_PAREN))
 	{
 		advance(); // consume ','
 		DataType type = parseTypeName();
 		std::string name = advance().getString();
-		this->locals.push_back(LocalVariable(type, name, scopeDepth));
+		addLocal(type, name, scopeDepth);
 	}
 	block();
 	// endScope();
 	this->scopeDepth--;
 
-	addCode(OpCode::CONSTANT);
-	addCode(compilingChunk->addConstant(new Value(ValueType::VOID)));
-	addCode(OpCode::RETURN);
+	addCode(OpCode::RETURN, 0);
 
 	this->locals.resize(frameStart);
 	this->frame = frameStart;
@@ -437,8 +441,9 @@ void Compiler::forStatement()
 	}
 	else
 	{
-		addCode(OpCode::CONSTANT);
-		addCode(compilingChunk->addConstant(new Value1b(true)));
+		Value c = Value(true);
+		addCode(OpCode::CONSTANT, c.type.getSize());
+		addCode(compilingChunk->addConstant(c.cloneData(), c.type.getSize()));
 	}
 	addCode(OpCode::JUMP_NT_POP);
 	addCode(0);
@@ -472,7 +477,8 @@ void Compiler::forStatement()
 
 uint8_t Compiler::identifierConstant(std::string& name)
 {
-	return this->compilingChunk->addConstant(new StrValue(name));
+	StrValue c(name);
+	return this->compilingChunk->addConstant(c.cloneData(), c.type.getSize());
 }
 
 void Compiler::beginScope()
@@ -482,28 +488,30 @@ void Compiler::beginScope()
 
 void Compiler::endScope()
 {
-	int toPop = 0;
+	size_t start = this->locals.size();
 	for (int i = this->locals.size() - 1; i >= 0; i--)
 	{
 		if (this->locals[i].depth == this->scopeDepth)
 		{
 			this->locals.pop_back();
-			toPop++;
 		}
 		else break;
 	}
-
-	if (toPop == 1)
-	{
-		addCode(OpCode::POP);
-	}
-	else if (toPop > 1)
-	{
-		addCode(OpCode::POPN);
-		addCode(toPop);
-	}
+	addCode(OpCode::POPN);
+	addCode(this->locals.size() - start);
 
 	this->scopeDepth--;
+}
+
+void Compiler::addLocal(DataType type, std::string name, int depth)
+{
+	size_t pos = 0;
+	if (this->locals.size() > 0)
+	{
+		pos = this->locals.back().startPos + this->locals.back().type.getSize();
+	}
+
+	this->locals.push_back(LocalVariable(type, name, depth, pos));
 }
 
 DataType Compiler::compileExpression()
@@ -529,15 +537,17 @@ DataType Compiler::compileExpression()
 		// Not Local
 		if (slot == -1)
 		{
-			auto it = vm.globals.find(token.getString());
+			auto it = globals.find(token.getString());
 			// Global
-			if (it != vm.globals.end())
+			if (it != globals.end())
 			{
-				type = vm.globals[token.getString()]->type;
+				type = globals[token.getString()]->type;
 				if (expType != type)
 					emitCast(expType, type);
-				addCode(OpCode::SET_GLOBAL);
-				addCode(compilingChunk->addConstant(new StrValue(token.getString())));
+				addCode(OpCode::SET_GLOBAL_POP, type.getSize());
+				StrValue c(token.getString());
+				addCode(compilingChunk->addConstant(c.cloneData(), c.type.getSize()));
+				addCode(type.getSize());
 			}
 			// DNE
 			else
@@ -551,10 +561,8 @@ DataType Compiler::compileExpression()
 			type = this->locals[slot].type;
 			if (expType != type)
 				emitCast(expType, type);
-			addCode(OpCode::SET_LOCAL);
-			addCode(slot);
+			addCode(OpCode::SET_LOCAL_POP, locals[slot].startPos, type.getSize());
 		}
-		addCode(OpCode::POP);
 		return type;
 	}
 	else
@@ -572,7 +580,7 @@ DataType Compiler::logic_or()
 		addCode(OpCode::JUMP);
 		addCode(0);
 		size_t jmp1 = this->compilingChunk->code.size() - 1;
-		addCode(OpCode::POP);
+		addCode(OpCode::POPN, a.getSize());
 		DataType b = logic_and();
 		if (b == ValueType::BOOL && a == b)
 		{
@@ -594,7 +602,7 @@ DataType Compiler::logic_and()
 		addCode(OpCode::JUMP_NT);
 		addCode(0);
 		size_t jmp1 = this->compilingChunk->code.size() - 1;
-		addCode(OpCode::POP);
+		addCode(OpCode::POPN, a.getSize());
 		DataType b = bit_or();
 		if (b == ValueType::BOOL && a == b)
 		{
@@ -1072,24 +1080,23 @@ DataType Compiler::call()
 		{
 			while (match(TokenType::OPEN_PAREN) && (a.type == ValueType::FUNCTION || a.type == ValueType::NATIVE))
 			{
-				int argc = 0;
+				int argSize = 0;
 				if (peek().type != TokenType::CLOSE_PAREN)
 				{
-					this->compileExpression();
-					argc++;
+					argSize += this->compileExpression().getSize();
 				}
 				while (!match(TokenType::CLOSE_PAREN))
 				{
 					consume(TokenType::COMMA, "Expect ',' between arguments.");
 					this->compileExpression();
-					argc++;
+					argSize += this->compileExpression().getSize();
 				}
 				if (a.type == ValueType::FUNCTION)
 					addCode(OpCode::CALL);
 				else if (a.type == ValueType::NATIVE)
 					addCode(OpCode::NATIVE_CALL);
 
-				addCode(argc);
+				addCode(argSize);
 				a = *a.intrinsicType;
 			}
 			return a;
@@ -1109,43 +1116,45 @@ DataType Compiler::primary()
 	switch (token.type)
 	{
 	case TokenType::TRUE:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value1b(true)));
+	{
+		addCode(OpCode::CONSTANT, sizeof(bool));
+		addCode(this->compilingChunk->addConstant(Value(true).cloneData(), sizeof(bool)));
 		return ValueType::BOOL;
+	}
 
 	case TokenType::FALSE:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value1b(false)));
+		addCode(OpCode::CONSTANT, sizeof(bool));
+		addCode(this->compilingChunk->addConstant(Value(false).cloneData(), sizeof(bool)));
 		return ValueType::BOOL;
 
 	case TokenType::NULL_TOKEN:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value()));
+		addCode(OpCode::CONSTANT, 0);
+		addCode(this->compilingChunk->addConstant(nullptr, 0));
 		return ValueType::NULL_TYPE;
 
 	case TokenType::INTEGER_LITERAL:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value4b(token.getInteger())));
+		addCode(OpCode::CONSTANT, sizeof(int32_t));
+		addCode(this->compilingChunk->addConstant(Value(token.getInteger()).cloneData(), sizeof(int32_t)));
 		return ValueType::INTEGER;
 
 	case TokenType::FLOAT_LITERAL:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value4b(token.getFloat())));
+		addCode(OpCode::CONSTANT, sizeof(float));
+		addCode(this->compilingChunk->addConstant(Value(token.getFloat()).cloneData(), sizeof(float)));
 		return ValueType::FLOAT;
 
 	case TokenType::DOUBLE_LITERAL:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value8b(token.getDouble())));
+		addCode(OpCode::CONSTANT, sizeof(double));
+		addCode(this->compilingChunk->addConstant(Value(token.getDouble()).cloneData(), sizeof(double)));
 		return ValueType::DOUBLE;
 
 	case TokenType::STRING_LITERAL:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new StrValue(token.getString())));
+		addCode(OpCode::CONSTANT, sizeof(char*));
+		addCode(this->compilingChunk->addConstant(StrValue(token.getString()).cloneData(), sizeof(char*)));
 		return ValueType::STRING;
 
 	case TokenType::CHAR_LITERAL:
-		addCode(OpCode::CONSTANT);
-		addCode(this->compilingChunk->addConstant(new Value1b(token.getChar())));
+		addCode(OpCode::CONSTANT, sizeof(char));
+		addCode(this->compilingChunk->addConstant(Value(token.getChar()).cloneData(), sizeof(char)));
 		return ValueType::CHAR;
 
 	case TokenType::OPEN_PAREN:
@@ -1172,13 +1181,13 @@ DataType Compiler::primary()
 		// Not Local
 		if (slot == -1)
 		{
-			auto it = vm.globals.find(token.getString());
+			auto it = globals.find(token.getString());
 			// Global
-			if (it != vm.globals.end())
+			if (it != globals.end())
 			{
-				addCode(OpCode::GET_GLOBAL);
-				addCode(compilingChunk->addConstant(new StrValue(token.getString())));
-				return vm.globals[token.getString()]->type;
+				addCode(OpCode::GET_GLOBAL, globals[token.getString()]->type.getSize());
+				addCode(compilingChunk->addConstant(StrValue(token.getString()).cloneData(), sizeof(char*)));
+				return globals[token.getString()]->type;
 			}
 			// DNE
 			else
@@ -1189,8 +1198,7 @@ DataType Compiler::primary()
 		// Local
 		else
 		{
-			addCode(OpCode::GET_LOCAL);
-			addCode(slot);
+			addCode(OpCode::GET_LOCAL, locals[slot].startPos, locals[slot].type.getSize());
 			return this->locals[slot].type;
 		}
 	}
@@ -1247,6 +1255,19 @@ void Compiler::addCode(OpCode code)
 	this->compilingChunk->code.push_back((uint8_t)code);
 }
 
+void Compiler::addCode(OpCode code1, uint8_t code2)
+{
+	this->compilingChunk->code.push_back((uint8_t)code1);
+	this->compilingChunk->code.push_back(code2);
+}
+
+void Compiler::addCode(OpCode code1, uint8_t code2, uint8_t code3)
+{
+	this->compilingChunk->code.push_back((uint8_t)code1);
+	this->compilingChunk->code.push_back(code2);
+	this->compilingChunk->code.push_back(code3);
+}
+
 void Compiler::addCode(uint8_t code)
 {
 	this->compilingChunk->code.push_back(code);
@@ -1258,6 +1279,7 @@ void Compiler::emitCast(DataType from, DataType to)
 	if (to != from)
 	{
 		addCode(OpCode::CAST);
+		addCode((uint8_t)from.type);
 		addCode((uint8_t)to.type);
 	}
 }
@@ -1268,7 +1290,8 @@ void Compiler::emitCast(DataType from, DataType to, size_t pos)
 	{
 		auto& code = this->compilingChunk->code;
 		code.insert(code.begin() + pos, (uint8_t)OpCode::CAST);
-		code.insert(code.begin() + pos + 1, (uint8_t)to.type);
+		code.insert(code.begin() + pos + 1, (uint8_t)from.type);
+		code.insert(code.begin() + pos + 2, (uint8_t)to.type);
 	}
 }
 
