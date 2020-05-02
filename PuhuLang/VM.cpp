@@ -32,8 +32,8 @@ void VM::run(OpCode code)
 #define BINARY_OP(op, type)\
 	    do{\
 		type b = pop<type>();\
-		type a = pop<type>();\
-		push<type>(a op b);\
+		type* a = (type*)(&stack[stack.size() - sizeof(type)]);\
+		*a = *a op b; \
 	    }while(false)\
 
 #define CMPD_OP(op)\
@@ -292,10 +292,8 @@ void VM::run(OpCode code)
 	{
 		uint8_t slot = advance();
 		uint8_t size = advance();
-		for (int i = 0; i < size; i++)
-		{
-			stack.push_back(stack[slot + this->frames.back().frameStart + i]);
-		}
+
+		pushSized(&stack[slot + this->frames.back().frameStart], size);
 		break;
 	}
 	case OpCode::SET_GLOBAL_POP:

@@ -60,11 +60,6 @@ private:
 			this->stack.resize(this->stack.size() + size);
 			memcpy(&stack[this->stack.size() - size], val, size * sizeof(uint8_t));
 		}
-		// for (int i = 0; i < size; i++)
-		// {
-		// 	this->stack.push_back(val[i]);
-		// }
-		// delete[] val;
 	}
 
 	template <class T>
@@ -78,11 +73,6 @@ private:
 
 	inline uint8_t* popSized(size_t size)
 	{
-		// for (int i = 0; i < size; i++)
-		// {
-		// 	val[i] = stack[stack.size() -size + i];
-		// }
-		// stack.resize(stack.size() - size);
 		if (size > 0)
 		{
 			uint8_t* val = &stack[stack.size() - size];
