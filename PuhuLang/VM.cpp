@@ -261,10 +261,9 @@ void VM::run(OpCode code)
 		char* name = *(char**)(currentChunk->getConstant(advance()));
 		std::string name_str(name);
 		uint8_t* val = peekSized(size);
-		*(uint8_t**)this->globals[name_str] = new uint8_t[size];
 		for (int i = 0; i < size; i++)
 		{
-			(*(uint8_t**)this->globals[name_str])[i] = val[i];
+			(*(uint8_t**)this->globals[name])[i] = val[i];
 		}
 		break;
 	}
@@ -272,8 +271,7 @@ void VM::run(OpCode code)
 	{
 		size_t size = advance();
 		char* name = *(char**)(currentChunk->getConstant(advance()));
-		std::string name_str(name);
-		uint8_t* val = *(uint8_t**)(this->globals[name_str]);
+		uint8_t* val = *(uint8_t**)(this->globals[name]);
 		pushSized(val, size);
 		break;
 	}
@@ -299,11 +297,11 @@ void VM::run(OpCode code)
 	case OpCode::SET_GLOBAL_POP:
 	{
 		size_t size = advance();
-		std::string* name = (std::string*)(currentChunk->getConstant(advance()));
+		char* name = *(char**)(currentChunk->getConstant(advance()));
 		uint8_t* val = peekSized(size);
 		for (int i = 0; i < size; i++)
 		{
-			this->globals[*name][i] = val[i];
+			this->globals[name][i] = val[i];
 		}
 		popSized(size);
 		break;

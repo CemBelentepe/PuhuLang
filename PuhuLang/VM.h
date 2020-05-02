@@ -32,7 +32,7 @@ private:
 	size_t ip;
 	std::vector<uint8_t> stack;
 public:
-	std::unordered_map<std::string, uint8_t*> globals;
+	std::unordered_map<std::string_view, uint8_t*> globals;
 	std::vector<Frame> frames;
 #ifdef _DEBUG
 	std::unordered_map<std::string, Chunk***> globalFuncs;

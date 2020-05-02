@@ -25,7 +25,9 @@ Chunk* Compiler::compile()
 
 	for (auto& var : globals)
 	{
-		vm.globals[var.first] = var.second->cloneData();
+		char* name = new char[var.first.size() + 1];
+		strcpy_s(name, var.first.size() + 1, var.first.data());
+		vm.globals[name] = var.second->cloneData();
 #ifdef _DEBUG
 		if (var.second->type.type == ValueType::FUNCTION)
 			vm.globalFuncs[var.first] = (Chunk***)var.second->cloneData();
