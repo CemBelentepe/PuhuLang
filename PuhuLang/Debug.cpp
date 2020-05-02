@@ -136,18 +136,30 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printInstruction("DPOST_DEC", offset);
 	case OpCode::LOGIC_NOT:
 		return printInstruction("LOGIC_NOT", offset);
-	case OpCode::LESS:
-		return printInstruction("LESS", offset);
-	case OpCode::GREAT:
-		return printInstruction("GREAT", offset);
-	case OpCode::LESS_EQUAL:
-		return printInstruction("LESS_EQUAL", offset);
-	case OpCode::GREAT_EQUAL:
-		return printInstruction("GREAT_EQUAL", offset);
-	case OpCode::IS_EQUAL:
-		return printInstruction("IS_EQUAL", offset);
-	case OpCode::NOT_EQUAL:
-		return printInstruction("NOT_EQUAL", offset);
+	case OpCode::DLESS:
+		return printInstruction("DLESS", offset);
+	case OpCode::DGREAT:
+		return printInstruction("DGREAT", offset);
+	case OpCode::DLESS_EQUAL:
+		return printInstruction("DLESS_EQUAL", offset);
+	case OpCode::DGREAT_EQUAL:
+		return printInstruction("DGREAT_EQUAL", offset);
+	case OpCode::DIS_EQUAL:
+		return printInstruction("DIS_EQUAL", offset);
+	case OpCode::DNOT_EQUAL:
+		return printInstruction("DNOT_EQUAL", offset);
+	case OpCode::ILESS:
+		return printInstruction("ILESS", offset);
+	case OpCode::IGREAT:
+		return printInstruction("IGREAT", offset);
+	case OpCode::ILESS_EQUAL:
+		return printInstruction("ILESS_EQUAL", offset);
+	case OpCode::IGREAT_EQUAL:
+		return printInstruction("IGREAT_EQUAL", offset);
+	case OpCode::IIS_EQUAL:
+		return printInstruction("IIS_EQUAL", offset);
+	case OpCode::INOT_EQUAL:
+		return printInstruction("INOT_EQUAL", offset);
 	case OpCode::CAST:
 		return printCastInstruction(chunk, offset);
 	case OpCode::POPN:

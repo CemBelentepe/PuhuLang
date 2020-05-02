@@ -676,12 +676,24 @@ DataType Compiler::equality()
 		ret = ValueType::BOOL;
 		if (a.type <= ValueType::BOOL && b.type <= ValueType::BOOL)
 		{
-			emitCast(a, ValueType::DOUBLE, pos);
-			emitCast(b, ValueType::DOUBLE);
-			if (type == TokenType::EQUAL_EQUAL)
-				addCode(OpCode::IS_EQUAL);
+			if (a.type >= ValueType::FLOAT || b.type >= ValueType::FLOAT)
+			{
+				emitCast(a, ValueType::DOUBLE, pos);
+				emitCast(b, ValueType::DOUBLE);
+				if (type == TokenType::EQUAL_EQUAL)
+					addCode(OpCode::DIS_EQUAL);
+				else
+					addCode(OpCode::DNOT_EQUAL);
+			}
 			else
-				addCode(OpCode::NOT_EQUAL);
+			{
+				emitCast(a, ValueType::INTEGER, pos);
+				emitCast(b, ValueType::INTEGER);
+				if (type == TokenType::EQUAL_EQUAL)
+					addCode(OpCode::IIS_EQUAL);
+				else
+					addCode(OpCode::INOT_EQUAL);
+			}
 		}
 		else
 			if (type == TokenType::EQUAL_EQUAL)
@@ -704,26 +716,53 @@ DataType Compiler::comparison()
 		DataType b = bitshift();
 		if (a.type <= ValueType::BOOL && b.type <= ValueType::BOOL)
 		{
-			emitCast(a, ValueType::DOUBLE, pos);
-			emitCast(b, ValueType::DOUBLE);
-			ret = ValueType::BOOL;
-			switch (type)
+			if (a.type >= ValueType::FLOAT || b.type >= ValueType::FLOAT)
 			{
-			case TokenType::LESS:
-				addCode(OpCode::LESS);
-				break;
-			case TokenType::LESS_EQUAL:
-				addCode(OpCode::LESS_EQUAL);
-				break;
-			case TokenType::GREAT:
-				addCode(OpCode::GREAT);
-				break;
-			case TokenType::GREAT_EQUAL:
-				addCode(OpCode::GREAT_EQUAL);
-				break;
-			default:
-				// Unreachable
-				break;
+				emitCast(a, ValueType::DOUBLE, pos);
+				emitCast(b, ValueType::DOUBLE);
+				ret = ValueType::BOOL;
+				switch (type)
+				{
+				case TokenType::LESS:
+					addCode(OpCode::DLESS);
+					break;
+				case TokenType::LESS_EQUAL:
+					addCode(OpCode::DLESS_EQUAL);
+					break;
+				case TokenType::GREAT:
+					addCode(OpCode::DGREAT);
+					break;
+				case TokenType::GREAT_EQUAL:
+					addCode(OpCode::DGREAT_EQUAL);
+					break;
+				default:
+					// Unreachable
+					break;
+				}
+			}
+			else
+			{
+				emitCast(a, ValueType::INTEGER, pos);
+				emitCast(b, ValueType::INTEGER);
+				ret = ValueType::BOOL;
+				switch (type)
+				{
+				case TokenType::LESS:
+					addCode(OpCode::ILESS);
+					break;
+				case TokenType::LESS_EQUAL:
+					addCode(OpCode::ILESS_EQUAL);
+					break;
+				case TokenType::GREAT:
+					addCode(OpCode::IGREAT);
+					break;
+				case TokenType::GREAT_EQUAL:
+					addCode(OpCode::IGREAT_EQUAL);
+					break;
+				default:
+					// Unreachable
+					break;
+				}
 			}
 		}
 		else

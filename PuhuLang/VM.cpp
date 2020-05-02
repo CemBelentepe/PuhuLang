@@ -36,10 +36,17 @@ void VM::run(OpCode code)
 		*a = *a op b; \
 	    }while(false)\
 
-#define CMPD_OP(op)\
+#define DCMP_OP(op)\
 	    do{\
 		double b = pop<double>();\
 		double a = pop<double>();\
+		push<bool>(a op b);\
+	    }while(false)\
+
+#define ICMP_OP(op)\
+	    do{\
+		int32_t b = pop<int32_t>();\
+		int32_t a = pop<int32_t>();\
 		push<bool>(a op b);\
 	    }while(false)\
 
@@ -209,34 +216,64 @@ void VM::run(OpCode code)
 		push<bool>(!pop<bool>());
 		break;
 	}
-	case OpCode::LESS:
+	case OpCode::DLESS:
 	{
-		CMPD_OP(< );
+		DCMP_OP(< );
 		break;
 	}
-	case OpCode::GREAT:
+	case OpCode::DGREAT:
 	{
-		CMPD_OP(> );
+		DCMP_OP(> );
 		break;
 	}
-	case OpCode::LESS_EQUAL:
+	case OpCode::ILESS:
 	{
-		CMPD_OP(<= );
+		ICMP_OP(< );
 		break;
 	}
-	case OpCode::GREAT_EQUAL:
+	case OpCode::IGREAT:
 	{
-		CMPD_OP(>= );
+		ICMP_OP(> );
 		break;
 	}
-	case OpCode::IS_EQUAL:
+	case OpCode::DLESS_EQUAL:
 	{
-		CMPD_OP(== );
+		DCMP_OP(<= );
 		break;
 	}
-	case OpCode::NOT_EQUAL:
+	case OpCode::DGREAT_EQUAL:
 	{
-		CMPD_OP(!= );
+		DCMP_OP(>= );
+		break;
+	}
+	case OpCode::DIS_EQUAL:
+	{
+		DCMP_OP(== );
+		break;
+	}
+	case OpCode::DNOT_EQUAL:
+	{
+		ICMP_OP(!= );
+		break;
+	}
+	case OpCode::ILESS_EQUAL:
+	{
+		ICMP_OP(<= );
+		break;
+	}
+	case OpCode::IGREAT_EQUAL:
+	{
+		ICMP_OP(>= );
+		break;
+	}
+	case OpCode::IIS_EQUAL:
+	{
+		ICMP_OP(== );
+		break;
+	}
+	case OpCode::INOT_EQUAL:
+	{
+		ICMP_OP(!= );
 		break;
 	}
 	case OpCode::CAST:
