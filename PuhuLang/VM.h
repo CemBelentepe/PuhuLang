@@ -32,7 +32,7 @@ private:
 	size_t ip;
 	std::vector<uint8_t> stack;
 public:
-	std::unordered_map<std::string_view, uint8_t*> globals;
+	std::vector<uint8_t*> globals;
 	std::vector<Frame> frames;
 #ifdef _DEBUG
 	std::unordered_map<std::string, Chunk***> globalFuncs;
@@ -55,11 +55,8 @@ private:
 
 	inline void pushSized(uint8_t* val, size_t size)
 	{
-		if (size > 0)
-		{
-			this->stack.resize(this->stack.size() + size);
-			memcpy(&stack[this->stack.size() - size], val, size * sizeof(uint8_t));
-		}
+		this->stack.resize(this->stack.size() + size);
+		memcpy(&stack[this->stack.size() - size], val, size * sizeof(uint8_t));
 	}
 
 	template <class T>
@@ -73,11 +70,9 @@ private:
 
 	inline uint8_t* popSized(size_t size)
 	{
-		if (size > 0)
-		{
-			uint8_t* val = &stack[stack.size() - size];
-			return val;
-		}
+		uint8_t* val = &stack[stack.size() - size];
+		this->stack.resize(stack.size() - size);
+		return val;
 	}
 
 	template <class T>

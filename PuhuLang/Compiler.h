@@ -19,7 +19,7 @@ private:
 	int scopeDepth;
 	int frame;
 	std::vector<LocalVariable> locals;
-	std::unordered_map<std::string, Value*> globals;
+	std::unordered_map<std::string, std::pair<Value*, size_t>> globals;
 
 	void addNatives();
 
@@ -47,6 +47,8 @@ private:
 	void beginScope();
 	void endScope();
 	void addLocal(DataType type, std::string name, int depth);
+	size_t addGlobal(std::string name, Value* value);
+	size_t getGlobal(std::string name);
 
 	DataType compileExpression();
 	DataType logic_or();

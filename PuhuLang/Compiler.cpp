@@ -20,17 +20,16 @@ Chunk* Compiler::compile()
 	}
 
 	addCode(OpCode::GET_GLOBAL, sizeof(char*));
-	addCode(compilingChunk->addConstant(StrValue("main").cloneData(), sizeof(char*)));
+	addCode(getGlobal("main"));
 	addCode(OpCode::CALL, 0);
 
+	vm.globals.resize(globals.size());
 	for (auto& var : globals)
 	{
-		char* name = new char[var.first.size() + 1];
-		strcpy_s(name, var.first.size() + 1, var.first.data());
-		vm.globals[name] = var.second->cloneData();
+		vm.globals[var.second.second] = var.second.first->cloneData();
 #ifdef _DEBUG
-		if (var.second->type.type == ValueType::FUNCTION)
-			vm.globalFuncs[var.first] = (Chunk***)var.second->cloneData();
+		if (var.second.first->type.type == ValueType::FUNCTION)
+			vm.globalFuncs[var.first] = (Chunk***)var.second.first->cloneData();
 #endif // _DEBUG
 	}
 
@@ -39,12 +38,12 @@ Chunk* Compiler::compile()
 
 void Compiler::addNatives()
 {
-	globals["print"] = new NativeFunc(native_print, ValueType::VOID, 1);
-	globals["println"] = new NativeFunc(native_println, ValueType::VOID, 1);
-	globals["printlnDouble"] = new NativeFunc(native_printlnDouble, ValueType::VOID, 1);
-	globals["input"] = new NativeFunc(native_input, ValueType::STRING, 0);
-	globals["inputInt"] = new NativeFunc(native_inputInt, ValueType::INTEGER, 0);
-	globals["clock"] = new NativeFunc(native_clock, ValueType::DOUBLE, 0);
+	addGlobal("print", new NativeFunc(native_print, ValueType::VOID, 1));
+	addGlobal("println", new NativeFunc(native_println, ValueType::VOID, 1));
+	addGlobal("printlnDouble", new NativeFunc(native_printlnDouble, ValueType::VOID, 1));
+	addGlobal("input", new NativeFunc(native_input, ValueType::STRING, 0));
+	addGlobal("inputInt", new NativeFunc(native_inputInt, ValueType::INTEGER, 0));
+	addGlobal("clock", new NativeFunc(native_clock, ValueType::DOUBLE, 0));
 }
 
 void Compiler::firstPass()
@@ -86,7 +85,7 @@ void Compiler::parseFunctionDeclaration()
 			argSize += parseTypeName().getSize();
 			advance();
 		}
-		globals[signiture.str()] = new FuncValue(nullptr, type, argSize);
+		addGlobal(signiture.str(), new FuncValue(nullptr, type, argSize));
 		consume(TokenType::OPEN_BRACE, "Expect '{' at function start."); // Opening {
 		size_t blocks = 1;
 		while (blocks > 0)
@@ -106,7 +105,7 @@ void Compiler::parseFunctionDeclaration()
 
 void Compiler::parseGlobalDeclaration(DataType type, Token name)
 {
-	globals[name.getString()] = new GlobalVariable(type);
+	addGlobal(name.getString(), new GlobalVariable(type));
 	while (peek().type != TokenType::SEMI_COLON)
 		advance();
 	advance();
@@ -277,7 +276,7 @@ void Compiler::variableDecleration(DataType type)
 	std::string name = advance().getString();
 
 	if (this->scopeDepth == 0)
-		((GlobalVariable*)globals[name])->initialized = true;
+		((GlobalVariable*)globals[name].first)->initialized = true;
 	else
 	{
 		for (int i = this->locals.size() - 1; i >= this->frame; i--)
@@ -299,7 +298,7 @@ void Compiler::variableDecleration(DataType type)
 		if (this->scopeDepth == 0)
 		{
 			addCode(OpCode::SET_GLOBAL, eqType.getSize());
-			addCode(identifierConstant(name));
+			addCode(getGlobal(name));
 		}
 		else
 		{
@@ -317,7 +316,7 @@ void Compiler::functionDecleration(DataType type)
 	Chunk* enclosing = compilingChunk;
 	std::string funcName = advance().getString();
 	compilingChunk = new Chunk();
-	((FuncValue*)globals[funcName])->chunk = compilingChunk;
+	((FuncValue*)globals[funcName].first)->chunk = compilingChunk;
 
 	int frameStart = this->locals.size();
 	this->frame = frameStart;
@@ -515,6 +514,18 @@ void Compiler::addLocal(DataType type, std::string name, int depth)
 	this->locals.push_back(LocalVariable(type, name, depth, pos));
 }
 
+size_t Compiler::addGlobal(std::string name, Value* value)
+{
+	size_t pos = globals.size();
+	globals[name] = std::make_pair(value, pos);
+	return pos;
+}
+
+size_t Compiler::getGlobal(std::string name)
+{
+	return globals[name].second;
+}
+
 DataType Compiler::compileExpression()
 {
 	if (peek().type == TokenType::IDENTIFIER && peekNext().type == TokenType::EQUAL)
@@ -542,12 +553,11 @@ DataType Compiler::compileExpression()
 			// Global
 			if (it != globals.end())
 			{
-				type = globals[token.getString()]->type;
+				type = globals[token.getString()].first->type;
 				if (expType != type)
 					emitCast(expType, type);
 				addCode(OpCode::SET_GLOBAL_POP, type.getSize());
-				StrValue c(token.getString());
-				addCode(compilingChunk->addConstant(c.cloneData(), c.type.getSize()));
+				addCode(getGlobal(token.getString()));
 				addCode(type.getSize());
 			}
 			// DNE
@@ -1225,9 +1235,9 @@ DataType Compiler::primary()
 			// Global
 			if (it != globals.end())
 			{
-				addCode(OpCode::GET_GLOBAL, globals[token.getString()]->type.getSize());
-				addCode(compilingChunk->addConstant(StrValue(token.getString()).cloneData(), sizeof(char*)));
-				return globals[token.getString()]->type;
+				addCode(OpCode::GET_GLOBAL, globals[token.getString()].first->type.getSize());
+				addCode(getGlobal(token.getString()));
+				return globals[token.getString()].first->type;
 			}
 			// DNE
 			else
