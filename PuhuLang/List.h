@@ -14,7 +14,7 @@ private:
 	const int min_cap = 128;
 public:
 	List()
-		:m_count(0), m_capacity(0), m_data(nullptr)
+		:m_count(0), m_capacity(0), m_old_cap(0), m_data(nullptr)
 	{}
 
 	~List()
