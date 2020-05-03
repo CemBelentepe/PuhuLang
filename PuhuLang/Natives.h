@@ -20,6 +20,12 @@ uint8_t* native_printlnDouble(int argc, uint8_t* args)
 	return nullptr;
 }
 
+uint8_t* native_printlnInt(int argc, uint8_t* args)
+{
+	std::cout << *(int*)args << "\n";
+	return nullptr;
+}
+
 uint8_t* native_input(int argc, uint8_t* args)
 {
 	std::string in;

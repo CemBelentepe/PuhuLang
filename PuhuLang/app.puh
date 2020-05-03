@@ -1,17 +1,17 @@
 void main(){
 	for(int i = 0; i < 10; i = i + 1){
 		double start = clock();
-		int x = fibb(32);
+		int x = fibb(30);
 		double end = clock();
 		double elapsed = end - start;
-		printlnDouble((double)x);
+		printlnInt(x);
 		printlnDouble(elapsed);
 	}
 }
 
 int fibb(int n){
-	if(n > 1)
-		return fibb(n - 1) + fibb(n - 2);
-	else
+ 	if(n > 1)
+ 		return fibb(n - 1) + fibb(n - 2);
+ 	else
 		return 1;
 }

@@ -41,6 +41,7 @@ void Compiler::addNatives()
 	addGlobal("print", new NativeFunc(native_print, ValueType::VOID, 1));
 	addGlobal("println", new NativeFunc(native_println, ValueType::VOID, 1));
 	addGlobal("printlnDouble", new NativeFunc(native_printlnDouble, ValueType::VOID, 1));
+	addGlobal("printlnInt", new NativeFunc(native_printlnInt, ValueType::VOID, 1));
 	addGlobal("input", new NativeFunc(native_input, ValueType::STRING, 0));
 	addGlobal("inputInt", new NativeFunc(native_inputInt, ValueType::INTEGER, 0));
 	addGlobal("clock", new NativeFunc(native_clock, ValueType::DOUBLE, 0));
