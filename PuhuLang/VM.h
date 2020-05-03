@@ -29,7 +29,7 @@ public:
 	~VM();
 	bool interpret(Chunk* entryChunk);
 
-	inline const List<uint8_t> getStack() const { return this->stack; }
+	inline const List<uint8_t>* getStack() const { return &this->stack; }
 
 private:
 	Chunk* currentChunk;
@@ -44,7 +44,6 @@ public:
 
 
 private:
-	// void run(OpCode code);
 	inline uint8_t advance()
 	{
 		return this->currentChunk->code[this->ip++];

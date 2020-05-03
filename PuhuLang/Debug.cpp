@@ -41,11 +41,11 @@ static size_t printCastInstruction(Chunk* chunk, size_t offset)
 void printStack(VM& vm)
 {
 	std::cout << "\t";
-	auto stack = vm.getStack();
-	for(int i = 0; i < stack.count(); i++)
+	const List<uint8_t>* stack = vm.getStack();
+	for(int i = 0; i < stack->count(); i++)
 	{
 		// std::cout << "[" << (void*)(val) << "]";
-		printf("[%.2X]", stack[i]);
+		printf("[%.2X]", stack->at(i));
 	}
 	std::cout << std::endl;
 }

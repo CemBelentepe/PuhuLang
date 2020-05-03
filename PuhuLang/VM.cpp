@@ -19,7 +19,7 @@ bool VM::interpret(Chunk* entryChunk)
 	{
 #ifdef _DEBUG
 		printStack(*this);
-		dissambleInstruction(currentChunk, this->ip - 1);
+		dissambleInstruction(currentChunk, this->ip);
 #endif // DEBUG_CODE_TRACE
 
 #define BINARY_OP(op, type)\
@@ -280,10 +280,7 @@ bool VM::interpret(Chunk* entryChunk)
 		case OpCode::POPN:
 		{
 			int toPop = advance();
-			for (int i = 0; i < toPop; i++)
-			{
-				this->stack.pop_back();
-			}
+			stack.pop_sized(toPop);
 			break;
 		}
 		case OpCode::SET_GLOBAL:
@@ -390,7 +387,6 @@ bool VM::interpret(Chunk* entryChunk)
 		case OpCode::RETURN:
 		{
 			uint8_t size = advance();
-			uint8_t* retVal = nullptr;
 
 			auto frame = this->frames.back();
 			this->frames.pop_back();
@@ -404,8 +400,6 @@ bool VM::interpret(Chunk* entryChunk)
 			this->ip = frame.ip;
 			this->currentChunk = frame.chunk;
 
-			if (size != 0)
-				delete[] retVal;
 			break;
 		}
 		}

@@ -10,7 +10,8 @@ private:
 	size_t m_capacity;
 	size_t m_old_cap;
 	T* m_data;
-	const int resize_factor = 4;
+	const int resize_factor = 2;
+	const int min_cap = 128;
 public:
 	List()
 		:m_count(0), m_capacity(0), m_data(nullptr)
@@ -21,12 +22,12 @@ public:
 		delete m_data;
 	}
 
-	inline size_t count()
+	inline size_t count() const
 	{
 		return m_count;
 	}
 
-	inline size_t capacity()
+	inline size_t capacity() const
 	{
 		return m_capacity;
 	}
@@ -36,7 +37,7 @@ public:
 		if (m_count + 1 > m_capacity)
 		{
 			m_old_cap = m_capacity;
-			m_capacity = (m_capacity < 8) ? 8 : m_capacity * resize_factor;
+			m_capacity = (m_capacity < min_cap) ? min_cap : m_capacity * resize_factor;
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 
@@ -48,10 +49,15 @@ public:
 		if (m_count < m_old_cap)
 		{
 			m_capacity = m_old_cap;
-			m_old_cap = (m_capacity < 8) ? 0 : (m_capacity / resize_factor);
+			m_old_cap = (m_capacity < min_cap) ? 0 : (m_capacity / resize_factor);
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 		return m_data[--m_count];
+	}
+
+	inline T& peek()
+	{
+		return m_data[m_count - 1];
 	}
 
 	inline void pop_sized(size_t size)
@@ -60,7 +66,7 @@ public:
 		if (m_count < m_old_cap)
 		{
 			m_capacity = m_old_cap;
-			m_old_cap = (m_capacity < 8) ? 0 : (m_capacity / resize_factor);
+			m_old_cap = (m_capacity < min_cap) ? 0 : (m_capacity / resize_factor);
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 	}
@@ -73,7 +79,7 @@ public:
 		if (m_count < m_old_cap)
 		{
 			m_capacity = m_old_cap;
-			m_old_cap = (m_capacity < 8) ? 0 : (m_capacity / resize_factor);
+			m_old_cap = (m_capacity < min_cap) ? 0 : (m_capacity / resize_factor);
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 		return val;
@@ -86,7 +92,7 @@ public:
 		if (m_count < m_old_cap)
 		{
 			m_capacity = m_old_cap;
-			m_old_cap = (m_capacity < 8) ? 0 : (m_capacity / resize_factor);
+			m_old_cap = (m_capacity < min_cap) ? 0 : (m_capacity / resize_factor);
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 		return *(U*)(&m_data[m_count]);
@@ -98,7 +104,7 @@ public:
 		if (m_count + sizeof(U) > m_capacity)
 		{
 			m_old_cap = m_capacity;
-			m_capacity = (m_capacity < 8) ? 8 : m_capacity * resize_factor;
+			m_capacity = (m_capacity < min_cap) ? min_cap : m_capacity * resize_factor;
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 
@@ -111,7 +117,7 @@ public:
 		if (m_count + size > m_capacity)
 		{
 			m_old_cap = m_capacity;
-			m_capacity = (m_capacity < 8) ? 8 : m_capacity * resize_factor;
+			m_capacity = (m_capacity < min_cap) ? min_cap : m_capacity * resize_factor;
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 
@@ -152,12 +158,17 @@ public:
 		if (m_count < m_old_cap)
 		{
 			m_capacity = m_old_cap;
-			m_old_cap = (m_capacity < 8) ? 0 : (m_capacity / resize_factor);
+			m_old_cap = (m_capacity < min_cap) ? 0 : (m_capacity / resize_factor);
 			m_data = (T*)realloc(m_data, m_capacity * sizeof(T));
 		}
 	}
 
 	inline T& operator[](size_t i)
+	{
+		return m_data[i];
+	}
+
+	inline const T at(size_t i) const
 	{
 		return m_data[i];
 	}

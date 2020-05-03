@@ -305,7 +305,7 @@ void Compiler::variableDecleration(DataType type)
 		{
 			addCode(OpCode::SET_LOCAL);
 			addCode(locals[locals.size() - 1].startPos);
-			addCode(eqType.getSize());
+			addCode(locals[locals.size() - 1].type.getSize());
 		}
 	}
 
@@ -418,11 +418,15 @@ void Compiler::forStatement()
 	consume(TokenType::OPEN_PAREN, "Expect '(' after 'for'.");
 	beginScope();
 
+	size_t declerationSize = 0;
+
 	if (!match(TokenType::SEMI_COLON))
 	{
 		if (isTypeName(peek()))
 		{
-			variableDecleration(parseTypeName());
+			DataType typeName = parseTypeName();
+			declerationSize = typeName.getSize();
+			variableDecleration(typeName);
 		}
 		else
 		{
@@ -463,10 +467,11 @@ void Compiler::forStatement()
 	size_t body = this->compilingChunk->code.size() - 1;
 	consume(TokenType::CLOSE_PAREN, "Expect ')' at the end of 'for'.");
 	block();
+	endScope();
+	this->compilingChunk->code.back() -= declerationSize;
 	addCode(OpCode::LOOP);
 	addCode(0);
 	size_t loop_inc = this->compilingChunk->code.size() - 1;
-	endScope();
 	size_t out = this->compilingChunk->code.size() - 1;
 
 
@@ -489,7 +494,7 @@ void Compiler::beginScope()
 
 void Compiler::endScope()
 {
-	size_t start = this->locals.size();
+	size_t start = this->locals.back().startPos + this->locals.back().type.getSize();
 	for (int i = this->locals.size() - 1; i >= 0; i--)
 	{
 		if (this->locals[i].depth == this->scopeDepth)
@@ -499,7 +504,7 @@ void Compiler::endScope()
 		else break;
 	}
 	addCode(OpCode::POPN);
-	addCode(this->locals.size() - start);
+	addCode(start - (this->locals.back().startPos + this->locals.back().type.getSize()));
 
 	this->scopeDepth--;
 }
