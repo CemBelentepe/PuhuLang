@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <memory>
 
 class Chunk;
 
@@ -13,12 +14,25 @@ class DataType
 {
 public:
 	ValueType type;
-	DataType* intrinsicType;
+	std::shared_ptr<DataType> intrinsicType;
 	bool isConst;
 
 	DataType()
 		:type(ValueType::ERROR), intrinsicType(nullptr), isConst(false)
 	{}
+
+	DataType(std::shared_ptr<DataType> dataType)
+	{
+		if (dataType)
+		{
+			type = dataType->type;
+			isConst = dataType->isConst;
+			if (dataType->intrinsicType)
+			{
+				intrinsicType = dataType->intrinsicType;
+			}
+		}
+	}
 
 	DataType(ValueType type, bool isConst = false)
 		:type(type), intrinsicType(nullptr), isConst(isConst)
@@ -28,15 +42,17 @@ public:
 		:type(type), intrinsicType(new DataType(intrinsicType)), isConst(isConst)
 	{}
 
-	DataType(ValueType type, DataType* intrinsicType, bool isConst = false)
+	DataType(ValueType type, std::shared_ptr <DataType> intrinsicType, bool isConst = false)
 		:type(type), intrinsicType(intrinsicType), isConst(isConst)
+	{}
+
+	~DataType()
 	{}
 
 	friend std::ostream& operator<<(std::ostream& os, const DataType& type);
 	bool operator==(const DataType& type);
 	bool operator!=(const DataType& type);
 	inline bool isPrimitive() const { return type <= ValueType::VOID; }
-
 	size_t getSize();
 };
 
@@ -91,6 +107,8 @@ public:
 		data.valDouble = value;
 	}
 
+	void setDataSized(uint8_t* data, size_t size);
+
 	virtual ~Value() {}
 
 	friend std::ostream& operator<<(std::ostream& os, const Value& val);
@@ -129,18 +147,15 @@ public:
 	Chunk* chunk;
 
 	FuncValue(Chunk* chunk, DataType returnType, int arity)
-		:Value(DataType(ValueType::FUNCTION, new DataType(returnType))), arity(arity), chunk(chunk)
+		:Value(DataType(ValueType::FUNCTION, std::make_shared<DataType>(returnType))), arity(arity), chunk(chunk)
 	{}
 
-	FuncValue(Chunk* chunk, DataType* returnType, int arity)
+	FuncValue(Chunk* chunk, std::shared_ptr<DataType> returnType, int arity)
 		:Value(DataType(ValueType::FUNCTION, returnType)), arity(arity), chunk(chunk)
 	{}
 
 	virtual ~FuncValue()
-	{
-		// Delete it?
-		// delete chunk;
-	}
+	{ }
 
 	virtual uint8_t* cloneData();
 };
@@ -153,7 +168,7 @@ public:
 	NativeFn func;
 
 	NativeFunc(NativeFn func, DataType returnType, int arity)
-		:Value(DataType(ValueType::NATIVE, new DataType(returnType))), arity(arity), func(func)
+		:Value(DataType(ValueType::NATIVE, std::make_shared<DataType>(returnType))), arity(arity), func(func)
 	{}
 
 	NativeFunc(NativeFn func, DataType* returnType, int arity)
@@ -186,10 +201,10 @@ class LocalVariable
 public:
 	DataType type;
 	std::string name;
-	int depth;
-	size_t startPos;
+	int depth = 0;
+	size_t startPos = 0;
 
-	LocalVariable(){}
+	LocalVariable() {}
 
 	LocalVariable(DataType type, std::string name, int depth, size_t startPos)
 		: type(type), name(name), depth(depth), startPos(startPos)

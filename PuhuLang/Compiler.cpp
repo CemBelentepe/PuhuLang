@@ -19,7 +19,7 @@ Chunk* Compiler::compile()
 		decleration();
 	}
 
-	addCode(OpCode::GET_GLOBAL, sizeof(std::string*));
+	addCode(OpCode::GET_GLOBAL, sizeof(char*));
 	addCode(compilingChunk->addConstant(StrValue("main").cloneData(), sizeof(char*)));
 	addCode(OpCode::CALL, 0);
 
@@ -32,7 +32,6 @@ Chunk* Compiler::compile()
 		if (var.second->type.type == ValueType::FUNCTION)
 			vm.globalFuncs[var.first] = (Chunk***)var.second->cloneData();
 #endif // _DEBUG
-
 	}
 
 	return compilingChunk;
@@ -121,7 +120,7 @@ DataType Compiler::parseTypeName()
 	do
 	{
 		if (i > 0)
-			type.intrinsicType = new DataType(type);
+			type.intrinsicType = std::make_shared<DataType>(type);
 		type.type = val;
 		if (type.isPrimitive() && type.intrinsicType != nullptr && type.intrinsicType->isPrimitive())
 		{
@@ -1138,7 +1137,7 @@ DataType Compiler::call()
 					addCode(OpCode::NATIVE_CALL);
 
 				addCode(argSize);
-				a = *a.intrinsicType;
+				a = DataType(a.intrinsicType);
 			}
 			return a;
 		}

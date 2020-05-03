@@ -52,6 +52,12 @@ size_t DataType::getSize()
 	return 0;
 }
 
+void Value::setDataSized(uint8_t* data, size_t size)
+{
+	for (int i = 0; i < size; i++)
+		((uint8_t*)(&(this->data.valDouble)))[i] = data[i];
+}
+
 uint8_t* Value::cloneData()
 {
 	uint8_t* clone = new uint8_t[type.getSize()];

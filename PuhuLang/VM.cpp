@@ -19,6 +19,10 @@ bool VM::interpret(Chunk* entryChunk)
 	{
 		run((OpCode)advance());
 	}
+	for (auto& p : globals)
+	{
+		delete p.second;
+	}
 	return true;
 }
 
@@ -296,7 +300,6 @@ void VM::run(OpCode code)
 	{
 		size_t size = advance();
 		char* name = *(char**)(currentChunk->getConstant(advance()));
-		std::string name_str(name);
 		uint8_t* val = peekSized(size);
 		for (int i = 0; i < size; i++)
 		{
