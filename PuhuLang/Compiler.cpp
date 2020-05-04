@@ -461,13 +461,15 @@ void Compiler::forStatement()
 
 	size_t inc = this->compilingChunk->code.size() - 1;
 	if (!match(TokenType::CLOSE_PAREN))
+	{
 		compileExpression();
+		consume(TokenType::CLOSE_PAREN, "Expect ')' at the end of 'for'.");
+	}
 	addCode(OpCode::LOOP);
 	addCode(0);
 	size_t loop_cond = this->compilingChunk->code.size() - 1;
 
 	size_t body = this->compilingChunk->code.size() - 1;
-	consume(TokenType::CLOSE_PAREN, "Expect ')' at the end of 'for'.");
 	block();
 	endScope();
 	this->compilingChunk->code.back() -= declerationSize;
@@ -1072,7 +1074,6 @@ DataType Compiler::unary()
 
 DataType Compiler::postfix()
 {
-	// TODO: Implement later for statements
 	DataType a = call();
 	if (a == ValueType::ERROR) return a;
 
