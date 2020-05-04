@@ -170,6 +170,57 @@ Token Scanner::makeToken(TokenType type)
 	return Token(type, line, &source[startPosition], currentPosition - startPosition);
 }
 
+std::string Scanner::formatString(const char* str, size_t size)
+{
+	std::stringstream ss;
+	size_t i = 0;
+	while (i < size)
+	{
+		if (str[i] == '\\')
+		{
+			switch (str[++i])
+			{
+			case 'n':
+				ss << '\n';
+				break;
+			case 't':
+				ss << '\t';
+				break;
+			case '\\':
+				ss << '\\';
+				break;
+			case 'r':
+				ss << '\r';
+				break;
+			case 'b':
+				ss << '\b';
+				break;
+			case 'a':
+				ss << '\a';
+				break;
+			case 'v':
+				ss << '\v';
+				break;
+			case '0':
+				ss << '\0';
+				break;
+			case '\'':
+				ss << '\'';
+				break;
+			default:
+				break;
+			}
+			i++;
+		}
+		else
+		{
+			ss << str[i++];
+		}
+	}
+
+	return ss.str();
+}
+
 Token Scanner::stringLiteral()
 {
 	while (peek() != '"' && !this->isAtEnd())
@@ -181,7 +232,10 @@ Token Scanner::stringLiteral()
 		return errorToken("Unterminated string.");
 
 	advance();
-	return Token(TokenType::STRING_LITERAL, line, &source[startPosition + 1], currentPosition - startPosition - 2);
+	std::string formattedString = formatString(&source[startPosition + 1], currentPosition - startPosition - 2);
+	char* str = new char[formattedString.size() + 1];
+	formattedString.copy(str, formattedString.size());
+	return Token(TokenType::STRING_LITERAL, line, str, formattedString.size());
 }
 
 Token Scanner::charLiteral()

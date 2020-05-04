@@ -4,10 +4,44 @@
 
 uint8_t* native_print(int argc, uint8_t* args)
 {
-	std::cout << *(char**)(args);
+	const char* str = *(char**)(args);
+	size_t args_start = sizeof(char**);
+	size_t i = 0;
+	while(str[i] != 0)
+	{
+		const char& c = str[i++];
+		if (c == '%')
+		{
+			switch (str[i])
+			{
+			case 'i':
+				std::cout << *(int32_t*)(&args[args_start]);
+				args_start += sizeof(int32_t);
+				break;
+			case 'f':
+				std::cout << *(float*)(&args[args_start]);
+				args_start += sizeof(float);
+				break;
+			case 'd':
+				std::cout << *(double*)(&args[args_start]);
+				args_start += sizeof(double);
+				break;
+			default:
+				std::cout << args[i];
+				break;
+			}
+			i++;
+		}
+		else
+		{
+			putchar(c);
+		}
+	}
+
 	return nullptr;
 }
 
+/*
 uint8_t* native_println(int argc, uint8_t* args)
 {
 	puts(*(char**)(args));
@@ -25,6 +59,7 @@ uint8_t* native_printlnInt(int argc, uint8_t* args)
 	std::cout << *(int*)args << "\n";
 	return nullptr;
 }
+*/
 
 uint8_t* native_input(int argc, uint8_t* args)
 {

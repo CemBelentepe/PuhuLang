@@ -2,10 +2,8 @@ void main(){
 	for(int i = 0; i < 10; i = i + 1){
 		double start = clock();
 		int x = fibb(30);
-		double end = clock();
-		double elapsed = end - start;
-		printlnInt(x);
-		printlnDouble(elapsed);
+		double elapsed = clock() - start;
+		print("Trial %i:\nFibb(30): %i\nElapsed Time: %d\n\n", i+1, x, elapsed); 
 	}
 }
 

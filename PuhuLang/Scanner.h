@@ -65,6 +65,7 @@ private:
 	Token scanToken(); // scans the next token on the file
 	Token makeToken(TokenType type); // creates a new token with the type
 
+	std::string formatString(const char* str, size_t size);
 	Token stringLiteral(); // scans to a "
 	Token charLiteral(); // scans to a '
 	Token identifierLiteral(); // scans the next identifier
