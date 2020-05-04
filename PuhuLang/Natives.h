@@ -26,6 +26,14 @@ uint8_t* native_print(int argc, uint8_t* args)
 				std::cout << *(double*)(&args[args_start]);
 				args_start += sizeof(double);
 				break;
+			case 'c':
+				std::cout << *(char*)(&args[args_start]);
+				args_start += sizeof(char);
+				break;
+			case 's':
+				std::cout << *(char**)(&args[args_start]);
+				args_start += sizeof(char*);
+				break;
 			default:
 				std::cout << args[i];
 				break;
