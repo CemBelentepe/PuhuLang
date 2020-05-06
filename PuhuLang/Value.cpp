@@ -99,20 +99,17 @@ uint8_t* FuncValue::cloneData()
 	std::cout << "Chunk: " << chunk << std::endl;
 #endif // _DEBUG
 
-	Chunk*** clone = new Chunk**();
-	*clone = new Chunk*();
-	**clone = chunk;
+	Chunk** clone = new Chunk*();
+	*clone = chunk;
 	return (uint8_t*)(clone);
 }
 
 uint8_t* NativeFunc::cloneData()
 {
-	NativeFunc*** clone = new NativeFunc**();
-	*clone = new NativeFunc *();
-	**clone = new NativeFunc(this->func, this->type, this->arity);
-	(**clone)->type = this->type;
+	NativeFunc** clone = new NativeFunc*();
+	*clone = this;
 #ifdef _DEBUG
-	std::cout << "Native: " << **clone << "\n";
+	std::cout << "Native: " << *clone << "\n";
 #endif // _DEBUG
 
 	return (uint8_t*)(clone);

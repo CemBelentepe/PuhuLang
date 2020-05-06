@@ -29,7 +29,7 @@ Chunk* Compiler::compile()
 		vm.globals[var.second.second] = var.second.first->cloneData();
 #ifdef _DEBUG
 		if (var.second.first->type.type == ValueType::FUNCTION)
-			vm.globalFuncs[var.first] = (Chunk***)var.second.first->cloneData();
+			vm.globalFuncs[var.first] = (Chunk**)var.second.first->cloneData();
 #endif // _DEBUG
 	}
 
@@ -41,7 +41,7 @@ void Compiler::addNatives()
 	addGlobal("print", new NativeFunc(native_print, ValueType::VOID, -1));
 	addGlobal("input", new NativeFunc(native_input, ValueType::STRING, 0));
 	addGlobal("clock", new NativeFunc(native_clock, ValueType::DOUBLE, 0));
-	
+
 	addGlobal("inputInt", new NativeFunc(native_inputInt, ValueType::INTEGER, 0));
 
 	// addGlobal("println", new NativeFunc(native_println, ValueType::VOID, 1));
@@ -71,7 +71,6 @@ void Compiler::parseFunctionDeclaration()
 	Token name = advance();
 	if (peek().type == TokenType::OPEN_PAREN)
 	{
-		// TODO: Create a functions here
 		std::stringstream signiture;
 		signiture << name.getString();
 		advance();
@@ -308,6 +307,26 @@ void Compiler::variableDecleration(DataType type)
 			addCode(OpCode::SET_LOCAL);
 			addCode(locals[locals.size() - 1].startPos);
 			addCode(locals[locals.size() - 1].type.getSize());
+		}
+	}
+	else
+	{
+		if (scopeDepth > 0)
+		{
+			size_t size = locals[locals.size() - 1].type.getSize();
+			uint8_t* data = new uint8_t[size];
+			addCode(OpCode::CONSTANT, size, compilingChunk->addConstant(data, size));
+			addCode(OpCode::SET_LOCAL);
+			addCode(locals[locals.size() - 1].startPos);
+			addCode(locals[locals.size() - 1].type.getSize());
+		}
+		else
+		{
+			size_t size = globals[name].first->type.getSize();
+			uint8_t* data = new uint8_t[size];
+			addCode(OpCode::CONSTANT, size, compilingChunk->addConstant(data, size));
+			addCode(OpCode::SET_GLOBAL, size);
+			addCode(getGlobal(name));
 		}
 	}
 
@@ -568,7 +587,6 @@ DataType Compiler::compileExpression()
 					emitCast(expType, type);
 				addCode(OpCode::SET_GLOBAL_POP, type.getSize());
 				addCode(getGlobal(token.getString()));
-				addCode(type.getSize());
 			}
 			// DNE
 			else
@@ -1161,8 +1179,30 @@ DataType Compiler::call()
 		}
 		else
 		{
-			typeError("Only a function can be called.");
+			return typeError("Only a function can be called.");
 		}
+	}
+	else if (peek().type == TokenType::OPEN_BRACKET)
+	{
+		if (a.type == ValueType::ARRAY)
+		{
+			while (match(TokenType::OPEN_BRACKET) && a.type == ValueType::ARRAY)
+			{
+				DataType index = compileExpression();
+				if (index.type != ValueType::INTEGER)
+					return typeError("Index of an array must be type of integer.");
+
+
+				addCode(OpCode::GET_ARRAY, a.intrinsicType->getSize());
+				consume(TokenType::CLOSE_BRACKET, "Expect ']' after array indexing.");
+				a = DataType(a.intrinsicType);
+			}
+		}
+		else
+		{
+			return typeError("Operator '[' will only work on arrays.");
+		}
+		return a;
 	}
 	return a;
 }

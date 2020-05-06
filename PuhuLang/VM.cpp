@@ -290,7 +290,7 @@ bool VM::interpret(Chunk* entryChunk)
 			uint8_t* val = stack.peek_sized(size);
 			for (int i = 0; i < size; i++)
 			{
-				(*(uint8_t**)this->globals[slot])[i] = val[i];
+				((uint8_t*)(globals[slot]))[i] = val[i];
 			}
 			break;
 		}
@@ -298,7 +298,7 @@ bool VM::interpret(Chunk* entryChunk)
 		{
 			size_t size = advance();
 			size_t slot = advance();
-			uint8_t* val = *(uint8_t**)(this->globals[slot]);
+			uint8_t* val = (uint8_t*)(this->globals[slot]);
 			stack.push_sized(val, size);
 			break;
 		}
@@ -324,7 +324,7 @@ bool VM::interpret(Chunk* entryChunk)
 			uint8_t* val = stack.pop_sized_ret(size);
 			for (int i = 0; i < size; i++)
 			{
-				(*(uint8_t**)this->globals[slot])[i] = val[i];
+				((uint8_t*)(globals[slot]))[i] = val[i];
 			}
 			delete[] val;
 			break;
@@ -366,8 +366,8 @@ bool VM::interpret(Chunk* entryChunk)
 		case OpCode::CALL:
 		{
 			uint8_t argSize = advance();
-			Chunk* func = *(Chunk**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk**) - argSize));
-			this->frames.push_back(Frame(ip, currentChunk, this->stack.count() - argSize - sizeof(Chunk**)));
+			Chunk* func = *(Chunk**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk*) - argSize));
+			this->frames.push_back(Frame(ip, currentChunk, this->stack.count() - argSize - sizeof(Chunk*)));
 			this->currentChunk = func;
 			this->ip = 0;
 			break;

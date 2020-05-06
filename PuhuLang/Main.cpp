@@ -25,7 +25,7 @@ void run(string& source)
 	for (auto& func : vm.globalFuncs)
 	{
 		cout << func.first << ":" << endl;
-		dissableChunk(**func.second);
+		dissableChunk(*func.second);
 		cout << "----" << endl;
 	}
 #endif // DEBUG

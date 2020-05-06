@@ -39,7 +39,7 @@ public:
 	std::vector<uint8_t*> globals;
 	std::vector<Frame> frames;
 #ifdef _DEBUG
-	std::unordered_map<std::string, Chunk***> globalFuncs;
+	std::unordered_map<std::string, Chunk**> globalFuncs;
 #endif // _DEBUG
 
 
