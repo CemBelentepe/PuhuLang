@@ -68,7 +68,7 @@ private:
 	std::string formatString(const char* str, size_t size);
 	Token stringLiteral(); // scans to a "
 	Token charLiteral(); // scans to a '
-	Token identifierLiteral(); // scans the next identifier
+	Token identifierLiteral(char start); // scans the next identifier
 	Token numberLiteral(); // scans the next number
 	Token errorToken(const char* msg);
 

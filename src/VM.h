@@ -1,11 +1,8 @@
 #pragma once
-#include "List.h"
-#include "Chunk.h"
 
-#ifdef _DEBUG
-#include <unordered_map>
-#endif // _DEBUG
-
+#include "ArrayList.h"
+#include "Chunk.hpp"
+#include "Value.h"
 
 struct Frame
 {
@@ -29,19 +26,15 @@ public:
 	~VM();
 	bool interpret(Chunk* entryChunk);
 
-	inline const List<uint8_t>* getStack() const { return &this->stack; }
+	inline const ArrayList<uint8_t>* getStack() const { return &this->stack; }
 
 private:
 	Chunk* currentChunk;
 	size_t ip;
-	List<uint8_t> stack;
+	ArrayList<uint8_t> stack;
 public:
 	std::vector<uint8_t*> globals;
 	std::vector<Frame> frames;
-#ifdef _DEBUG
-	std::unordered_map<std::string, Chunk**> globalFuncs;
-#endif // _DEBUG
-
 
 private:
 	inline uint8_t advance()
@@ -49,6 +42,5 @@ private:
 		return this->currentChunk->code[this->ip++];
 	}
 
-	void typeCast(ValueType from, ValueType to);
+	void typeCast(TypeTag from, TypeTag to);
 };
-

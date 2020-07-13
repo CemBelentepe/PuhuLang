@@ -3,7 +3,7 @@
 #include <cstring>
 
 template<class T>
-class List
+class ArrayList
 {
 private:
 	size_t m_count;
@@ -13,11 +13,11 @@ private:
 	const int resize_factor = 2;
 	const int min_cap = 128;
 public:
-	List()
+	ArrayList()
 		:m_count(0), m_capacity(0), m_old_cap(0), m_data(nullptr)
 	{}
 
-	~List()
+	~ArrayList()
 	{
 		delete m_data;
 	}

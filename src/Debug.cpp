@@ -1,62 +1,73 @@
 #include "Debug.h"
-#include <iostream>
-#include <iomanip>
 
-static size_t printInstruction(const char* name, size_t offset)
+void debugTokens(std::vector<Token> tokens)
+{
+    std::cout << "Tokens:\n";
+    for (auto& token : tokens)
+        std::cout << token << std::endl;
+    std::cout << std::endl;
+}
+
+void debugAST(Expr* expr)
+{
+    AstDebugger debugger;
+    std::cout << "AST:\n";
+    debugger.debugAll(expr);
+    std::cout << std::endl;
+}
+
+void debugInstructions(IRChunk* irChunk)
+{
+    InstDebugger debugger(irChunk);
+    std::cout << "Instructions:\n";
+    debugger.debugAll();
+    std::cout << std::endl;
+}
+
+void printStack(ArrayList<uint8_t>& stack)
+{
+	std::cout << "\t";
+	for(int i = 0; i < stack.count(); i++)
+	{
+		printf("[%.2X]", stack.at(i));
+	}
+	std::cout << std::endl;
+}
+
+size_t printInstruction(const char* name, size_t offset)
 {
 	std::cout << offset << "\t" << std::setw(10) << std::left << name << std::endl;
 	return offset;
 }
 
-static size_t printConstantInstruction(const char* name, Chunk* chunk, size_t offset)
+size_t printConstantInstruction(const char* name, Chunk* chunk, size_t offset)
 {
 	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << "\t" << (void*)chunk->getConstant(chunk->code[++offset]) << std::endl;
 	return offset;
 }
 
-static size_t printPopInstruction(const char* name, Chunk* chunk, size_t offset)
+size_t printPopInstruction(const char* name, Chunk* chunk, size_t offset)
 {
 	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << std::endl;
 	return offset;
 }
 
-static size_t printLocalInstruction(const char* name, Chunk* chunk, size_t offset)
+size_t printLocalInstruction(const char* name, Chunk* chunk, size_t offset)
 {
 	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << " " << (unsigned int)chunk->code[++offset] << std::endl;
 	return offset;
 }
 
-static size_t printJumpInstruction(const char* name, Chunk* chunk, size_t offset, int dir)
+size_t printJumpInstruction(const char* name, Chunk* chunk, size_t offset, int dir)
 {
 	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << dir * (int)(chunk->code[++offset]) + offset + 1 << std::endl;
 	return offset;
 }
 
-static size_t printCastInstruction(Chunk* chunk, size_t offset)
+size_t printCastInstruction(Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "       from " << (int)(chunk->code[++offset]) << " to " << (int)(chunk->code[++offset]) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "      " << Type((TypeTag)(chunk->code[++offset])) << "->" << Type((TypeTag)(chunk->code[++offset])) << std::endl;
 	return offset;
-}
-
-void printStack(VM& vm)
-{
-	std::cout << "\t";
-	const List<uint8_t>* stack = vm.getStack();
-	for(int i = 0; i < stack->count(); i++)
-	{
-		// std::cout << "[" << (void*)(val) << "]";
-		printf("[%.2X]", stack->at(i));
-	}
-	std::cout << std::endl;
-}
-
-void dissableChunk(Chunk* chunk)
-{
-	size_t offset = 0;
-	while (offset < chunk->code.size())
-	{
-		offset = dissambleInstruction(chunk, offset) + 1;
-	}
 }
 
 size_t dissambleInstruction(Chunk* chunk, size_t offset)
@@ -111,30 +122,18 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printInstruction("BIT_LEFT", offset);
 	case OpCode::BITSHIFT_RIGHT:
 		return printInstruction("BIT_RIGHT", offset);
-	case OpCode::IPRE_INC:
-		return printInstruction("IPRE_INC", offset);
-	case OpCode::IPRE_DEC:
-		return printInstruction("IPRE_DEC", offset);
-	case OpCode::IPOST_INC:
-		return printInstruction("IPOST_INC", offset);
-	case OpCode::IPOST_DEC:
-		return printInstruction("IPOST_DEC", offset);
-	case OpCode::FPRE_INC:
-		return printInstruction("FPRE_INC", offset);
-	case OpCode::FPRE_DEC:
-		return printInstruction("FPRE_DEC", offset);
-	case OpCode::FPOST_INC:
-		return printInstruction("FPOST_INC", offset);
-	case OpCode::FPOST_DEC:
-		return printInstruction("FPOST_DEC", offset);
-	case OpCode::DPRE_INC:
-		return printInstruction("DPRE_INC", offset);
-	case OpCode::DPRE_DEC:
-		return printInstruction("DPRE_DEC", offset);
-	case OpCode::DPOST_INC:
-		return printInstruction("DPOST_INC", offset);
-	case OpCode::DPOST_DEC:
-		return printInstruction("DPOST_DEC", offset);
+	case OpCode::IINC:
+		return printInstruction("IINC", offset);
+	case OpCode::IDEC:
+		return printInstruction("IDEC", offset);
+	case OpCode::FINC:
+		return printInstruction("FINC", offset);
+	case OpCode::FDEC:
+		return printInstruction("FDEC", offset);
+	case OpCode::DINC:
+		return printInstruction("DINC", offset);
+	case OpCode::DDEC:
+		return printInstruction("DDEC", offset);
 	case OpCode::LOGIC_NOT:
 		return printInstruction("LOGIC_NOT", offset);
 	case OpCode::DLESS:
@@ -193,5 +192,14 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printPopInstruction("RETURN", chunk, offset);
 	default:
 		return printInstruction("UNKNOWN", offset);
+	}
+}
+
+void dissambleChunk(Chunk* chunk)
+{
+	size_t offset = 0;
+	while (offset < chunk->code.size())
+	{
+		offset = dissambleInstruction(chunk, offset) + 1;
 	}
 }

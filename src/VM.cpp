@@ -1,9 +1,10 @@
+#define DEBUG_CODE_TRACE
+
 #include "VM.h"
 
-#ifdef _DEBUG
+#ifdef DEBUG_CODE_TRACE
 #include "Debug.h"
 #endif // DEBUG_CODE_TRACE
-
 
 VM::VM()
 	:ip(0), currentChunk(nullptr)
@@ -17,8 +18,8 @@ bool VM::interpret(Chunk* entryChunk)
 	this->currentChunk = entryChunk;
 	while (ip < this->currentChunk->code.size())
 	{
-#ifdef _DEBUG
-		printStack(*this);
+#ifdef DEBUG_CODE_TRACE
+		printStack(this->stack);
 		dissambleInstruction(currentChunk, this->ip);
 #endif // DEBUG_CODE_TRACE
 
@@ -163,48 +164,36 @@ bool VM::interpret(Chunk* entryChunk)
 			BINARY_OP(>> , int32_t);
 			break;
 		}
-		case OpCode::IPRE_INC:
+		case OpCode::IINC:
 		{
 			*stack.peek_as_ref<int32_t>() += 1;
 			break;
 		}
-		case OpCode::IPRE_DEC:
+		case OpCode::IDEC:
 		{
 			*stack.peek_as_ref<int32_t>() -= 1;
 			break;
 		}
-		case OpCode::IPOST_INC:
-			break;
-		case OpCode::IPOST_DEC:
-			break;
-		case OpCode::FPRE_INC:
+		case OpCode::FINC:
 		{
 			*stack.peek_as_ref<float>() += 1;
 			break;
 		}
-		case OpCode::FPRE_DEC:
+		case OpCode::FDEC:
 		{
 			*stack.peek_as_ref<float>() -= 1;
 			break;
 		}
-		case OpCode::FPOST_INC:
-			break;
-		case OpCode::FPOST_DEC:
-			break;
-		case OpCode::DPRE_INC:
+		case OpCode::DINC:
 		{
 			*stack.peek_as_ref<double>() += 1;
 			break;
 		}
-		case OpCode::DPRE_DEC:
+		case OpCode::DDEC:
 		{
 			*stack.peek_as_ref<double>() -= 1;
 			break;
 		}
-		case OpCode::DPOST_INC:
-			break;
-		case OpCode::DPOST_DEC:
-			break;
 		case OpCode::LOGIC_NOT:
 		{
 			*stack.peek_as_ref<bool>() = !(*stack.peek_as_ref<bool>());
@@ -272,8 +261,8 @@ bool VM::interpret(Chunk* entryChunk)
 		}
 		case OpCode::CAST:
 		{
-			ValueType from = (ValueType)advance();
-			ValueType to = (ValueType)advance();
+			TypeTag from = (TypeTag)advance();
+			TypeTag to = (TypeTag)advance();
 			typeCast(from, to);
 			break;
 		}
@@ -374,14 +363,12 @@ bool VM::interpret(Chunk* entryChunk)
 		}
 		case OpCode::NATIVE_CALL:
 		{
-			uint8_t argSize = advance();
-			NativeFunc* call = *(NativeFunc**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk**) - argSize));
-			NativeFn func = call->func;
-			uint8_t* result = func(argSize, argSize > 0 ? (stack.get_at_ref(this->stack.count() - argSize)) : nullptr);
-
-			this->stack.resize(this->stack.count() - argSize - sizeof(NativeFunc**));
-
-			stack.push_sized(result, call->type.intrinsicType->getSize());
+			// uint8_t argSize = advance();
+			// NativeFunc* call = *(NativeFunc**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk**) - argSize));
+			// NativeFn func = call->func;
+			// uint8_t* result = func(argSize, argSize > 0 ? (stack.get_at_ref(this->stack.count() - argSize)) : nullptr);
+			// this->stack.resize(this->stack.count() - argSize - sizeof(NativeFunc**));
+			// stack.push_sized(result, call->type.intrinsicType->getSize());
 			break;
 		}
 		case OpCode::RETURN:
@@ -404,54 +391,59 @@ bool VM::interpret(Chunk* entryChunk)
 		}
 		}
 	}
+
+#ifdef DEBUG_CODE_TRACE
+	printStack(this->stack);
+#endif // DEBUG_CODE_TRACE
+
 	return true;
 }
 
-void VM::typeCast(ValueType from, ValueType to)
+void VM::typeCast(TypeTag from, TypeTag to)
 {
 #define CAST(value)   \
 	switch (to)\
 	{\
-	case ValueType::INTEGER:\
+	case TypeTag::INTEGER:\
 		stack.push_as<int32_t>(value);\
 		break;\
-	case ValueType::FLOAT:\
+	case TypeTag::FLOAT:\
 		stack.push_as<float>(value);\
 		break;\
-	case ValueType::DOUBLE:\
+	case TypeTag::DOUBLE:\
 		stack.push_as<double>(value);\
 		break;\
-	case ValueType::BOOL:\
+	case TypeTag::BOOL:\
 		stack.push_as<bool>(value);\
 		break;\
-	case ValueType::CHAR:\
+	case TypeTag::CHAR:\
 		stack.push_as<char>(value);\
 		break;\
 	}\
 
 	switch (from)
 	{
-	case ValueType::INTEGER:
+	case TypeTag::INTEGER:
 	{
 		CAST(stack.pop_as<int32_t>());
 		break;
 	}
-	case ValueType::FLOAT:
+	case TypeTag::FLOAT:
 	{
 		CAST(stack.pop_as<float>());
 		break;
 	}
-	case ValueType::DOUBLE:
+	case TypeTag::DOUBLE:
 	{
 		CAST(stack.pop_as<double>());
 		break;
 	}
-	case ValueType::BOOL:
+	case TypeTag::BOOL:
 	{
 		CAST(stack.pop_as<bool>());
 		break;
 	}
-	case ValueType::CHAR:
+	case TypeTag::CHAR:
 	{
 		CAST(stack.pop_as<char>());
 		break;

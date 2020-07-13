@@ -158,7 +158,7 @@ Token Scanner::scanToken()
 
 	default:
 		if (this->isAlpha(c))
-			return identifierLiteral();
+			return identifierLiteral(c);
 		else if (this->isDigit(c))
 			return numberLiteral();
 		return errorToken("Unexpected character");
@@ -252,16 +252,14 @@ Token Scanner::charLiteral()
 	}
 }
 
-Token Scanner::identifierLiteral()
+Token Scanner::identifierLiteral(char start)
 {
-	char c = peekPrev();
 	std::stringstream lexeme;
+	lexeme << start;
 	while ((this->isAlpha(peek()) || this->isDigit(peek())))
 	{
-		lexeme << peekPrev();
-		c = advance();
+		lexeme << advance();
 	}
-	lexeme << peekPrev();
 
 	if (lexeme.str() == "using")
 		return makeToken(TokenType::USING);
