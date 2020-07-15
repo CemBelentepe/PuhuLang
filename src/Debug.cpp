@@ -8,11 +8,11 @@ void debugTokens(std::vector<Token> tokens)
     std::cout << std::endl;
 }
 
-void debugAST(Expr* expr)
+void debugAST(std::vector<Stmt*>& root)
 {
     AstDebugger debugger;
     std::cout << "AST:\n";
-    debugger.debugAll(expr);
+    debugger.debugAll(root);
     std::cout << std::endl;
 }
 

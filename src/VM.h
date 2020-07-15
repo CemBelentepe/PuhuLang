@@ -2,7 +2,7 @@
 
 #include "ArrayList.h"
 #include "Chunk.hpp"
-#include "Value.h"
+#include "Value.hpp"
 
 struct Frame
 {
@@ -22,7 +22,7 @@ struct Frame
 class VM
 {
 public:
-	VM();
+	VM(ArrayList<uint8_t> globals);
 	~VM();
 	bool interpret(Chunk* entryChunk);
 
@@ -33,7 +33,7 @@ private:
 	size_t ip;
 	ArrayList<uint8_t> stack;
 public:
-	std::vector<uint8_t*> globals;
+	ArrayList<uint8_t> globals;
 	std::vector<Frame> frames;
 
 private:

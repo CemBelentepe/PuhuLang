@@ -86,3 +86,28 @@ void InstNeq::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstGetGlobal::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstSetGlobal::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstCall::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstPop::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstReturn::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+

@@ -1,26 +1,37 @@
 #pragma once
 
-#include "Scanner.h"
 #include "AstVisitor.hpp"
 #include "IRChunk.hpp"
+#include "Scanner.h"
+#include <unordered_map>
 
 class IRGen : public AstVisitor
 {
 private:
-    IRChunk *chunk;
-    Expr* root;
-public:
-    IRGen(Expr *expr)
-        :chunk(new IRChunk()), root(expr)
-    {    }
+    IRChunk* chunk;
+    std::vector<Stmt*>& root;
+    std::unordered_map<std::string, Value*>& globals;
+    std::vector<IRChunk*> chunks;
 
-    IRChunk* generateIR()
+public:
+    IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
+        : chunk(new IRChunk("entry")), root(root), globals(globals)
     {
-        root->accept(this);
-        return this->chunk;
     }
 
-    void visit(ExprBinary *expr)
+    std::vector<IRChunk*> generateIR()
+    {
+        chunks.push_back(chunk);
+        for (auto& stmt : root)
+            stmt->accept(this);
+
+        chunk->addCode(new InstGetGlobal("main"));
+        chunk->addCode(new InstCall({TypeTag::VOID}, TypeTag::FUNCTION));
+
+        return chunks;
+    }
+
+    void visit(ExprBinary* expr)
     {
         expr->left->accept(this);
         expr->right->accept(this);
@@ -69,26 +80,29 @@ public:
             break;
         }
     }
-    void visit(ExprCall *expr)
+    void visit(ExprCall* expr)
     {
-        expr->callee->accept(this);
-        for (auto &arg : expr->args)
+        std::vector<TypeTag> args;
+        for (auto& arg : expr->args)
+        {
             arg->accept(this);
+            args.push_back(arg->type.tag);
+        }
 
-        // TODO: add the call instruction
-        // chunk->addCode(new InstCall());
+        expr->callee->accept(this);
+        chunk->addCode(new InstCall(args, expr->callee->type.tag));
     }
-    void visit(ExprCast *expr)
+    void visit(ExprCast* expr)
     {
         expr->expr->accept(this);
         chunk->addCode(new InstCast(expr->from.tag, expr->to.tag));
     }
-    void visit(ExprLiteral *expr)
+    void visit(ExprLiteral* expr)
     {
         size_t pos = chunk->addConstant(expr->val);
         chunk->addCode(new InstConst(pos));
     }
-    void visit(ExprUnary *expr)
+    void visit(ExprUnary* expr)
     {
         expr->expr->accept(this);
 
@@ -101,8 +115,41 @@ public:
             chunk->addCode(new InstBit(TokenType::TILDE));
         }
     }
-    void visit(ExprVariable *expr)
+    void visit(ExprVariable* expr)
     {
         // TODO: Implement later
+        chunk->addCode(new InstGetGlobal(expr->name.getString()));
+    }
+
+    void visit(StmtBlock* stmt)
+    {
+        for (auto& s : stmt->statements)
+            s->accept(this);
+
+        // TODO: Pop enviroment
+    }
+    void visit(StmtExpr* stmt)
+    {
+        stmt->expr->accept(this);
+        chunk->addCode(new InstPop({stmt->expr->type.tag}));
+    }
+    void visit(StmtFunc* stmt)
+    {
+        IRChunk* enclosing = chunk;
+        chunk = new IRChunk(stmt->name.getString());
+        
+        FuncValue* func = (FuncValue*)globals[stmt->name.getString()];
+        func->irChunk = chunk;
+        func->data.valChunk = func->irChunk->chunk;
+
+        // TODO: ENVIROMENT
+        stmt->body->accept(this);
+
+        if(func->type == TypeTag::VOID)
+            chunk->addCode(new InstReturn(TypeTag::VOID));
+
+        chunks.push_back(func->irChunk);
+
+        chunk = enclosing;
     }
 };

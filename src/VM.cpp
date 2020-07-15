@@ -1,4 +1,4 @@
-#define DEBUG_CODE_TRACE
+// #define DEBUG_CODE_TRACE
 
 #include "VM.h"
 
@@ -6,9 +6,14 @@
 #include "Debug.h"
 #endif // DEBUG_CODE_TRACE
 
-VM::VM()
-	:ip(0), currentChunk(nullptr)
-{}
+VM::VM(ArrayList<uint8_t> globals)
+	:ip(0), currentChunk(nullptr), globals(globals)
+{
+#ifdef DEBUG_CODE_TRACE
+	std::cout << "Globals: ";
+	printStack(this->globals);
+#endif
+}
 
 VM::~VM()
 {}
@@ -277,18 +282,14 @@ bool VM::interpret(Chunk* entryChunk)
 			size_t size = advance();
 			size_t slot = advance();
 			uint8_t* val = stack.peek_sized(size);
-			for (int i = 0; i < size; i++)
-			{
-				((uint8_t*)(globals[slot]))[i] = val[i];
-			}
+			globals.set_sized(val, slot, size);
 			break;
 		}
 		case OpCode::GET_GLOBAL:
 		{
 			size_t size = advance();
 			size_t slot = advance();
-			uint8_t* val = (uint8_t*)(this->globals[slot]);
-			stack.push_sized(val, size);
+			stack.push_sized(globals.get_at_ref(slot), size);
 			break;
 		}
 		case OpCode::SET_LOCAL:
@@ -311,10 +312,7 @@ bool VM::interpret(Chunk* entryChunk)
 			size_t size = advance();
 			size_t slot = advance();
 			uint8_t* val = stack.pop_sized_ret(size);
-			for (int i = 0; i < size; i++)
-			{
-				((uint8_t*)(globals[slot]))[i] = val[i];
-			}
+			globals.set_sized(val, slot, size);
 			delete[] val;
 			break;
 		}
@@ -355,20 +353,20 @@ bool VM::interpret(Chunk* entryChunk)
 		case OpCode::CALL:
 		{
 			uint8_t argSize = advance();
-			Chunk* func = *(Chunk**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk*) - argSize));
-			this->frames.push_back(Frame(ip, currentChunk, this->stack.count() - argSize - sizeof(Chunk*)));
+			Chunk* func = stack.pop_as<Chunk*>();
+			this->frames.push_back(Frame(ip, currentChunk, this->stack.count() - argSize));
 			this->currentChunk = func;
 			this->ip = 0;
 			break;
 		}
 		case OpCode::NATIVE_CALL:
 		{
-			// uint8_t argSize = advance();
-			// NativeFunc* call = *(NativeFunc**)(stack.get_at_ref(this->stack.count() - sizeof(Chunk**) - argSize));
-			// NativeFn func = call->func;
-			// uint8_t* result = func(argSize, argSize > 0 ? (stack.get_at_ref(this->stack.count() - argSize)) : nullptr);
-			// this->stack.resize(this->stack.count() - argSize - sizeof(NativeFunc**));
-			// stack.push_sized(result, call->type.intrinsicType->getSize());
+			uint8_t argSize = advance();
+			NativeFunc* call = stack.pop_as<NativeFunc*>();
+			NativeFn func = call->data.valNative;
+			uint8_t* result = func(argSize, argSize > 0 ? (stack.get_at_ref(this->stack.count() - argSize)) : nullptr);
+			this->stack.resize(this->stack.count() - argSize);
+			stack.push_sized(result, call->type.intrinsicType->getSize());
 			break;
 		}
 		case OpCode::RETURN:

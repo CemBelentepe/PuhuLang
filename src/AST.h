@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scanner.h"
-#include "Value.h"
+#include "Value.hpp"
 
 class AstVisitor;
 
@@ -91,5 +91,50 @@ public:
 	ExprLiteral(Value* val)
 		:Expr(val->type), val(val)
 	{}
+	void accept(AstVisitor* visitor);
+};
+
+class Stmt
+{
+public:
+	virtual void accept(AstVisitor* visitor) = 0;
+};
+
+class StmtExpr : public Stmt
+{
+public:
+	Expr* expr;
+
+	StmtExpr(Expr* expr)
+		:expr(expr)
+	{}
+
+	void accept(AstVisitor* visitor);
+};
+
+class StmtBlock : public Stmt
+{
+public:
+	std::vector<Stmt*> statements;
+
+	StmtBlock(std::vector<Stmt*> statements)
+		:statements(statements)
+	{}
+
+	void accept(AstVisitor* visitor);
+};
+
+class StmtFunc : public Stmt
+{
+public:
+	Token name;
+	StmtBlock* body;
+	Type ret_type;
+	std::vector<std::pair<Token, Type>> args;
+
+	StmtFunc(Token name, StmtBlock* body, Type ret_type, std::vector<std::pair<Token, Type>> args)
+		:name(name), ret_type(ret_type), body(body), args(args)
+	{}
+
 	void accept(AstVisitor* visitor);
 };

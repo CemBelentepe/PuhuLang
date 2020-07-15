@@ -1,5 +1,5 @@
 def tokenize (line):
-    pieces = line.split(':')
+    pieces = line.split(': ')
     inst_name = pieces[0].strip()
     operands = []
     
@@ -45,9 +45,14 @@ instructions = ["InstConst  : int id",
                 "InstGreat  : TypeTag type",
                 "InstGte    : TypeTag type",
                 "InstEq     : TypeTag type",
-                "InstNeq    : TypeTag type"]
+                "InstNeq    : TypeTag type",
+                "InstGetGlobal: std::string name",
+                "InstSetGlobal: std::string name",
+                "InstCall   : std::vector<TypeTag> args, TypeTag callType",
+                "InstPop    : std::vector<TypeTag> types",
+                "InstReturn : TypeTag type"]
 
-header = "#pragma once\n\nclass InstVisitor;\nclass Instruction\n{\npublic:\n\tvirtual void accept(InstVisitor* visitor) = 0;\n};\n\n"
+header = "#pragma once\n#include \"Value.hpp\"\n\nclass InstVisitor;\nclass Instruction\n{\npublic:\n\tvirtual void accept(InstVisitor* visitor) = 0;\n};\n\n"
 source = '#include "Instruction.h"\n#include "InstVisitor.hpp"\n\n'
 
 for inst in instructions:

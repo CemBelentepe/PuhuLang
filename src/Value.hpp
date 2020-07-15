@@ -3,9 +3,13 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <vector>
 
+#include "Scanner.h"
+
 class IRChunk;
+class Chunk;
 
 enum class TypeTag
 {
@@ -155,6 +159,8 @@ public:
     }
 };
 
+typedef uint8_t* (*NativeFn)(int, uint8_t*);
+
 class Value
 {
 public:
@@ -167,6 +173,8 @@ public:
         float valFloat;
         double valDouble;
         char* valString;
+        Chunk* valChunk;
+        NativeFn valNative;
     } data;
 
     Value()
@@ -253,7 +261,7 @@ public:
         return os;
     }
 
-    uint8_t* cloneData()
+    virtual uint8_t* cloneData()
     {
         uint8_t* clone = new uint8_t[type.getSize()];
         switch (type.tag)
@@ -275,8 +283,12 @@ public:
             break;
         case TypeTag::STRING:
             *(char**)clone = data.valString;
+            break;
+        case TypeTag::FUNCTION:
+            *(Chunk**)clone = data.valChunk;
+            break;
         default:
-            std::cout << "Unknown type cloning";
+            std::cout << "[ERROR] Unknown type cloning\n";
             break;
         }
         return clone;
@@ -315,16 +327,11 @@ public:
 class FuncValue : public Value
 {
 public:
-    std::vector<Type> params;
+    std::vector<std::pair<Token, Type>> params;
     IRChunk* irChunk;
 
-    FuncValue(IRChunk* chunk, Type returnType, std::vector<Type> params)
-        : Value(Type(TypeTag::FUNCTION, std::make_shared<Type>(returnType))), params(params), irChunk(chunk)
-    {
-    }
-
-    FuncValue(IRChunk* chunk, std::shared_ptr<Type> returnType, std::vector<Type> params)
-        : Value(Type(TypeTag::FUNCTION, returnType)), params(params), irChunk(chunk)
+    FuncValue(Type returnType, std::vector<std::pair<Token, Type>> params)
+        : Value(Type(TypeTag::FUNCTION, std::make_shared<Type>(returnType))), params(params), irChunk(nullptr)
     {
     }
 
@@ -334,5 +341,27 @@ public:
     {
         os << val.irChunk;
         return os;
+    }
+};
+
+class NativeFunc : public Value
+{
+public:
+    std::vector<Type> params;
+    bool is_variadic;
+
+    NativeFunc(NativeFn func, Type returnType, std::vector<Type> params, bool is_variadic = false)
+        : Value(Type(TypeTag::NATIVE, std::make_shared<Type>(returnType))), params(params), is_variadic(is_variadic)
+    {
+        data.valNative = func;
+    }
+
+    virtual ~NativeFunc() {}
+
+    uint8_t* cloneData() override
+    {
+        NativeFunc** clone = new NativeFunc*();
+        *clone = this;
+        return (uint8_t*)(clone);
     }
 };

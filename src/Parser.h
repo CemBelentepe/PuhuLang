@@ -1,8 +1,11 @@
 #pragma once
 
-#include <vector>
 #include "Scanner.h"
-#include "Value.h"
+#include "Value.hpp"
+#include "AST.h"
+
+#include <vector>
+#include <unordered_map>
 
 class Expr;
 
@@ -10,7 +13,8 @@ class Parser
 {
 public:
 	Parser(std::vector<Token>& tokens);
-	Expr* parse();
+	std::vector<Stmt*> parse();
+	std::unordered_map<std::string, Value*> globals;
 
 private:
 	std::vector<Token>& tokens;
@@ -47,11 +51,11 @@ private:
 	inline void errorAtToken(const char* message);
 	void panic();
 
-	// Stmt* decleration();
-	// Stmt* variableDecleration(DataType type);
-	// Stmt* functionDecleration(DataType type);
-	// Stmt* statement();
-	// Stmt* block();
+	Stmt* decleration();
+	Stmt* variableDecleration(Type type);
+	Stmt* functionDecleration(Type type);
+	Stmt* statement();
+	Stmt* block();
 
 	Expr* parseExpression();
 	Expr* logic_or();

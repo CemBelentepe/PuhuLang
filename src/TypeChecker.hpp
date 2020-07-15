@@ -8,11 +8,13 @@ class TypeChecker : public AstVisitor
 {
 public:
     bool hadError;
+    std::unordered_map<std::string, Value*>& globals;
 
-    TypeChecker(Expr *expr)
-        : hadError(false)
+    TypeChecker(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
+        : hadError(false), globals(globals)
     {
-        expr->accept(this);
+        for(auto& stmt : root)
+            stmt->accept(this);
     }
 
     void error(const std::string &message, Token token)
@@ -118,9 +120,10 @@ public:
     {
         expr->callee->accept(this);
 
-        if (expr->callee->type.tag != TypeTag::FUNCTION || expr->callee->type.tag != TypeTag::NATIVE)
+        if (expr->callee->type.tag != TypeTag::FUNCTION && expr->callee->type.tag != TypeTag::NATIVE)
             error("Only a type function can be called!", expr->openParen);
 
+        // TODO: Compare with table
         for (auto &args : expr->args)
         {
             args->accept(this);
@@ -128,15 +131,18 @@ public:
 
         expr->type = expr->callee->type.intrinsicType;
     }
+    
     void visit(ExprCast *expr)
     {
         expr->expr->accept(this);
         expr->from = expr->expr->type;
     }
+    
     void visit(ExprLiteral *expr)
     {
         expr->type = expr->val->type;
     }
+    
     void visit(ExprUnary *expr)
     {
         expr->expr->accept(this);
@@ -174,8 +180,27 @@ public:
             break;
         }
     }
+   
     void visit(ExprVariable *expr)
     {
         // TODO: find type from enviroment!!!
+        expr->type = globals[expr->name.getString()]->type;
+    }
+
+    void visit(StmtBlock* stmt)
+    {
+        for(auto& s : stmt->statements)
+            s->accept(this);
+
+        this->hadError = false;
+    }
+    void visit(StmtExpr* stmt) 
+    {
+        stmt->expr->accept(this);
+        this->hadError = false;
+    }
+    void visit(StmtFunc* stmt) 
+    {
+        stmt->body->accept(this);
     }
 };

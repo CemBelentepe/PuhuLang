@@ -45,34 +45,45 @@ void run(const char *path)
 #endif
 
 	Parser parser(tokens);
-	Expr* expr = parser.parse();
+	std::vector<Stmt*> root = parser.parse();
 
 #ifdef DEBUG_BARE_AST
-	debugAST(expr);
+	debugAST(root);
 #endif
 
-	TypeChecker typeChecker(expr);
+	TypeChecker typeChecker(root, parser.globals);
 
 #ifdef DEBUG_AST
-	debugAST(expr);
+	debugAST(root);
 #endif
 
-	IRGen irGen(expr);
-	IRChunk* mainIR = irGen.generateIR();
+	IRGen irGen(root, parser.globals);
+	std::vector<IRChunk*> irChunks = irGen.generateIR();
 
 #ifdef DEBUG_IR
-	debugInstructions(mainIR);
+	for(auto& irc : irChunks)
+	{
+		std::cout << irc->name << ":\n";
+		debugInstructions(irc);
+		std::cout << std::endl;
+	}
 #endif
 
-	CodeGen codegen(mainIR);
-	Chunk* chunk = codegen.generateCode();
+	CodeGen codegen(parser.globals);
+	for(auto& irc : irChunks)
+		codegen.generateCode(irc);
 
 #ifdef DEBUG_CODE
-	dissambleChunk(chunk);
+	for(auto& irc : irChunks)
+	{
+		std::cout << irc->name << "@" << irc->chunk << ":\n";
+		dissambleChunk(irc->chunk);
+		std::cout << std::endl;
+	}
 #endif
 
-	VM vm;
-	vm.interpret(chunk);
+	VM vm(codegen.getGlobals());
+	vm.interpret(irChunks[0]->chunk);
 }
 
 int main(int argc, char *argv[])

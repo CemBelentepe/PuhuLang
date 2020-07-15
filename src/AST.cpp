@@ -30,3 +30,18 @@ void ExprVariable::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtBlock::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void StmtFunc::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void StmtExpr::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}

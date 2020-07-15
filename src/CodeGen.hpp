@@ -4,11 +4,20 @@
 #include "IRChunk.hpp"
 #include "InstVisitor.hpp"
 
-struct constInfo
+#include <string>
+#include <unordered_map>
+
+struct valInfo
 {
     size_t size;
     size_t addr;
-    constInfo(size_t size, size_t addr)
+
+    valInfo()
+        : size(0), addr(0)
+    {
+    }
+
+    valInfo(size_t size, size_t addr)
         : size(size), addr(addr)
     {
     }
@@ -17,44 +26,56 @@ struct constInfo
 class CodeGen : public InstVisitor
 {
 private:
-    IRChunk* irChunk;
     Chunk* chunk;
-    std::vector<constInfo> constPositions;
+    std::vector<valInfo> constPositions;
+    std::unordered_map<std::string, valInfo> globalInfo;
+    ArrayList<uint8_t> m_globals;
     bool hadError;
 
 public:
-    CodeGen(IRChunk* irChunk)
-        : irChunk(irChunk), chunk(new Chunk()), hadError(false)
+    CodeGen(std::unordered_map<std::string, Value*>& globals)
+        : hadError(false)
     {
+        for (auto& val : globals)
+        {
+            size_t size = val.second->type.getSize();
+            size_t addr = m_globals.count();
+            m_globals.push_sized(val.second->cloneData(), size);
+            globalInfo.insert(std::make_pair(val.first, valInfo(size, addr)));
+        }
     }
 
-    Chunk* generateCode()
+    void generateCode(IRChunk* irChunk)
     {
+        chunk = irChunk->chunk;
         for (auto& val : irChunk->getConstants())
         {
             size_t size = val->type.getSize();
             size_t addr = chunk->addConstant(val->cloneData(), size);
-            constPositions.push_back(constInfo(size, addr));
+            constPositions.push_back(valInfo(size, addr));
         }
 
         for (auto& inst : irChunk->getCode())
         {
             inst->accept(this);
         }
+    }
 
-        return chunk;
+    inline ArrayList<uint8_t> getGlobals()
+    {
+        return m_globals;
     }
 
     void error(const char* msg)
     {
-        // TODO: add line to here
+        // TODO: add which line to here
         this->hadError = true;
         std::cout << msg << std::endl;
     }
 
     void visit(InstConst* inst)
     {
-        constInfo& c = constPositions[inst->id];
+        valInfo& c = constPositions[inst->id];
         if (c.addr > 255)
             error("Constant position is out of bounds[255].");
 
@@ -246,5 +267,46 @@ public:
             chunk->addCode(OpCode::INOT_EQUAL);
         else
             chunk->addCode(OpCode::DNOT_EQUAL);
+    }
+
+    void visit(InstGetGlobal* inst)
+    {
+        auto& var = globalInfo[inst->name];
+        chunk->addCode(OpCode::GET_GLOBAL, var.size, var.addr);
+    }
+    void visit(InstSetGlobal* inst)
+    {
+        auto& var = globalInfo[inst->name];
+        chunk->addCode(OpCode::SET_GLOBAL, var.size, var.addr);
+    }
+    void visit(InstCall* inst)
+    {
+        size_t size = 0;
+        for (auto& arg : inst->args)
+            size += Type(arg).getSize();
+
+        if (size > 255)
+            error("[ERROR] Too much data for call.");
+
+        if (inst->callType == TypeTag::FUNCTION)
+            chunk->addCode(OpCode::CALL, size);
+        else if (inst->callType == TypeTag::NATIVE)
+            chunk->addCode(OpCode::NATIVE_CALL, size);
+    }
+    void visit(InstPop* inst)
+    {
+        size_t size = 0;
+        for (auto& t : inst->types)
+            size += Type(t).getSize();
+
+        if (size > 255)
+            error("[ERROR] Too much data for pop.");
+
+        chunk->addCode(OpCode::POPN, size);
+    }
+    void visit(InstReturn* inst)
+    {
+        size_t size = Type(inst->type).getSize();
+        chunk->addCode(OpCode::RETURN, size);
     }
 };

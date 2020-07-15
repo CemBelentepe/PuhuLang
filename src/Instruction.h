@@ -1,6 +1,5 @@
 #pragma once
-#include "Value.h"
-#include "Scanner.h"
+#include "Value.hpp"
 
 class InstVisitor;
 class Instruction
@@ -191,6 +190,62 @@ public:
 	TypeTag type;
 
 	InstNeq(TypeTag type)
+		: type(type) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstGetGlobal : public Instruction
+{
+public:
+	std::string name;
+
+	InstGetGlobal(std::string name)
+		: name(name) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstSetGlobal : public Instruction
+{
+public:
+	std::string name;
+
+	InstSetGlobal(std::string name)
+		: name(name) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstCall : public Instruction
+{
+public:
+	std::vector<TypeTag> args;
+	TypeTag callType;
+
+	InstCall(std::vector<TypeTag> args, TypeTag callType)
+		: args(args), callType(callType) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstPop : public Instruction
+{
+public:
+	std::vector<TypeTag> types;
+
+	InstPop(std::vector<TypeTag> types)
+		: types(types) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstReturn : public Instruction
+{
+public:
+	TypeTag type;
+
+	InstReturn(TypeTag type)
 		: type(type) { } 
 
 	 void accept(InstVisitor* visitor);

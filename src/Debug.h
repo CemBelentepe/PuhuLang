@@ -1,24 +1,35 @@
 #pragma once
 
+#include "ArrayList.h"
 #include "AstVisitor.hpp"
+#include "Chunk.hpp"
 #include "IRChunk.hpp"
 #include "InstVisitor.hpp"
 #include "Scanner.h"
-#include "Value.h"
-#include "ArrayList.h"
-#include "Chunk.hpp"
+#include "Value.hpp"
 
-#include <istream>
 #include <iomanip>
+#include <istream>
 
 void debugTokens(std::vector<Token> tokens);
 
 class AstDebugger : public AstVisitor
 {
-public:
-    void debugAll(Expr* expr)
+private:
+    size_t indent;
+    void indentCode()
     {
-        expr->accept(this);
+        for (size_t i = 0; i < indent; i++)
+            std::cout << "    ";
+        std::cout << "|";
+    }
+
+public:
+    void debugAll(std::vector<Stmt*>& root)
+    {
+        indent = 0;
+        for (auto& stmt : root)
+            stmt->accept(this);
         std::cout << "\n";
     }
 
@@ -37,8 +48,7 @@ public:
         expr->callee->accept(this);
         for (int i = 0; i < expr->args.size(); i++)
         {
-            if (i > 0)
-                std::cout << ", ";
+            std::cout << ", ";
             expr->args[i]->accept(this);
         }
         std::cout << ")";
@@ -60,16 +70,54 @@ public:
 
     void visit(ExprVariable* expr)
     {
-        std::cout << expr->name;
+        std::cout << expr->name.getString();
     }
 
     void visit(ExprLiteral* expr)
     {
         std::cout << *(expr->val);
     }
+
+    void visit(StmtBlock* stmt)
+    {
+        indentCode();
+
+        std::cout << "-> Block:\n";
+        indent++;
+        for (auto& s : stmt->statements)
+        {
+            s->accept(this);
+        }
+        indent--;
+        std::cout << "\n";
+    }
+    void visit(StmtExpr* stmt)
+    {
+        indentCode();
+        std::cout << "-> Expression: ";
+        stmt->expr->accept(this);
+        std::cout << "\n";
+    }
+    void visit(StmtFunc* stmt)
+    {
+        indentCode();
+        std::cout << "-> " << stmt->name.getString() << "(";
+        indent++;
+
+        for (size_t i = 0; i < stmt->args.size(); i++)
+        {
+            if (i != 0)
+                std::cout << ", ";
+            std::cout << stmt->args[i].second << " " << stmt->args[i].first;
+        }
+        std::cout << ")\n";
+
+        stmt->body->accept(this);
+        indent--;
+    }
 };
 
-void debugAST(Expr* expr);
+void debugAST(std::vector<Stmt*>& expr);
 
 class InstDebugger : public InstVisitor
 {
@@ -269,6 +317,32 @@ public:
             std::cout << "INOT_EQUAL";
         else
             std::cout << "DNOT_EQUAL";
+    }
+    void visit(InstGetGlobal* inst)
+    {
+        std::cout << "GET_GLOBAL\t" << inst->name;
+    }
+    void visit(InstSetGlobal* inst)
+    {
+        std::cout << "SET_GLOBAL\t" << inst->name;
+    }
+    void visit(InstCall* inst)
+    {
+        if (inst->callType == TypeTag::NATIVE)
+            std::cout << "NATIVE_";
+        std::cout << "CALL\t";
+        for (auto& arg : inst->args)
+            std::cout << Type(arg) << " ";
+    }
+    void visit(InstPop* inst)
+    {
+        std::cout << "POP\t";
+        for (auto& arg : inst->types)
+            std::cout << Type(arg) << " ";
+    }
+    void visit(InstReturn* inst)
+    {
+        std::cout << "RETURN\t" << Type(inst->type);
     }
 };
 
