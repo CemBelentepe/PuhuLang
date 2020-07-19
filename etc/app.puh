@@ -1,15 +1,10 @@
-int a = 8;
-int n = a + 2;
-
 void main()
 {
-    printx(n*2);
-    n = 17;
-    printx(n*2);
+    int n = 8;
+    print("%i+1 = %i\n", n, inc(n));
 }
 
-void printx(int n)
+int inc(int n)
 {
-    int m = n + 9;
-    print("Hello %i\n", m + 1);
+    return n+1;
 }

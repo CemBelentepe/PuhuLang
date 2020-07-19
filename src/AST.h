@@ -23,7 +23,7 @@ public:
     Type type;
 
     Expr(ExprType instance, Type type)
-        :instance(instance),  type(type)
+        : instance(instance), type(type)
     {
     }
 
@@ -184,6 +184,19 @@ public:
 
     StmtVarDecleration(Type varType, Token name, Expr* initializer)
         : varType(varType), name(name), initializer(initializer)
+    {
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class StmtReturn : public Stmt
+{
+public:
+    Expr* retVal;
+
+    StmtReturn(Expr* retVal)
+        : retVal(retVal)
     {
     }
 

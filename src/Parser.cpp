@@ -319,13 +319,13 @@ Stmt* Parser::statement()
     // {
     // 	forStatement();
     // }
-    // else if (token == TokenType::RETURN)
-    // {
-    // 	advance();
-    // 	size_t size = compileExpression().getSize();
-    // 	consume(TokenType::SEMI_COLON, "Expect ';' after an expression statement.");
-    // 	addCode(OpCode::RETURN, size);
-    // }
+    else if (token == TokenType::RETURN)
+    {
+    	advance();
+    	Expr* ret = parseExpression();
+    	consume(TokenType::SEMI_COLON, "Expect ';' after a return statement.");
+    	return new StmtReturn(ret);
+    }
     else
     {
         Expr* expr = parseExpression();

@@ -258,4 +258,12 @@ public:
         if(currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
     }
+    void visit(StmtReturn* stmt)
+    {
+        // TODO: add type checking of the return value
+        if(stmt->retVal != nullptr)
+        {
+            stmt->retVal->accept(this);
+        }
+    }
 };

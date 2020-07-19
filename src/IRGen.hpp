@@ -200,11 +200,26 @@ public:
             if(currentEnviroment->depth != 0)
                 currentEnviroment->define(stmt->name, stmt->varType);
             if (currentEnviroment->depth == 0)
+            {
                 chunk->addCode(new InstSetGlobal(stmt->name.getString()));
+                chunk->addCode(new InstPop({stmt->varType.tag}));
+            }
             else
                 chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
         }
         else if(currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
+    }
+    void visit(StmtReturn* stmt)
+    {
+        if(stmt->retVal != nullptr)
+        {
+            stmt->retVal->accept(this);
+            chunk->addCode(new InstReturn(stmt->retVal->type.tag));
+        }
+        else
+        {
+            chunk->addCode(new InstReturn(TypeTag::VOID));
+        }
     }
 };

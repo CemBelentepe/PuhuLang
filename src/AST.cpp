@@ -55,3 +55,8 @@ void StmtVarDecleration::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtReturn::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}

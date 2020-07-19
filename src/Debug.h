@@ -133,6 +133,16 @@ public:
         }
         std::cout << "\n";
     }
+    void visit(StmtReturn* stmt)
+    {
+        indentCode();
+        std::cout << "-> return ";
+        if (stmt->retVal != nullptr)
+        {
+            stmt->retVal->accept(this);
+        }
+        std::cout << "\n";
+    }
 };
 
 void debugAST(std::vector<Stmt*>& expr);
