@@ -59,6 +59,7 @@ private:
 	Stmt* block();
 
 	Expr* parseExpression();
+	Expr* assignment();
 	Expr* logic_or();
 	Expr* logic_and();
 	Expr* bit_or();

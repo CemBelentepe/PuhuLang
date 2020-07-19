@@ -1,6 +1,11 @@
 #include "AST.h"
 #include "AstVisitor.hpp"
 
+void ExprAssignment::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void ExprBinary::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

@@ -4,6 +4,7 @@
 class AstVisitor
 {
 public:
+    virtual void visit(ExprAssignment* expr) = 0;
     virtual void visit(ExprBinary* expr) = 0;
     virtual void visit(ExprCall* expr) = 0;
     virtual void visit(ExprCast* expr) = 0;

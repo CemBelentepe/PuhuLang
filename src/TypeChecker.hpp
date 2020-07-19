@@ -42,6 +42,19 @@ public:
         currentEnviroment = env;
     }
 
+    void visit(ExprAssignment* expr)
+    {
+        expr->assignment->accept(this);
+        Type type = currentEnviroment->get(expr->name).type;
+        expr->type = type;
+        if(expr->assignment->type != type)
+        {
+            std::stringstream ss;
+            ss << "Invalid assignment due to type missmatch, variable '" << expr->name.getString() << "' has the type '" << type << "' but the expression type is '" << expr->assignment->type;
+            error(ss.str(), expr->name);
+        }
+    }
+
     void visit(ExprBinary* expr)
     {
         expr->left->accept(this);

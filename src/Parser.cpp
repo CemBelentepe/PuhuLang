@@ -354,7 +354,27 @@ Stmt* Parser::block()
 
 Expr* Parser::parseExpression()
 {
-    return bit_or();
+    return assignment();
+}
+
+Expr* Parser::assignment()
+{
+    Expr* expr = bit_or();
+
+    if(match(TokenType::EQUAL))
+    {
+        Expr* asgn = parseExpression();
+        
+        if(expr->instance == ExprType::Variable)
+        {
+            Token name = ((ExprVariable*)expr)->name;
+            return new ExprAssignment(name, asgn);
+        }
+        
+        error("Invalid assignment target.");
+    }
+
+    return expr;
 }
 
 Expr* Parser::bit_or()

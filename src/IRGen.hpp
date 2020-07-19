@@ -49,6 +49,15 @@ public:
         currentEnviroment = env;
     }
 
+    void visit(ExprAssignment* expr)
+    {
+        expr->assignment->accept(this);
+        Variable var = currentEnviroment->get(expr->name);
+        if(var.depth == 0)
+            chunk->addCode(new InstSetGlobal(expr->name.getString()));
+        else
+            chunk->addCode(new InstSetLocal(expr->name.getString(), var));
+    }
     void visit(ExprBinary* expr)
     {
         expr->left->accept(this);

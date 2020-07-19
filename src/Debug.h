@@ -33,6 +33,13 @@ public:
         std::cout << "\n";
     }
 
+    void visit(ExprAssignment* expr)
+    {
+        std::cout << "(" << expr->name.getString() << " = ";
+        expr->assignment->accept(this);
+        std::cout << ")";
+    }
+
     void visit(ExprBinary* expr)
     {
         std::cout << "(" << expr->op.getString() << " ";
