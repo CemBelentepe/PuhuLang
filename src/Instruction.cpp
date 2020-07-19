@@ -96,6 +96,16 @@ void InstSetGlobal::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstGetLocal::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstSetLocal::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
 void InstCall::accept(InstVisitor* visitor)
 {
 	visitor->visit(this);

@@ -1,29 +1,48 @@
 #pragma once
-#include "AstVisitor.hpp"
 
-#include <string>
+#include "AstVisitor.hpp"
+#include "Enviroment.hpp"
+
 #include <sstream>
+#include <string>
 
 class TypeChecker : public AstVisitor
 {
 public:
     bool hadError;
     std::unordered_map<std::string, Value*>& globals;
+    Enviroment* currentEnviroment;
 
     TypeChecker(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : hadError(false), globals(globals)
+        : hadError(false), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
     {
-        for(auto& stmt : root)
+        for (auto& val : globals)
+            currentEnviroment->define(val.first, val.second->type);
+
+        for (auto& stmt : root)
             stmt->accept(this);
     }
 
-    void error(const std::string &message, Token token)
+    void error(const std::string& message, Token token)
     {
         this->hadError = true;
         std::cout << "[Line " << token.line << ", " << token.getString() << "] " << message << std::endl;
     }
 
-    void visit(ExprBinary *expr)
+    void beginScope()
+    {
+        currentEnviroment = new Enviroment(currentEnviroment, 0);
+    }
+
+    void endScope()
+    {
+        std::vector<TypeTag> types = currentEnviroment->getEnvTypes();
+        Enviroment* env = currentEnviroment->closing;
+        delete currentEnviroment;
+        currentEnviroment = env;
+    }
+
+    void visit(ExprBinary* expr)
     {
         expr->left->accept(this);
         expr->right->accept(this);
@@ -35,20 +54,19 @@ public:
         case TokenType::STAR:
         case TokenType::SLASH:
         {
-            if ((expr->left->type.tag == TypeTag::INTEGER || expr->left->type.tag == TypeTag::FLOAT || expr->left->type.tag == TypeTag::DOUBLE) 
-                && (expr->right->type.tag == TypeTag::INTEGER || expr->right->type.tag == TypeTag::FLOAT || expr->right->type.tag == TypeTag::DOUBLE))
+            if ((expr->left->type.tag == TypeTag::INTEGER || expr->left->type.tag == TypeTag::FLOAT || expr->left->type.tag == TypeTag::DOUBLE) && (expr->right->type.tag == TypeTag::INTEGER || expr->right->type.tag == TypeTag::FLOAT || expr->right->type.tag == TypeTag::DOUBLE))
             {
                 if (expr->left->type.tag > expr->right->type.tag)
                 {
                     Type from = expr->right->type;
                     expr->right = new ExprCast(expr->left->type, expr->right);
-                    ((ExprCast *)expr->right)->from = from;
+                    ((ExprCast*)expr->right)->from = from;
                 }
                 else if (expr->right->type.tag > expr->left->type.tag)
                 {
                     Type from = expr->left->type;
                     expr->left = new ExprCast(expr->right->type, expr->left);
-                    ((ExprCast *)expr->left)->from = from;
+                    ((ExprCast*)expr->left)->from = from;
                 }
                 expr->type = expr->left->type;
             }
@@ -93,13 +111,13 @@ public:
                 {
                     Type from = expr->left->type;
                     expr->left = new ExprCast(TypeTag::DOUBLE, expr->left);
-                    ((ExprCast *)expr->left)->from = from;
+                    ((ExprCast*)expr->left)->from = from;
                 }
                 if (expr->right->type.tag < TypeTag::DOUBLE)
                 {
                     Type from = expr->right->type;
                     expr->right = new ExprCast(TypeTag::DOUBLE, expr->right);
-                    ((ExprCast *)expr->right)->from = from;
+                    ((ExprCast*)expr->right)->from = from;
                 }
 
                 expr->type = TypeTag::BOOL;
@@ -116,7 +134,7 @@ public:
         }
     }
 
-    void visit(ExprCall *expr)
+    void visit(ExprCall* expr)
     {
         expr->callee->accept(this);
 
@@ -124,26 +142,26 @@ public:
             error("Only a type function can be called!", expr->openParen);
 
         // TODO: Compare with table
-        for (auto &args : expr->args)
+        for (auto& args : expr->args)
         {
             args->accept(this);
         }
 
         expr->type = expr->callee->type.intrinsicType;
     }
-    
-    void visit(ExprCast *expr)
+
+    void visit(ExprCast* expr)
     {
         expr->expr->accept(this);
         expr->from = expr->expr->type;
     }
-    
-    void visit(ExprLiteral *expr)
+
+    void visit(ExprLiteral* expr)
     {
         expr->type = expr->val->type;
     }
-    
-    void visit(ExprUnary *expr)
+
+    void visit(ExprUnary* expr)
     {
         expr->expr->accept(this);
         expr->type = expr->expr->type;
@@ -180,27 +198,51 @@ public:
             break;
         }
     }
-   
-    void visit(ExprVariable *expr)
+
+    void visit(ExprVariable* expr)
     {
-        // TODO: find type from enviroment!!!
-        expr->type = globals[expr->name.getString()]->type;
+        Variable var = currentEnviroment->get(expr->name);
+        if (var.depth == 0)
+            expr->type = globals[expr->name.getString()]->type;
+        else
+            expr->type = var.type;
     }
 
     void visit(StmtBlock* stmt)
     {
-        for(auto& s : stmt->statements)
+        beginScope();
+        for (auto& s : stmt->statements)
             s->accept(this);
+        endScope();
 
         this->hadError = false;
     }
-    void visit(StmtExpr* stmt) 
+    void visit(StmtExpr* stmt)
     {
         stmt->expr->accept(this);
         this->hadError = false;
     }
-    void visit(StmtFunc* stmt) 
+    void visit(StmtFunc* stmt)
     {
-        stmt->body->accept(this);
+        beginScope();
+        for (auto& s : stmt->args)
+            currentEnviroment->define(s.first, s.second);
+
+        for (auto& s : stmt->body->statements)
+            s->accept(this);
+
+        endScope();
+    }
+    void visit(StmtVarDecleration* stmt)
+    {
+        if (stmt->initializer != nullptr)
+        {
+            stmt->initializer->accept(this);
+            if (stmt->varType != stmt->initializer->type)
+                error("Type of the initializer of the variable is not same as the variable type.", stmt->name);
+        }
+
+        if(currentEnviroment->depth != 0)
+            currentEnviroment->define(stmt->name, stmt->varType);
     }
 };

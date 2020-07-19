@@ -1,5 +1,5 @@
 #pragma once
-#include "Value.hpp"
+#include "Enviroment.hpp"
 
 class InstVisitor;
 class Instruction
@@ -213,6 +213,30 @@ public:
 
 	InstSetGlobal(std::string name)
 		: name(name) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstGetLocal : public Instruction
+{
+public:
+	std::string name;
+	Variable var;
+
+	InstGetLocal(std::string name, Variable var)
+		: name(name), var(var) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstSetLocal : public Instruction
+{
+public:
+	std::string name;
+	Variable var;
+
+	InstSetLocal(std::string name, Variable var)
+		: name(name), var(var) { } 
 
 	 void accept(InstVisitor* visitor);
 };

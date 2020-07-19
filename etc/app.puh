@@ -1,4 +1,13 @@
+int a = 8;
+int n = a + 2;
+
 void main()
 {
-    print("Hello, World!\n");
+    printx(n*2);
+}
+
+void printx(int n)
+{
+    int m = n + 9;
+    print("Hello %i\n", m + 1);
 }

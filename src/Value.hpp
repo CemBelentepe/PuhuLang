@@ -118,6 +118,9 @@ public:
         case TypeTag::NULL_TYPE:
             os << "nl";
             break;
+        case TypeTag::ERROR:
+            os << "err";
+            break;
         default:
             std::cout << "[ERROR] Unknown type: " << (int)val.tag << "\n";
             break;

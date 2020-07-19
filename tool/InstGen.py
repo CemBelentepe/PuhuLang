@@ -48,11 +48,13 @@ instructions = ["InstConst  : int id",
                 "InstNeq    : TypeTag type",
                 "InstGetGlobal: std::string name",
                 "InstSetGlobal: std::string name",
+                "InstGetLocal: std::string name, Variable var",
+                "InstSetLocal: std::string name, Variable var",
                 "InstCall   : std::vector<TypeTag> args, TypeTag callType",
                 "InstPop    : std::vector<TypeTag> types",
                 "InstReturn : TypeTag type"]
 
-header = "#pragma once\n#include \"Value.hpp\"\n\nclass InstVisitor;\nclass Instruction\n{\npublic:\n\tvirtual void accept(InstVisitor* visitor) = 0;\n};\n\n"
+header = "#pragma once\n#include \"Enviroment.hpp\"\n\nclass InstVisitor;\nclass Instruction\n{\npublic:\n\tvirtual void accept(InstVisitor* visitor) = 0;\n};\n\n"
 source = '#include "Instruction.h"\n#include "InstVisitor.hpp"\n\n'
 
 for inst in instructions:

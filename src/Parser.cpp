@@ -4,7 +4,7 @@
 #include "Value.hpp"
 
 Parser::Parser(std::vector<Token>& tokens)
-    : tokens(tokens), currentToken(0)
+    : tokens(tokens), currentToken(0), depth(0)
 {
     globals.insert({"print", new NativeFunc(native_print, TypeTag::VOID, {Type(TypeTag::STRING)}, true)});
     globals.insert({"input", new NativeFunc(native_input, TypeTag::STRING, {})});
@@ -251,7 +251,19 @@ Stmt* Parser::decleration()
 
 Stmt* Parser::variableDecleration(Type type)
 {
-    return nullptr;
+    Token varName = advance();
+    Expr* init = nullptr;
+    if (match(TokenType::EQUAL))
+        init = parseExpression();
+
+    consume(TokenType::SEMI_COLON, "Expect ';' after variable decleration.");
+
+    if (depth == 0)
+    {
+        globals.insert({varName.getString(), new Value(type)});
+    }
+
+    return new StmtVarDecleration(type, varName, init);
 }
 
 Stmt* Parser::functionDecleration(Type type)
@@ -260,6 +272,7 @@ Stmt* Parser::functionDecleration(Type type)
     std::vector<std::pair<Token, Type>> params;
     size_t totalSize = 0;
 
+    this->depth++;
     advance(); // Open Paren (
 
     if (peek().type != TokenType::CLOSE_PAREN)
@@ -281,6 +294,7 @@ Stmt* Parser::functionDecleration(Type type)
     consume(TokenType::OPEN_BRACE, "Expect '{' at function start."); // Opening {
     StmtBlock* body = (StmtBlock*)block();
 
+    this->depth--;
     globals.insert(std::make_pair(funcName.getString(), new FuncValue(type, params)));
 
     return new StmtFunc(funcName, body, type, params);
@@ -322,13 +336,19 @@ Stmt* Parser::statement()
 
 Stmt* Parser::block()
 {
+    this->depth++;
+
     std::vector<Stmt*> stmts;
     while (peek().type != TokenType::CLOSE_BRACE && peek().type != TokenType::EOF_TOKEN)
     {
-        stmts.push_back(statement());
+        if (isTypeName(peek()))
+            stmts.push_back(variableDecleration(parseTypeName()));
+        else
+            stmts.push_back(statement());
     }
     consume(TokenType::CLOSE_BRACE, "Expect '}' after a block.");
 
+    this->depth--;
     return new StmtBlock(stmts);
 }
 

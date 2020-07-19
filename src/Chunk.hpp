@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ArrayList.h"
+#include "ArrayList.hpp"
 #include <cstdint>
 #include <vector>
 

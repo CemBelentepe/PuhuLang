@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ArrayList.h"
+#include "ArrayList.hpp"
 #include "AstVisitor.hpp"
 #include "Chunk.hpp"
 #include "IRChunk.hpp"
@@ -108,12 +108,23 @@ public:
         {
             if (i != 0)
                 std::cout << ", ";
-            std::cout << stmt->args[i].second << " " << stmt->args[i].first;
+            std::cout << stmt->args[i].second << " " << stmt->args[i].first.getString();
         }
         std::cout << ")\n";
 
         stmt->body->accept(this);
         indent--;
+    }
+    void visit(StmtVarDecleration* stmt)
+    {
+        indentCode();
+        std::cout << "-> " << stmt->varType << " " << stmt->name.getString();
+        if (stmt->initializer != nullptr)
+        {
+            std::cout << " = ";
+            stmt->initializer->accept(this);
+        }
+        std::cout << "\n";
     }
 };
 
@@ -325,6 +336,14 @@ public:
     void visit(InstSetGlobal* inst)
     {
         std::cout << "SET_GLOBAL\t" << inst->name;
+    }
+    void visit(InstGetLocal* inst)
+    {
+        std::cout << "GET_LOCAL\t" << inst->name;
+    }
+    void visit(InstSetLocal* inst)
+    {
+        std::cout << "SET_LOCAL\t" << inst->name;
     }
     void visit(InstCall* inst)
     {

@@ -14,4 +14,5 @@ public:
     virtual void visit(StmtBlock* stmt) = 0;
     virtual void visit(StmtExpr* stmt) = 0;
     virtual void visit(StmtFunc* stmt) = 0;
+    virtual void visit(StmtVarDecleration* stmt) = 0;
 };

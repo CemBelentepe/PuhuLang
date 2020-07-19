@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ArrayList.h"
+#include "ArrayList.hpp"
 #include "Chunk.hpp"
 #include "Value.hpp"
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AstVisitor.hpp"
+#include "Enviroment.hpp"
 #include "IRChunk.hpp"
 #include "Scanner.h"
 #include <unordered_map>
@@ -12,11 +13,14 @@ private:
     std::vector<Stmt*>& root;
     std::unordered_map<std::string, Value*>& globals;
     std::vector<IRChunk*> chunks;
+    Enviroment* currentEnviroment;
 
 public:
     IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : chunk(new IRChunk("entry")), root(root), globals(globals)
+        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
     {
+        for (auto& val : globals)
+            currentEnviroment->define(val.first, val.second->type);
     }
 
     std::vector<IRChunk*> generateIR()
@@ -29,6 +33,20 @@ public:
         chunk->addCode(new InstCall({TypeTag::VOID}, TypeTag::FUNCTION));
 
         return chunks;
+    }
+
+    void beginScope(bool frameStart)
+    {
+        currentEnviroment = new Enviroment(currentEnviroment, frameStart ? 0 : currentEnviroment->currentPos);
+    }
+
+    void endScope()
+    {
+        std::vector<TypeTag> types = currentEnviroment->getEnvTypes();
+        chunk->addCode(new InstPop(types));
+        Enviroment* env = currentEnviroment->closing;
+        delete currentEnviroment;
+        currentEnviroment = env;
     }
 
     void visit(ExprBinary* expr)
@@ -117,16 +135,21 @@ public:
     }
     void visit(ExprVariable* expr)
     {
-        // TODO: Implement later
-        chunk->addCode(new InstGetGlobal(expr->name.getString()));
+        Variable var = currentEnviroment->get(expr->name);
+        if (var.depth == 0)
+            chunk->addCode(new InstGetGlobal(expr->name.getString()));
+        else
+            chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name)));
     }
 
     void visit(StmtBlock* stmt)
     {
+        beginScope(false);
+
         for (auto& s : stmt->statements)
             s->accept(this);
 
-        // TODO: Pop enviroment
+        endScope();
     }
     void visit(StmtExpr* stmt)
     {
@@ -137,19 +160,42 @@ public:
     {
         IRChunk* enclosing = chunk;
         chunk = new IRChunk(stmt->name.getString());
-        
+
         FuncValue* func = (FuncValue*)globals[stmt->name.getString()];
         func->irChunk = chunk;
         func->data.valChunk = func->irChunk->chunk;
 
-        // TODO: ENVIROMENT
-        stmt->body->accept(this);
+        // currentEnviroment->define(stmt->name, func->type);
 
-        if(func->type == TypeTag::VOID)
+        beginScope(true);
+        for (auto& s : stmt->args)
+            currentEnviroment->define(s.first, s.second);
+
+        for (auto& s : stmt->body->statements)
+            s->accept(this);
+
+        endScope();
+
+        if (func->type.intrinsicType->tag == TypeTag::VOID)
             chunk->addCode(new InstReturn(TypeTag::VOID));
 
         chunks.push_back(func->irChunk);
 
         chunk = enclosing;
+    }
+    void visit(StmtVarDecleration* stmt)
+    {
+        if (stmt->initializer != nullptr)
+        {
+            stmt->initializer->accept(this);
+            if(currentEnviroment->depth != 0)
+                currentEnviroment->define(stmt->name, stmt->varType);
+            if (currentEnviroment->depth == 0)
+                chunk->addCode(new InstSetGlobal(stmt->name.getString()));
+            else
+                chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
+        }
+        else if(currentEnviroment->depth != 0)
+            currentEnviroment->define(stmt->name, stmt->varType);
     }
 };

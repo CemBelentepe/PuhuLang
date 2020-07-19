@@ -15,6 +15,7 @@ public:
 	Parser(std::vector<Token>& tokens);
 	std::vector<Stmt*> parse();
 	std::unordered_map<std::string, Value*> globals;
+	int depth;
 
 private:
 	std::vector<Token>& tokens;

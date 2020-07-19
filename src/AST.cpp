@@ -45,3 +45,8 @@ void StmtExpr::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtVarDecleration::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}

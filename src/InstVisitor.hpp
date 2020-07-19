@@ -24,6 +24,8 @@ public:
     virtual void visit(InstNeq* inst) = 0;
     virtual void visit(InstGetGlobal* inst) = 0;
     virtual void visit(InstSetGlobal* inst) = 0;
+    virtual void visit(InstGetLocal* inst) = 0;
+    virtual void visit(InstSetLocal* inst) = 0;
     virtual void visit(InstCall* inst) = 0;
     virtual void visit(InstPop* inst) = 0;
     virtual void visit(InstReturn* inst) = 0;

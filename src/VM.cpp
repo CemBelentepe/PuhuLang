@@ -294,16 +294,16 @@ bool VM::interpret(Chunk* entryChunk)
 		}
 		case OpCode::SET_LOCAL:
 		{
-			uint8_t slot = advance();
 			uint8_t size = advance();
+			uint8_t slot = advance();
 			stack.set_sized(stack.peek_sized(size), slot + this->frames.back().frameStart, size);
 
 			break;
 		}
 		case OpCode::GET_LOCAL:
 		{
-			uint8_t slot = advance();
 			uint8_t size = advance();
+			uint8_t slot = advance();
 			stack.push_sized(stack.get_at_ref(slot + this->frames.back().frameStart), size);
 			break;
 		}
@@ -318,8 +318,8 @@ bool VM::interpret(Chunk* entryChunk)
 		}
 		case OpCode::SET_LOCAL_POP:
 		{
-			uint8_t slot = advance();
 			uint8_t size = advance();
+			uint8_t slot = advance();
 			stack.set_sized(stack.peek_sized(size), slot + this->frames.back().frameStart, size);
 			stack.pop_sized(size);
 			break;

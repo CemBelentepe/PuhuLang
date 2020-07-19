@@ -48,6 +48,7 @@ public:
     void generateCode(IRChunk* irChunk)
     {
         chunk = irChunk->chunk;
+        constPositions.clear();
         for (auto& val : irChunk->getConstants())
         {
             size_t size = val->type.getSize();
@@ -278,6 +279,15 @@ public:
     {
         auto& var = globalInfo[inst->name];
         chunk->addCode(OpCode::SET_GLOBAL, var.size, var.addr);
+    }
+    void visit(InstGetLocal* inst)
+    {
+        chunk->addCode(OpCode::GET_LOCAL, inst->var.type.getSize(), inst->var.position);
+    }
+    void visit(InstSetLocal* inst)
+    {
+        auto& var = globalInfo[inst->name];
+        chunk->addCode(OpCode::SET_LOCAL, inst->var.type.getSize(), inst->var.position);
     }
     void visit(InstCall* inst)
     {
