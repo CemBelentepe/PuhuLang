@@ -266,4 +266,13 @@ public:
             stmt->retVal->accept(this);
         }
     }
+    void visit(StmtIf* stmt)
+    {
+        stmt->condition->accept(this);
+        if(stmt->condition->type.tag != TypeTag::BOOL)
+            error("Type of the if condition must be a 'bool'", stmt->paren);
+        stmt->then->accept(this);
+        if(stmt->els != nullptr)
+            stmt->els->accept(this);
+    }
 };

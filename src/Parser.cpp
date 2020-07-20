@@ -307,10 +307,10 @@ Stmt* Parser::statement()
     {
         return block();
     }
-    // else if (token == TokenType::IF)
-    // {
-    // 	ifStatement();
-    // }
+    else if (token == TokenType::IF)
+    {
+        return ifStatement();
+    }
     // else if (token == TokenType::WHILE)
     // {
     // 	whileStatement();
@@ -321,10 +321,10 @@ Stmt* Parser::statement()
     // }
     else if (token == TokenType::RETURN)
     {
-    	advance();
-    	Expr* ret = parseExpression();
-    	consume(TokenType::SEMI_COLON, "Expect ';' after a return statement.");
-    	return new StmtReturn(ret);
+        advance();
+        Expr* ret = parseExpression();
+        consume(TokenType::SEMI_COLON, "Expect ';' after a return statement.");
+        return new StmtReturn(ret);
     }
     else
     {
@@ -352,6 +352,20 @@ Stmt* Parser::block()
     return new StmtBlock(stmts);
 }
 
+Stmt* Parser::ifStatement()
+{
+    advance();
+    consume(TokenType::OPEN_PAREN, "Expect '(' after if keyword.");
+    Token paren = consumed();
+    Expr* condition = parseExpression();
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after if condition.");
+    Stmt* then = statement();
+    Stmt* els = nullptr;
+    if (match(TokenType::ELSE))
+        els = statement();
+    return new StmtIf(condition, then, els, paren);
+}
+
 Expr* Parser::parseExpression()
 {
     return assignment();
@@ -361,16 +375,16 @@ Expr* Parser::assignment()
 {
     Expr* expr = bit_or();
 
-    if(match(TokenType::EQUAL))
+    if (match(TokenType::EQUAL))
     {
         Expr* asgn = parseExpression();
-        
-        if(expr->instance == ExprType::Variable)
+
+        if (expr->instance == ExprType::Variable)
         {
             Token name = ((ExprVariable*)expr)->name;
             return new ExprAssignment(name, asgn);
         }
-        
+
         error("Invalid assignment target.");
     }
 

@@ -121,3 +121,13 @@ void InstReturn::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstJump::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstLabel::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+

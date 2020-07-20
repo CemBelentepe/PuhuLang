@@ -1,10 +1,15 @@
 void main()
 {
-    int n = 8;
-    print("%i+1 = %i\n", n, inc(n));
+    double start = clock();
+    int x = fibb(30);
+    double elapsed = clock();
+    print("Fibb(30): %i\nElapsed Time %d\n\n", x, elapsed);
 }
 
-int inc(int n)
+int fibb(int n)
 {
-    return n+1;
+    if(n > 1)
+        return fibb(n-1) + fibb(n-2);
+    else
+        return 1;
 }

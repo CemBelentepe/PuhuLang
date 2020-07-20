@@ -14,10 +14,11 @@ private:
     std::unordered_map<std::string, Value*>& globals;
     std::vector<IRChunk*> chunks;
     Enviroment* currentEnviroment;
+    size_t currentLabel;
 
 public:
     IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
+        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0)
     {
         for (auto& val : globals)
             currentEnviroment->define(val.first, val.second->type);
@@ -49,11 +50,16 @@ public:
         currentEnviroment = env;
     }
 
+    InstLabel* createLabel()
+    {
+        return new InstLabel(-1, currentLabel++, {});
+    }
+
     void visit(ExprAssignment* expr)
     {
         expr->assignment->accept(this);
         Variable var = currentEnviroment->get(expr->name);
-        if(var.depth == 0)
+        if (var.depth == 0)
             chunk->addCode(new InstSetGlobal(expr->name.getString()));
         else
             chunk->addCode(new InstSetLocal(expr->name.getString(), var));
@@ -197,7 +203,7 @@ public:
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
-            if(currentEnviroment->depth != 0)
+            if (currentEnviroment->depth != 0)
                 currentEnviroment->define(stmt->name, stmt->varType);
             if (currentEnviroment->depth == 0)
             {
@@ -207,12 +213,12 @@ public:
             else
                 chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
         }
-        else if(currentEnviroment->depth != 0)
+        else if (currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
     }
     void visit(StmtReturn* stmt)
     {
-        if(stmt->retVal != nullptr)
+        if (stmt->retVal != nullptr)
         {
             stmt->retVal->accept(this);
             chunk->addCode(new InstReturn(stmt->retVal->type.tag));
@@ -221,5 +227,25 @@ public:
         {
             chunk->addCode(new InstReturn(TypeTag::VOID));
         }
+    }
+    void visit(StmtIf* stmt)
+    {
+        stmt->condition->accept(this);
+        InstLabel* out = createLabel();
+        if (stmt->els != nullptr)
+        {
+            InstLabel* elsLabel = createLabel();
+            chunk->addCode(new InstJump(-1, elsLabel, 2));
+            stmt->then->accept(this);
+            chunk->addCode(new InstJump(-1, out, 0));
+            chunk->addCode(elsLabel);
+            stmt->els->accept(this);
+        }
+        else
+        {
+            chunk->addCode(new InstJump(-1, out, 2));
+            stmt->then->accept(this);
+        }
+        chunk->addCode(out);
     }
 };

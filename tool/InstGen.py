@@ -52,7 +52,9 @@ instructions = ["InstConst  : int id",
                 "InstSetLocal: std::string name, Variable var",
                 "InstCall   : std::vector<TypeTag> args, TypeTag callType",
                 "InstPop    : std::vector<TypeTag> types",
-                "InstReturn : TypeTag type"]
+                "InstReturn : TypeTag type",
+                "InstJump   : int pos, InstLabel* label, int type",
+                "InstLabel  : int pos, size_t id, std::vector<InstJump*> patches"]
 
 header = "#pragma once\n#include \"Enviroment.hpp\"\n\nclass InstVisitor;\nclass Instruction\n{\npublic:\n\tvirtual void accept(InstVisitor* visitor) = 0;\n};\n\n"
 source = '#include "Instruction.h"\n#include "InstVisitor.hpp"\n\n'

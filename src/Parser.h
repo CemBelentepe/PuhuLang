@@ -57,6 +57,7 @@ private:
 	Stmt* functionDecleration(Type type);
 	Stmt* statement();
 	Stmt* block();
+	Stmt* ifStatement();
 
 	Expr* parseExpression();
 	Expr* assignment();

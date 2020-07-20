@@ -60,3 +60,8 @@ void StmtReturn::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtIf::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}

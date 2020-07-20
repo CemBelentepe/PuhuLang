@@ -29,4 +29,6 @@ public:
     virtual void visit(InstCall* inst) = 0;
     virtual void visit(InstPop* inst) = 0;
     virtual void visit(InstReturn* inst) = 0;
+    virtual void visit(InstLabel* inst) = 0;
+    virtual void visit(InstJump* inst) = 0;
 };

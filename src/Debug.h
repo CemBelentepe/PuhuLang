@@ -143,6 +143,26 @@ public:
         }
         std::cout << "\n";
     }
+    void visit(StmtIf* stmt)
+    {
+        indentCode();
+        std::cout << "-> if: ";
+        indentCode();
+        std::cout << "Condition: ";
+        stmt->condition->accept(this);
+        std::cout << "\n";
+        indentCode();
+        indent++;
+        std::cout << "Then:\n";
+        stmt->then->accept(this);
+        if (stmt->els != nullptr)
+        {
+            std::cout << "Else:\n";
+            stmt->then->accept(this);
+        }
+        indent--;
+        std::cout << "\n";
+    }
 };
 
 void debugAST(std::vector<Stmt*>& expr);
@@ -379,6 +399,26 @@ public:
     void visit(InstReturn* inst)
     {
         std::cout << "RETURN\t" << Type(inst->type);
+    }
+    void visit(InstJump* inst)
+    {
+        switch (inst->type)
+        {
+        case 0:
+            std::cout << "JUMP";
+            break;
+        case 1:
+            std::cout << "JUMP_NT";
+            break;
+        case 2:
+            std::cout << "JUMP_NT_POP";
+            break;
+        }
+        std::cout << "\tL." << inst->label->id;
+    }
+    void visit(InstLabel* inst)
+    {
+        std::cout << "L." << inst->id << ":";
     }
 };
 

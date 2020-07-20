@@ -202,3 +202,18 @@ public:
 
     void accept(AstVisitor* visitor);
 };
+
+class StmtIf : public Stmt
+{
+public:
+    Expr* condition;
+    Stmt* then;
+    Stmt* els;
+    Token paren;
+
+    StmtIf(Expr* condition, Stmt* then, Stmt* els, Token paren)
+        :condition(condition), then(then), els(els), paren(paren)
+    {}
+
+    void accept(AstVisitor* visitor);
+};

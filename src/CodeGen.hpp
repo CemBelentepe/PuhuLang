@@ -30,6 +30,7 @@ private:
     std::vector<valInfo> constPositions;
     std::unordered_map<std::string, valInfo> globalInfo;
     ArrayList<uint8_t> m_globals;
+    int pos;
     bool hadError;
 
 public:
@@ -47,6 +48,7 @@ public:
 
     void generateCode(IRChunk* irChunk)
     {
+        pos = 0;
         chunk = irChunk->chunk;
         constPositions.clear();
         for (auto& val : irChunk->getConstants())
@@ -81,10 +83,12 @@ public:
             error("Constant position is out of bounds[255].");
 
         chunk->addCode(OpCode::CONSTANT, c.size, c.addr);
+        pos += 3;
     }
     void visit(InstCast* inst)
     {
         chunk->addCode(OpCode::CAST, (uint8_t)inst->from, (uint8_t)inst->to);
+        pos += 3;
     }
     void visit(InstAdd* inst)
     {
@@ -102,6 +106,7 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstSub* inst)
     {
@@ -119,6 +124,7 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstMul* inst)
     {
@@ -136,6 +142,7 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstDiv* inst)
     {
@@ -153,6 +160,7 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstNeg* inst)
     {
@@ -170,10 +178,12 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstMod* inst)
     {
         chunk->addCode(OpCode::MOD);
+        pos += 1;
     }
     void visit(InstBit* inst)
     {
@@ -205,10 +215,12 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstNot* inst)
     {
         chunk->addCode(OpCode::LOGIC_NOT);
+        pos += 1;
     }
     void visit(InstInc* inst)
     {
@@ -226,6 +238,7 @@ public:
             break;
         }
         chunk->addCode(code);
+        pos += 1;
     }
     void visit(InstLess* inst)
     {
@@ -233,6 +246,7 @@ public:
             chunk->addCode(OpCode::ILESS);
         else
             chunk->addCode(OpCode::DLESS);
+        pos += 1;
     }
     void visit(InstLte* inst)
     {
@@ -240,6 +254,7 @@ public:
             chunk->addCode(OpCode::ILESS_EQUAL);
         else
             chunk->addCode(OpCode::DLESS_EQUAL);
+        pos += 1;
     }
     void visit(InstGreat* inst)
     {
@@ -247,6 +262,7 @@ public:
             chunk->addCode(OpCode::IGREAT);
         else
             chunk->addCode(OpCode::DGREAT);
+        pos += 1;
     }
     void visit(InstGte* inst)
     {
@@ -254,6 +270,7 @@ public:
             chunk->addCode(OpCode::IGREAT_EQUAL);
         else
             chunk->addCode(OpCode::DGREAT_EQUAL);
+        pos += 1;
     }
     void visit(InstEq* inst)
     {
@@ -261,6 +278,7 @@ public:
             chunk->addCode(OpCode::IIS_EQUAL);
         else
             chunk->addCode(OpCode::DIS_EQUAL);
+        pos += 1;
     }
     void visit(InstNeq* inst)
     {
@@ -268,26 +286,31 @@ public:
             chunk->addCode(OpCode::INOT_EQUAL);
         else
             chunk->addCode(OpCode::DNOT_EQUAL);
+        pos += 1;
     }
 
     void visit(InstGetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
         chunk->addCode(OpCode::GET_GLOBAL, var.size, var.addr);
+        pos += 3;
     }
     void visit(InstSetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
         chunk->addCode(OpCode::SET_GLOBAL, var.size, var.addr);
+        pos += 3;
     }
     void visit(InstGetLocal* inst)
     {
         chunk->addCode(OpCode::GET_LOCAL, inst->var.type.getSize(), inst->var.position);
+        pos += 3;
     }
     void visit(InstSetLocal* inst)
     {
         auto& var = globalInfo[inst->name];
         chunk->addCode(OpCode::SET_LOCAL, inst->var.type.getSize(), inst->var.position);
+        pos += 3;
     }
     void visit(InstCall* inst)
     {
@@ -302,6 +325,7 @@ public:
             chunk->addCode(OpCode::CALL, size);
         else if (inst->callType == TypeTag::NATIVE)
             chunk->addCode(OpCode::NATIVE_CALL, size);
+        pos += 2;
     }
     void visit(InstPop* inst)
     {
@@ -313,10 +337,50 @@ public:
             error("[ERROR] Too much data for pop.");
 
         chunk->addCode(OpCode::POPN, size);
+        pos += 2;
     }
     void visit(InstReturn* inst)
     {
         size_t size = Type(inst->type).getSize();
         chunk->addCode(OpCode::RETURN, size);
+        pos += 2;
+    }
+    void visit(InstLabel* inst)
+    {
+        inst->pos = pos;
+        for (auto& jmp : inst->patches)
+        {
+            int diff = pos - jmp->pos - 2;
+            if (diff > 255)
+                error("Jump is too long.");
+            chunk->code[jmp->pos + 1] = diff;
+        }
+        pos += 0;
+    }
+    void visit(InstJump* inst)
+    {
+        inst->pos = pos;
+        if (inst->type == 0)
+        {
+            if (inst->label->pos > 0)
+            {
+                chunk->addCode(OpCode::LOOP, pos + 2 - inst->label->pos);
+            }
+            else
+            {
+                inst->label->patches.push_back(inst);
+                chunk->addCode(OpCode::JUMP, 0);
+            }
+        }
+        else
+        {
+            inst->label->patches.push_back(inst);
+            if (inst->type == 1)
+                chunk->addCode(OpCode::JUMP_NT, 0);
+            else
+                chunk->addCode(OpCode::JUMP_NT_POP, 0);
+        }
+
+        pos += 2;
     }
 };

@@ -17,4 +17,5 @@ public:
     virtual void visit(StmtFunc* stmt) = 0;
     virtual void visit(StmtVarDecleration* stmt) = 0;
     virtual void visit(StmtReturn* stmt) = 0;
+    virtual void visit(StmtIf* stmt) = 0;
 };

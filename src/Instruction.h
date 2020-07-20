@@ -275,3 +275,31 @@ public:
 	 void accept(InstVisitor* visitor);
 };
 
+class InstLabel;
+
+class InstJump : public Instruction
+{
+public:
+	int pos;
+	InstLabel* label;
+	int type;
+
+	InstJump(int pos, InstLabel* label, int type)
+		: pos(pos), label(label), type(type) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstLabel : public Instruction
+{
+public:
+	int pos;
+	size_t id;
+	std::vector<InstJump*> patches;
+
+	InstLabel(int pos, size_t id, std::vector<InstJump*> patches)
+		: pos(pos), id(id), patches(patches) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
