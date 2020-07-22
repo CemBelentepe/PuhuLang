@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -14,6 +15,9 @@ enum class TokenType
 	LESS_EQUAL, GREAT_EQUAL, ARROW, BANG_EQUAL, EQUAL_EQUAL, AND, OR,
 	PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, BIT_AND_EQUAL, BIT_OR_EQUAL, BIT_XOR_EQUAL, BITSHIFT_LEFT, BITSHIFT_RIGHT,
 	PLUS_PLUS, MINUS_MINUS,
+
+	// Three char
+	BITSHIFT_LEFT_EQUAL, BITSHIFT_RIGHT_EQUAL,
 
 	// Literals
 	STRING_LITERAL, IDENTIFIER, INTEGER_LITERAL, DOUBLE_LITERAL, FLOAT_LITERAL, CHAR_LITERAL,
@@ -33,7 +37,7 @@ enum class TokenType
 class Token
 {
 public:
-	const TokenType type;
+	TokenType type;
 	const int line;
 	const char* start;
 	const int length;
@@ -68,7 +72,7 @@ private:
 	std::string formatString(const char* str, size_t size);
 	Token stringLiteral(); // scans to a "
 	Token charLiteral(); // scans to a '
-	Token identifierLiteral(); // scans the next identifier
+	Token identifierLiteral(char start); // scans the next identifier
 	Token numberLiteral(); // scans the next number
 	Token errorToken(const char* msg);
 

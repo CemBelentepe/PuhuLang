@@ -1,0 +1,15 @@
+void main(){
+    for(int i = 0; i < 10; i += 1){
+        double start = clock();
+        int x = fibb(30);
+        double elapsed = clock() - start;
+        print("Trial %i:\nFibb(30): %i\nElapsed Time: %d\n\n", i+1, x, elapsed); 
+    }
+}
+
+int fibb(int n){
+ 	if(n > 1)
+ 		return fibb(n - 1) + fibb(n - 2);
+ 	else
+		return 1;
+}
