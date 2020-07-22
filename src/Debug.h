@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ArrayList.hpp"
 #include "AstVisitor.hpp"
 #include "Chunk.hpp"
 #include "IRChunk.hpp"
@@ -424,7 +423,7 @@ public:
 
 void debugInstructions(IRChunk* irChunk);
 
-void printStack(ArrayList<uint8_t>& stack);
+void printStack(std::vector<Data>& stack);
 
 size_t dissambleInstruction(Chunk* chunk, size_t offset);
 

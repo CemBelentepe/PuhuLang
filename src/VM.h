@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ArrayList.hpp"
 #include "Chunk.hpp"
 #include "Value.hpp"
+#include <vector>
 
 struct Frame
 {
@@ -22,18 +22,18 @@ struct Frame
 class VM
 {
 public:
-	VM(ArrayList<uint8_t> globals);
+	VM(std::vector<Data> globals);
 	~VM();
 	bool interpret(Chunk* entryChunk);
 
-	inline const ArrayList<uint8_t>* getStack() const { return &this->stack; }
+	inline const std::vector<Data>* getStack() const { return &this->stack; }
 
 private:
 	Chunk* currentChunk;
 	size_t ip;
-	ArrayList<uint8_t> stack;
+	std::vector<Data> stack;
 public:
-	ArrayList<uint8_t> globals;
+	std::vector<Data> globals;
 	std::vector<Frame> frames;
 
 private:

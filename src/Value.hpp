@@ -136,24 +136,20 @@ public:
         switch (tag)
         {
         case TypeTag::BOOL:
-            return sizeof(bool);
         case TypeTag::INTEGER:
-            return sizeof(int32_t);
         case TypeTag::FLOAT:
-            return sizeof(float);
         case TypeTag::DOUBLE:
-            return sizeof(double);
         case TypeTag::CHAR:
-            return sizeof(char);
+        case TypeTag::FUNCTION:
+        case TypeTag::POINTER:
+        case TypeTag::STRING:
+        case TypeTag::NATIVE:
+            return 1;
         case TypeTag::VOID:
             return 0;
 
-        case TypeTag::STRING:
         case TypeTag::ARRAY:
-        case TypeTag::POINTER:
-        case TypeTag::FUNCTION:
-        case TypeTag::NATIVE:
-            return sizeof(void*);
+            return 1;
 
         default:
             std::cout << "[ERROR] Unknown type: " << (int)tag << "\n";
@@ -162,23 +158,25 @@ public:
     }
 };
 
-typedef uint8_t* (*NativeFn)(int, uint8_t*);
+union Data
+{
+    bool valBool;
+    char valChar;
+    int32_t valInt;
+    float valFloat;
+    double valDouble;
+    char* valString;
+    Chunk* valChunk;
+    Data(*valNative)(int, Data*);
+};
+
+typedef Data (*NativeFn)(int, Data*);
 
 class Value
 {
 public:
     Type type;
-    union Data
-    {
-        bool valBool;
-        char valChar;
-        int32_t valInt;
-        float valFloat;
-        double valDouble;
-        char* valString;
-        Chunk* valChunk;
-        NativeFn valNative;
-    } data;
+    Data data;
 
     Value()
         : type(TypeTag::ERROR), data({0})
@@ -264,39 +262,6 @@ public:
         return os;
     }
 
-    virtual uint8_t* cloneData()
-    {
-        uint8_t* clone = new uint8_t[type.getSize()];
-        switch (type.tag)
-        {
-        case TypeTag::INTEGER:
-            *(int32_t*)clone = data.valInt;
-            break;
-        case TypeTag::FLOAT:
-            *(float*)clone = data.valFloat;
-            break;
-        case TypeTag::DOUBLE:
-            *(double*)clone = data.valDouble;
-            break;
-        case TypeTag::BOOL:
-            *(bool*)clone = data.valBool;
-            break;
-        case TypeTag::CHAR:
-            *(char*)clone = data.valChar;
-            break;
-        case TypeTag::STRING:
-            *(char**)clone = data.valString;
-            break;
-        case TypeTag::FUNCTION:
-            *(Chunk**)clone = data.valChunk;
-            break;
-        default:
-            std::cout << "[ERROR] Unknown type cloning\n";
-            break;
-        }
-        return clone;
-    }
-
     bool operator==(const Value& right)
     {
         if (right.type != this->type)
@@ -360,11 +325,4 @@ public:
     }
 
     virtual ~NativeFunc() {}
-
-    uint8_t* cloneData() override
-    {
-        NativeFunc** clone = new NativeFunc*();
-        *clone = this;
-        return (uint8_t*)(clone);
-    }
 };

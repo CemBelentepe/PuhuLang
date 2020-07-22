@@ -280,7 +280,7 @@ Stmt* Parser::functionDecleration(Type type)
         Type type = parseTypeName();
         Token name = advance();
         params.push_back(std::make_pair(name, type));
-        totalSize += type.getSize();
+        totalSize++;
     }
     while (!match(TokenType::CLOSE_PAREN))
     {
@@ -288,7 +288,7 @@ Stmt* Parser::functionDecleration(Type type)
         Type type = parseTypeName();
         Token name = advance();
         params.push_back(std::make_pair(name, type));
-        totalSize += type.getSize();
+        totalSize++;
     }
 
     consume(TokenType::OPEN_BRACE, "Expect '{' at function start."); // Opening {

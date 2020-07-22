@@ -3,51 +3,47 @@
 #include "Value.hpp"
 #include <ctime>
 
-uint8_t* native_print(int argc, uint8_t* args)
+Data native_print(int argc, Data* args)
 {
-	const char* str = *(char**)(args);
-	size_t args_start = sizeof(char**);
-	size_t i = 0;
-	while(str[i] != 0)
-	{
-		const char& c = str[i++];
-		if (c == '%')
-		{
-			switch (str[i])
-			{
-			case 'i':
-				std::cout << *(int32_t*)(&args[args_start]);
-				args_start += sizeof(int32_t);
-				break;
-			case 'f':
-				std::cout << *(float*)(&args[args_start]);
-				args_start += sizeof(float);
-				break;
-			case 'd':
-				std::cout << *(double*)(&args[args_start]);
-				args_start += sizeof(double);
-				break;
-			case 'c':
-				std::cout << *(char*)(&args[args_start]);
-				args_start += sizeof(char);
-				break;
-			case 's':
-				std::cout << *(char**)(&args[args_start]);
-				args_start += sizeof(char*);
-				break;
-			default:
-				std::cout << args[i];
-				break;
-			}
-			i++;
-		}
-		else
-		{
-			putchar(c);
-		}
-	}
+    const char* str = args[0].valString;
+    size_t args_start = 1;
+    size_t i = 0;
+    while (str[i] != 0)
+    {
+        const char& c = str[i++];
+        if (c == '%')
+        {
+            switch (str[i])
+            {
+            case 'i':
+                std::cout << args[args_start].valInt;
+                break;
+            case 'f':
+                std::cout << args[args_start].valFloat;
+                break;
+            case 'd':
+                std::cout << args[args_start].valDouble;
+                break;
+            case 'c':
+                std::cout << args[args_start].valChar;
+                break;
+            case 's':
+                std::cout << args[args_start].valString;
+                break;
+            default:
+                std::cout << args[args_start].valChunk;
+                break;
+            }
+            args_start++;
+            i++;
+        }
+        else
+        {
+            putchar(c);
+        }
+    }
 
-	return nullptr;
+    return Data{0};
 }
 
 /*
@@ -68,21 +64,27 @@ uint8_t* native_printlnInt(int argc, uint8_t* args)
 }
 */
 
-uint8_t* native_input(int argc, uint8_t* args)
+Data native_input(int argc, Data* args)
 {
-	std::string in;
-	getline(std::cin, in);
-	return Value(in).cloneData();
+    std::string in;
+    getline(std::cin, in);
+    Data data;
+    data.valString = new char[in.size() + 1];
+    strcpy(data.valString, in.c_str());
+    return data;
 }
 
-uint8_t* native_inputInt(int argc, uint8_t* args)
+Data native_inputInt(int argc, Data* args)
 {
-	int32_t i;
-	std::cin >> i;
-	return Value(i).cloneData();
+    Data i;
+    std::cin >> i.valInt;
+    return i;
 }
 
-uint8_t* native_clock(int argc, uint8_t* args)
+Data native_clock(int argc, Data* args)
 {
-	return Value((double)clock() / CLOCKS_PER_SEC).cloneData();
+    Data t;
+    t.valDouble = (double)clock() / CLOCKS_PER_SEC;
+    ;
+    return t;
 }

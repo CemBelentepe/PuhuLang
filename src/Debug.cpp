@@ -24,12 +24,12 @@ void debugInstructions(IRChunk* irChunk)
     std::cout << std::endl;
 }
 
-void printStack(ArrayList<uint8_t>& stack)
+void printStack(std::vector<Data>& stack)
 {
 	std::cout << "\t";
-	for(int i = 0; i < stack.count(); i++)
+	for(int i = 0; i < stack.size(); i++)
 	{
-		printf("[%.2X]", stack.at(i));
+		printf("[%.16X]", stack[i]);
 	}
 	std::cout << std::endl;
 }
@@ -42,7 +42,7 @@ size_t printInstruction(const char* name, size_t offset)
 
 size_t printConstantInstruction(const char* name, Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << "\t" << (void*)chunk->getConstant(chunk->code[++offset]) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << chunk->getConstant(chunk->code[++offset]).valChunk << std::endl;
 	return offset;
 }
 
@@ -54,7 +54,7 @@ size_t printPopInstruction(const char* name, Chunk* chunk, size_t offset)
 
 size_t printLocalInstruction(const char* name, Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << (unsigned int)chunk->code[++offset] << " " << (unsigned int)chunk->code[++offset] << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << name << "\t" << " " << (unsigned int)chunk->code[++offset] << std::endl;
 	return offset;
 }
 

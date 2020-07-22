@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ArrayList.hpp"
 #include <cstdint>
 #include <vector>
+#include "Value.hpp"
 
 enum class OpCode
 {
@@ -43,28 +43,20 @@ class Chunk
 {
 public:
 	std::vector<uint8_t> code;
-	ArrayList<uint8_t> constants;
+	std::vector<Data> constants;
 	
     Chunk() {}
 
-	inline size_t addConstant(uint8_t* value, size_t valueSize)
+	inline size_t addConstant(Data value)
     {
-        size_t pos = constants.count();
-        constants.push_sized(value, valueSize);
+        size_t pos = constants.size();
+        constants.push_back(value);
         return pos;
     }
 
-    template<class T>
-    inline size_t addConstant(T value)
+    inline Data& getConstant(size_t addr)
     {
-        size_t pos = constants.count();
-        constants.push_as<T>(value);
-        return pos;
-    }
-
-    inline uint8_t* getConstant(size_t addr)
-    {
-        return constants.get_at_ref(addr);
+        return constants[addr];
     }
 
 	inline void addCode(OpCode code)

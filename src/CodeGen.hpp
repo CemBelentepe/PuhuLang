@@ -9,16 +9,15 @@
 
 struct valInfo
 {
-    size_t size;
     size_t addr;
 
     valInfo()
-        : size(0), addr(0)
+        : addr(0)
     {
     }
 
-    valInfo(size_t size, size_t addr)
-        : size(size), addr(addr)
+    valInfo(size_t addr)
+        : addr(addr)
     {
     }
 };
@@ -29,7 +28,7 @@ private:
     Chunk* chunk;
     std::vector<valInfo> constPositions;
     std::unordered_map<std::string, valInfo> globalInfo;
-    ArrayList<uint8_t> m_globals;
+    std::vector<Data> m_globals;
     int pos;
     bool hadError;
 
@@ -39,10 +38,9 @@ public:
     {
         for (auto& val : globals)
         {
-            size_t size = val.second->type.getSize();
-            size_t addr = m_globals.count();
-            m_globals.push_sized(val.second->cloneData(), size);
-            globalInfo.insert(std::make_pair(val.first, valInfo(size, addr)));
+            size_t addr = m_globals.size();
+            m_globals.push_back(val.second->data);
+            globalInfo.insert(std::make_pair(val.first, valInfo(addr)));
         }
     }
 
@@ -53,9 +51,8 @@ public:
         constPositions.clear();
         for (auto& val : irChunk->getConstants())
         {
-            size_t size = val->type.getSize();
-            size_t addr = chunk->addConstant(val->cloneData(), size);
-            constPositions.push_back(valInfo(size, addr));
+            size_t addr = chunk->addConstant(val->data);
+            constPositions.push_back(valInfo(addr));
         }
 
         for (auto& inst : irChunk->getCode())
@@ -64,7 +61,7 @@ public:
         }
     }
 
-    inline ArrayList<uint8_t> getGlobals()
+    inline std::vector<Data> getGlobals()
     {
         return m_globals;
     }
@@ -82,8 +79,8 @@ public:
         if (c.addr > 255)
             error("Constant position is out of bounds[255].");
 
-        chunk->addCode(OpCode::CONSTANT, c.size, c.addr);
-        pos += 3;
+        chunk->addCode(OpCode::CONSTANT, c.addr);
+        pos += 2;
     }
     void visit(InstCast* inst)
     {
@@ -292,30 +289,30 @@ public:
     void visit(InstGetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::GET_GLOBAL, var.size, var.addr);
-        pos += 3;
+        chunk->addCode(OpCode::GET_GLOBAL, var.addr);
+        pos += 2;
     }
     void visit(InstSetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::SET_GLOBAL, var.size, var.addr);
-        pos += 3;
+        chunk->addCode(OpCode::SET_GLOBAL, var.addr);
+        pos += 2;
     }
     void visit(InstGetLocal* inst)
     {
-        chunk->addCode(OpCode::GET_LOCAL, inst->var.type.getSize(), inst->var.position);
-        pos += 3;
+        chunk->addCode(OpCode::GET_LOCAL, inst->var.position);
+        pos += 2;
     }
     void visit(InstSetLocal* inst)
     {
         auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::SET_LOCAL, inst->var.type.getSize(), inst->var.position);
-        pos += 3;
+        chunk->addCode(OpCode::SET_LOCAL, inst->var.position);
+        pos += 2;
     }
     void visit(InstCall* inst)
     {
         size_t size = 0;
-        for (auto& arg : inst->args)
+        for(auto& arg : inst->args)
             size += Type(arg).getSize();
 
         if (size > 255)
@@ -330,7 +327,7 @@ public:
     void visit(InstPop* inst)
     {
         size_t size = 0;
-        for (auto& t : inst->types)
+        for(auto& t : inst->types)
             size += Type(t).getSize();
 
         if (size > 255)

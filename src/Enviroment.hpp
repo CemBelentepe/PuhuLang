@@ -53,7 +53,7 @@ public:
         if (values.find(name.getString()) == values.end())
         {
             values.insert({name.getString(), Variable(depth, currentPos, type)});
-            currentPos += type.getSize();
+            currentPos++;
         }
         else
             std::cout << "[ERROR] Variable '" << name.getString() << "' has already defined at this scope at line " << name.line << "\n";
@@ -64,7 +64,7 @@ public:
         if (values.find(name) == values.end())
         {
             values.insert({name, Variable(depth, currentPos, type)});
-            currentPos += type.getSize();
+            currentPos++;
         }
         else
             std::cout << "[ERROR] Variable '" << name << "' has already defined at this scope\n";
