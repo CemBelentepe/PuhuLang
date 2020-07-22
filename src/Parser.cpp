@@ -134,6 +134,16 @@ bool Parser::match(TokenType type)
     return false;
 }
 
+bool Parser::match(std::vector<TokenType> types)
+{
+    for (auto& token : types)
+    {
+        if (match(token))
+            return true;
+    }
+    return false;
+}
+
 bool Parser::matchCast()
 {
     return tokens[currentToken].type == TokenType::OPEN_PAREN && getCast() != TypeTag::ERROR && tokens[currentToken + 2].type == TokenType::CLOSE_PAREN;
@@ -384,7 +394,7 @@ Stmt* Parser::forStatement()
             consume(TokenType::SEMI_COLON, "Expect ';' after first part of 'for' statement.");
         }
     }
-    
+
     if (!match(TokenType::SEMI_COLON))
     {
         cond = parseExpression();
@@ -395,14 +405,13 @@ Stmt* Parser::forStatement()
         cond = new ExprLiteral(new Value(true));
     }
 
-
-    if(peek().type != TokenType::CLOSE_PAREN)
+    if (peek().type != TokenType::CLOSE_PAREN)
     {
         inc = parseExpression();
     }
 
     consume(TokenType::CLOSE_PAREN, "Expect ')' after 'for' conditions.");
-    
+
     Stmt* loop = statement();
     return new StmtFor(decl, cond, inc, loop, paren);
 }
@@ -425,11 +434,47 @@ Expr* Parser::parseExpression()
 
 Expr* Parser::assignment()
 {
-    Expr* expr = bit_or();
+    Expr* expr = logic_or();
 
-    if (match(TokenType::EQUAL))
+    if (match({TokenType::EQUAL, TokenType::PLUS_EQUAL, TokenType::MINUS_EQUAL, TokenType::STAR_EQUAL, TokenType::SLASH_EQUAL,
+               TokenType::BIT_AND_EQUAL, TokenType::BIT_OR_EQUAL, TokenType::BIT_XOR_EQUAL, TokenType::BITSHIFT_LEFT_EQUAL, TokenType::BITSHIFT_RIGHT_EQUAL}))
     {
+        Token t = consumed();
         Expr* asgn = parseExpression();
+
+        switch (t.type)
+        {
+        case TokenType::PLUS_EQUAL:
+            t.type = TokenType::PLUS;
+            break;
+        case TokenType::MINUS_EQUAL:
+            t.type = TokenType::MINUS;
+            break;
+        case TokenType::STAR_EQUAL:
+            t.type = TokenType::STAR;
+            break;
+        case TokenType::SLASH_EQUAL:
+            t.type = TokenType::SLASH;
+            break;
+        case TokenType::BIT_AND_EQUAL:
+            t.type = TokenType::BIT_AND;
+            break;
+        case TokenType::BIT_OR_EQUAL:
+            t.type = TokenType::BIT_OR;
+            break;
+        case TokenType::BIT_XOR_EQUAL:
+            t.type = TokenType::BIT_XOR;
+            break;
+        case TokenType::BITSHIFT_LEFT:
+            t.type = TokenType::BITSHIFT_LEFT;
+            break;
+        case TokenType::BITSHIFT_RIGHT_EQUAL:
+            t.type = TokenType::BITSHIFT_RIGHT;
+            break;
+        }
+
+        if (t.type != TokenType::EQUAL)
+            asgn = new ExprBinary(expr, asgn, t);
 
         if (expr->instance == ExprType::Variable)
         {
@@ -441,6 +486,30 @@ Expr* Parser::assignment()
     }
 
     return expr;
+}
+
+Expr* Parser::logic_or()
+{
+    Expr* left = logic_and();
+    while (match(TokenType::AND))
+    {
+        Token op = consumed();
+        Expr* right = logic_and();
+        left = new ExprLogic(left, right, op);
+    }
+    return left;
+}
+
+Expr* Parser::logic_and()
+{
+    Expr* left = bit_or();
+    while (match(TokenType::OR))
+    {
+        Token op = consumed();
+        Expr* right = bit_or();
+        left = new ExprLogic(left, right, op);
+    }
+    return left;
 }
 
 Expr* Parser::bit_or()

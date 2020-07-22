@@ -10,6 +10,7 @@ enum class ExprType
     Call,
     Cast,
     Literal,
+    Logic,
     Unary,
     Variable
 };
@@ -127,6 +128,20 @@ public:
     void accept(AstVisitor* visitor);
 };
 
+class ExprLogic : public Expr
+{
+public:
+    Expr* left;
+    Expr* right;
+    Token op;
+
+    ExprLogic(Expr* left, Expr* right, Token op)
+        : Expr(ExprType::Logic, TypeTag::BOOL), left(left), right(right), op(op)
+    {
+    }
+    void accept(AstVisitor* visitor);
+};
+
 class Stmt
 {
 public:
@@ -228,8 +243,8 @@ public:
     Stmt* loop;
     Token paren;
 
-    StmtFor(Stmt* decl, Expr* cond, Expr* inc, Stmt* loop,Token paren)
-        :decl(decl), cond(cond), inc(inc), loop(loop), paren(paren)
+    StmtFor(Stmt* decl, Expr* cond, Expr* inc, Stmt* loop, Token paren)
+        : decl(decl), cond(cond), inc(inc), loop(loop), paren(paren)
     {
     }
 

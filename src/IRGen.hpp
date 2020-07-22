@@ -135,6 +135,29 @@ public:
         size_t pos = chunk->addConstant(expr->val);
         chunk->addCode(new InstConst(pos));
     }
+    void visit(ExprLogic* expr)
+    {
+        expr->left->accept(this);
+        if (expr->op.type == TokenType::AND)
+        {
+            InstLabel* out = createLabel();
+            chunk->addCode(new InstJump(-1, out, 1));
+            chunk->addCode(new InstPop({TypeTag::BOOL}));
+            expr->right->accept(this);
+            chunk->addCode(out);
+        }
+        else
+        {
+            InstLabel* l1 = createLabel();
+            InstLabel* l2 = createLabel();
+            chunk->addCode(new InstJump(-1, l1, 1));
+            chunk->addCode(new InstJump(-1, l2, 0));
+            chunk->addCode(l1);
+            chunk->addCode(new InstPop({TypeTag::BOOL}));
+            expr->right->accept(this);
+            chunk->addCode(l2);
+        }
+    }
     void visit(ExprUnary* expr)
     {
         expr->expr->accept(this);
@@ -258,7 +281,7 @@ public:
         stmt->cond->accept(this);
         chunk->addCode(new InstJump(-1, out, 2));
         stmt->loop->accept(this);
-        if(stmt->inc)
+        if (stmt->inc)
             stmt->inc->accept(this);
         chunk->addCode(new InstJump(-1, start, 0));
         chunk->addCode(out);

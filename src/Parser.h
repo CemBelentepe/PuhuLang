@@ -44,6 +44,7 @@ private:
 		return this->tokens[this->currentToken + 1];
 	}
 	bool match(TokenType type);
+	bool match(std::vector<TokenType> types);
 	bool matchCast();
 	Type getCast();
 

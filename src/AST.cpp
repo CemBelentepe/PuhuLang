@@ -26,6 +26,11 @@ void ExprLiteral::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
+void ExprLogic::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void ExprUnary::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

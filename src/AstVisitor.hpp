@@ -9,6 +9,7 @@ public:
     virtual void visit(ExprCall* expr) = 0;
     virtual void visit(ExprCast* expr) = 0;
     virtual void visit(ExprLiteral* expr) = 0;
+    virtual void visit(ExprLogic* expr) = 0;
     virtual void visit(ExprUnary* expr) = 0;
     virtual void visit(ExprVariable* expr) = 0;
 

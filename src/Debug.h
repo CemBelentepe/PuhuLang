@@ -84,6 +84,15 @@ public:
         std::cout << *(expr->val);
     }
 
+    void visit(ExprLogic* expr)
+    {
+        std::cout << "(" << expr->op.getString() << " ";
+        expr->left->accept(this);
+        std::cout << ", ";
+        expr->right->accept(this);
+        std::cout << ")";
+    }
+
     void visit(StmtBlock* stmt)
     {
         indentCode();

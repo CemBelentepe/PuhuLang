@@ -174,6 +174,18 @@ public:
         expr->type = expr->val->type;
     }
 
+    void visit(ExprLogic* expr)
+    {
+        expr->left->accept(this);
+        expr->right->accept(this);
+        if (expr->left->type != TypeTag::BOOL || expr->right->type != TypeTag::BOOL)
+        {
+            std::stringstream ss;
+            ss << "Both operands of '" << expr->op.getString() << "' must be a type of 'bool'.";
+            error(ss.str(), expr->op);
+        }
+    }
+
     void visit(ExprUnary* expr)
     {
         expr->expr->accept(this);
@@ -278,7 +290,7 @@ public:
     void visit(StmtFor* stmt)
     {
         beginScope();
-        if(stmt->decl)
+        if (stmt->decl)
             stmt->decl->accept(this);
         if (stmt->cond)
             stmt->cond->accept(this);

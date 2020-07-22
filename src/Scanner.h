@@ -16,6 +16,9 @@ enum class TokenType
 	PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, BIT_AND_EQUAL, BIT_OR_EQUAL, BIT_XOR_EQUAL, BITSHIFT_LEFT, BITSHIFT_RIGHT,
 	PLUS_PLUS, MINUS_MINUS,
 
+	// Three char
+	BITSHIFT_LEFT_EQUAL, BITSHIFT_RIGHT_EQUAL,
+
 	// Literals
 	STRING_LITERAL, IDENTIFIER, INTEGER_LITERAL, DOUBLE_LITERAL, FLOAT_LITERAL, CHAR_LITERAL,
 
@@ -34,7 +37,7 @@ enum class TokenType
 class Token
 {
 public:
-	const TokenType type;
+	TokenType type;
 	const int line;
 	const char* start;
 	const int length;
