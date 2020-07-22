@@ -311,14 +311,14 @@ Stmt* Parser::statement()
     {
         return ifStatement();
     }
-    // else if (token == TokenType::WHILE)
-    // {
-    // 	whileStatement();
-    // }
-    // else if (token == TokenType::FOR)
-    // {
-    // 	forStatement();
-    // }
+    else if (token == TokenType::FOR)
+    {
+        return forStatement();
+    }
+    else if (token == TokenType::WHILE)
+    {
+        return whileStatement();
+    }
     else if (token == TokenType::RETURN)
     {
         advance();
@@ -355,15 +355,67 @@ Stmt* Parser::block()
 Stmt* Parser::ifStatement()
 {
     advance();
-    consume(TokenType::OPEN_PAREN, "Expect '(' after if keyword.");
+    consume(TokenType::OPEN_PAREN, "Expect '(' after 'if' keyword.");
     Token paren = consumed();
     Expr* condition = parseExpression();
-    consume(TokenType::CLOSE_PAREN, "Expect ')' after if condition.");
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after 'if' condition.");
     Stmt* then = statement();
     Stmt* els = nullptr;
     if (match(TokenType::ELSE))
         els = statement();
     return new StmtIf(condition, then, els, paren);
+}
+
+Stmt* Parser::forStatement()
+{
+    advance();
+    consume(TokenType::OPEN_PAREN, "Expect '(' after 'for' keyword.");
+    Token paren = consumed();
+    Stmt* decl = nullptr;
+    Expr* cond = nullptr;
+    Expr* inc = nullptr;
+    if (!match(TokenType::SEMI_COLON))
+    {
+        if (isTypeName(peek()))
+            decl = variableDecleration(parseTypeName());
+        else
+        {
+            decl = new StmtExpr(parseExpression());
+            consume(TokenType::SEMI_COLON, "Expect ';' after first part of 'for' statement.");
+        }
+    }
+    
+    if (!match(TokenType::SEMI_COLON))
+    {
+        cond = parseExpression();
+        consume(TokenType::SEMI_COLON, "Expect ';' after second part of 'for' statement.");
+    }
+    else
+    {
+        cond = new ExprLiteral(new Value(true));
+    }
+
+
+    if(peek().type != TokenType::CLOSE_PAREN)
+    {
+        inc = parseExpression();
+    }
+
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after 'for' conditions.");
+    
+    Stmt* loop = statement();
+    return new StmtFor(decl, cond, inc, loop, paren);
+}
+
+Stmt* Parser::whileStatement()
+{
+    advance();
+    consume(TokenType::OPEN_PAREN, "Expect '(' after 'while' keyword.");
+    Token paren = consumed();
+    Expr* condition = parseExpression();
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after 'while' condition.");
+    Stmt* loop = statement();
+    return new StmtWhile(condition, loop, paren);
 }
 
 Expr* Parser::parseExpression()

@@ -18,4 +18,6 @@ public:
     virtual void visit(StmtVarDecleration* stmt) = 0;
     virtual void visit(StmtReturn* stmt) = 0;
     virtual void visit(StmtIf* stmt) = 0;
+    virtual void visit(StmtFor* stmt) = 0;
+    virtual void visit(StmtWhile* stmt) = 0;
 };

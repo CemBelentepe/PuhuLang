@@ -58,6 +58,8 @@ private:
 	Stmt* statement();
 	Stmt* block();
 	Stmt* ifStatement();
+	Stmt* forStatement();
+	Stmt* whileStatement();
 
 	Expr* parseExpression();
 	Expr* assignment();

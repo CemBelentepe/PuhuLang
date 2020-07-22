@@ -47,7 +47,7 @@ public:
         expr->assignment->accept(this);
         Type type = currentEnviroment->get(expr->name).type;
         expr->type = type;
-        if(expr->assignment->type != type)
+        if (expr->assignment->type != type)
         {
             std::stringstream ss;
             ss << "Invalid assignment due to type missmatch, variable '" << expr->name.getString() << "' has the type '" << type << "' but the expression type is '" << expr->assignment->type;
@@ -255,13 +255,13 @@ public:
                 error("Type of the initializer of the variable is not same as the variable type.", stmt->name);
         }
 
-        if(currentEnviroment->depth != 0)
+        if (currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
     }
     void visit(StmtReturn* stmt)
     {
         // TODO: add type checking of the return value
-        if(stmt->retVal != nullptr)
+        if (stmt->retVal != nullptr)
         {
             stmt->retVal->accept(this);
         }
@@ -269,10 +269,29 @@ public:
     void visit(StmtIf* stmt)
     {
         stmt->condition->accept(this);
-        if(stmt->condition->type.tag != TypeTag::BOOL)
+        if (stmt->condition->type.tag != TypeTag::BOOL)
             error("Type of the if condition must be a 'bool'", stmt->paren);
         stmt->then->accept(this);
-        if(stmt->els != nullptr)
+        if (stmt->els != nullptr)
             stmt->els->accept(this);
+    }
+    void visit(StmtFor* stmt)
+    {
+        beginScope();
+        if(stmt->decl)
+            stmt->decl->accept(this);
+        if (stmt->cond)
+            stmt->cond->accept(this);
+        if (stmt->inc)
+            stmt->inc->accept(this);
+        stmt->loop->accept(this);
+        endScope();
+    }
+    void visit(StmtWhile* stmt)
+    {
+        stmt->condition->accept(this);
+        if (stmt->condition->type.tag != TypeTag::BOOL)
+            error("Type of the while condition must be a 'bool'", stmt->paren);
+        stmt->loop->accept(this);
     }
 };

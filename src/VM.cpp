@@ -13,6 +13,7 @@ VM::VM(std::vector<Data> globals)
     std::cout << "Globals: ";
     printStack(this->globals);
 #endif
+    stack.reserve(1024);
 }
 
 VM::~VM()

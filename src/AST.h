@@ -212,8 +212,41 @@ public:
     Token paren;
 
     StmtIf(Expr* condition, Stmt* then, Stmt* els, Token paren)
-        :condition(condition), then(then), els(els), paren(paren)
-    {}
+        : condition(condition), then(then), els(els), paren(paren)
+    {
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class StmtFor : public Stmt
+{
+public:
+    Stmt* decl;
+    Expr* cond;
+    Expr* inc;
+    Stmt* loop;
+    Token paren;
+
+    StmtFor(Stmt* decl, Expr* cond, Expr* inc, Stmt* loop,Token paren)
+        :decl(decl), cond(cond), inc(inc), loop(loop), paren(paren)
+    {
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class StmtWhile : public Stmt
+{
+public:
+    Expr* condition;
+    Stmt* loop;
+    Token paren;
+
+    StmtWhile(Expr* condition, Stmt* loop, Token paren)
+        : condition(condition), loop(loop), paren(paren)
+    {
+    }
 
     void accept(AstVisitor* visitor);
 };

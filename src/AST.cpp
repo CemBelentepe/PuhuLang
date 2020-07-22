@@ -65,3 +65,13 @@ void StmtIf::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtWhile::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void StmtFor::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}

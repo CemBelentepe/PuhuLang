@@ -145,7 +145,7 @@ public:
     void visit(StmtIf* stmt)
     {
         indentCode();
-        std::cout << "-> if: ";
+        std::cout << "-> if:\n";
         indentCode();
         std::cout << "Condition: ";
         stmt->condition->accept(this);
@@ -159,6 +159,48 @@ public:
             std::cout << "Else:\n";
             stmt->then->accept(this);
         }
+        indent--;
+        std::cout << "\n";
+    }
+    void visit(StmtFor* stmt)
+    {
+        indentCode();
+        std::cout << "-> for:\n";
+        indent++;
+        if (stmt->decl)
+        {
+            indentCode();
+            std::cout << "Decleration:\n";
+            stmt->decl->accept(this);
+            std::cout << "\n";
+        }
+        indentCode();
+        std::cout << "Condition: ";
+        stmt->cond->accept(this);
+        std::cout << "\n";
+        if (stmt->inc)
+        {
+            indentCode();
+            std::cout << "Incrementation: ";
+            stmt->inc->accept(this);
+            std::cout << "\n";
+        }
+        indentCode();
+        stmt->loop->accept(this);
+        indent--;
+        std::cout << "\n";
+    }
+    void visit(StmtWhile* stmt)
+    {
+        indentCode();
+        std::cout << "-> while:\n";
+        indent++;
+        indentCode();
+        std::cout << "Condition: ";
+        stmt->condition->accept(this);
+        std::cout << "\n";
+        indentCode();
+        stmt->loop->accept(this);
         indent--;
         std::cout << "\n";
     }

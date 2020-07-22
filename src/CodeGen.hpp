@@ -312,7 +312,7 @@ public:
     void visit(InstCall* inst)
     {
         size_t size = 0;
-        for(auto& arg : inst->args)
+        for (auto& arg : inst->args)
             size += Type(arg).getSize();
 
         if (size > 255)
@@ -327,14 +327,16 @@ public:
     void visit(InstPop* inst)
     {
         size_t size = 0;
-        for(auto& t : inst->types)
+        for (auto& t : inst->types)
             size += Type(t).getSize();
 
-        if (size > 255)
-            error("[ERROR] Too much data for pop.");
-
-        chunk->addCode(OpCode::POPN, size);
-        pos += 2;
+        if (size > 0)
+        {
+            if (size > 255)
+                error("[ERROR] Too much data for pop.");
+            chunk->addCode(OpCode::POPN, size);
+            pos += 2;
+        }
     }
     void visit(InstReturn* inst)
     {

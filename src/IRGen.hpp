@@ -200,21 +200,19 @@ public:
     }
     void visit(StmtVarDecleration* stmt)
     {
-        if (stmt->initializer != nullptr)
-        {
-            stmt->initializer->accept(this);
-            if (currentEnviroment->depth != 0)
-                currentEnviroment->define(stmt->name, stmt->varType);
-            if (currentEnviroment->depth == 0)
-            {
-                chunk->addCode(new InstSetGlobal(stmt->name.getString()));
-                chunk->addCode(new InstPop({stmt->varType.tag}));
-            }
-            else
-                chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
-        }
-        else if (currentEnviroment->depth != 0)
+        if (stmt->initializer == nullptr)
+            stmt->initializer = new ExprLiteral(new Value(0));
+        stmt->initializer->accept(this);
+
+        if (currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
+        if (currentEnviroment->depth == 0)
+        {
+            chunk->addCode(new InstSetGlobal(stmt->name.getString()));
+            chunk->addCode(new InstPop({stmt->varType.tag}));
+        }
+        else
+            chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
     }
     void visit(StmtReturn* stmt)
     {
@@ -246,6 +244,35 @@ public:
             chunk->addCode(new InstJump(-1, out, 2));
             stmt->then->accept(this);
         }
+        chunk->addCode(out);
+    }
+    void visit(StmtFor* stmt)
+    {
+        beginScope(false);
+        if (stmt->decl)
+            stmt->decl->accept(this);
+
+        InstLabel* start = createLabel();
+        InstLabel* out = createLabel();
+        chunk->addCode(start);
+        stmt->cond->accept(this);
+        chunk->addCode(new InstJump(-1, out, 2));
+        stmt->loop->accept(this);
+        if(stmt->inc)
+            stmt->inc->accept(this);
+        chunk->addCode(new InstJump(-1, start, 0));
+        chunk->addCode(out);
+        endScope();
+    }
+    void visit(StmtWhile* stmt)
+    {
+        InstLabel* start = createLabel();
+        InstLabel* out = createLabel();
+        chunk->addCode(start);
+        stmt->condition->accept(this);
+        chunk->addCode(new InstJump(-1, out, 2));
+        stmt->loop->accept(this);
+        chunk->addCode(new InstJump(-1, start, 0));
         chunk->addCode(out);
     }
 };
