@@ -28,6 +28,8 @@ public:
     {
     }
 
+    virtual ~Expr() {}
+
     virtual void accept(AstVisitor* visitor) = 0;
 };
 
@@ -40,6 +42,11 @@ public:
     ExprAssignment(Token name, Expr* assignment)
         : Expr(ExprType::Assignment, TypeTag::NULL_TYPE), name(name), assignment(assignment)
     {
+    }
+
+    ~ExprAssignment()
+    {
+        delete assignment;
     }
 
     void accept(AstVisitor* visitor);
@@ -57,6 +64,12 @@ public:
     {
     }
 
+    ~ExprBinary()
+    {
+        delete left;
+        delete right;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -70,6 +83,13 @@ public:
     ExprCall(Expr* callee, std::vector<Expr*> args, Token openParen)
         : Expr(ExprType::Call, callee->type.intrinsicType), callee(callee), args(args), openParen(openParen)
     {
+    }
+
+    ~ExprCall()
+    {
+        delete callee;
+        for (auto& arg : args)
+            delete arg;
     }
 
     void accept(AstVisitor* visitor);
@@ -86,6 +106,12 @@ public:
         : Expr(ExprType::Cast, to), from(TypeTag::NULL_TYPE), to(to), expr(expr)
     {
     }
+
+    ~ExprCast()
+    {
+        delete expr;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -98,6 +124,11 @@ public:
     ExprUnary(Expr* expr, Token op)
         : Expr(ExprType::Unary, TypeTag::NULL_TYPE), expr(expr), op(op)
     {
+    }
+
+    ~ExprUnary()
+    {
+        delete expr;
     }
 
     void accept(AstVisitor* visitor);
@@ -139,12 +170,20 @@ public:
         : Expr(ExprType::Logic, TypeTag::BOOL), left(left), right(right), op(op)
     {
     }
+
+    ~ExprLogic()
+    {
+        delete left;
+        delete right;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
 class Stmt
 {
 public:
+    virtual ~Stmt(){}
     virtual void accept(AstVisitor* visitor) = 0;
 };
 
@@ -158,6 +197,11 @@ public:
     {
     }
 
+    ~StmtExpr()
+    {
+        delete expr;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -169,6 +213,12 @@ public:
     StmtBlock(std::vector<Stmt*> statements)
         : statements(statements)
     {
+    }
+
+    ~StmtBlock()
+    {
+        for (auto& stmt : statements)
+            delete stmt;
     }
 
     void accept(AstVisitor* visitor);
@@ -187,6 +237,11 @@ public:
     {
     }
 
+    ~StmtFunc()
+    {
+        delete body;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -202,6 +257,12 @@ public:
     {
     }
 
+    ~StmtVarDecleration()
+    {
+        if (initializer)
+            delete initializer;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -213,6 +274,11 @@ public:
     StmtReturn(Expr* retVal)
         : retVal(retVal)
     {
+    }
+
+    ~StmtReturn()
+    {
+        delete retVal;
     }
 
     void accept(AstVisitor* visitor);
@@ -229,6 +295,14 @@ public:
     StmtIf(Expr* condition, Stmt* then, Stmt* els, Token paren)
         : condition(condition), then(then), els(els), paren(paren)
     {
+    }
+
+    ~StmtIf()
+    {
+        delete condition;
+        delete then;
+        if (els)
+            delete els;
     }
 
     void accept(AstVisitor* visitor);
@@ -248,6 +322,16 @@ public:
     {
     }
 
+    ~StmtFor()
+    {
+        if (decl)
+            delete decl;
+        delete cond;
+        if (inc)
+            delete inc;
+        delete loop;
+    }
+
     void accept(AstVisitor* visitor);
 };
 
@@ -261,6 +345,12 @@ public:
     StmtWhile(Expr* condition, Stmt* loop, Token paren)
         : condition(condition), loop(loop), paren(paren)
     {
+    }
+
+    ~StmtWhile()
+    {
+        delete condition;
+        delete loop;
     }
 
     void accept(AstVisitor* visitor);

@@ -41,6 +41,7 @@ public:
             size_t addr = m_globals.size();
             m_globals.push_back(val.second->data);
             globalInfo.insert(std::make_pair(val.first, valInfo(addr)));
+            delete val.second;
         }
     }
 

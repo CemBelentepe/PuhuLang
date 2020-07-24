@@ -36,9 +36,10 @@ void run(const char* path)
     std::stringstream sourceStream;
     sourceStream << file.rdbuf();
     std::string source = sourceStream.str();
-
+    
     Scanner scanner(source);
     std::vector<Token> tokens = scanner.scanTokens();
+    file.close();
 
 #ifdef DEBUG_TOKENS
     debugTokens(tokens);
@@ -59,6 +60,10 @@ void run(const char* path)
 
     IRGen irGen(root, parser.globals);
     std::vector<IRChunk*> irChunks = irGen.generateIR();
+
+    for(auto& stmt : root)
+        delete stmt;
+    root.clear();
 
 #ifdef DEBUG_IR
     for (auto& irc : irChunks)
@@ -82,8 +87,16 @@ void run(const char* path)
     }
 #endif
 
+    std::vector<Chunk*> chunks;
+    for(auto& irc : irChunks)
+    {
+        chunks.push_back(irc->chunk);
+        delete irc;
+    }
+    irChunks.clear();
+
     VM vm(codegen.getGlobals());
-    vm.interpret(irChunks[0]->chunk);
+    vm.interpret(chunks[0]);
 }
 
 int main(int argc, char* argv[])
