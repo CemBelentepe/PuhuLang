@@ -314,7 +314,7 @@ public:
     {
         size_t size = 0;
         for (auto& arg : inst->args)
-            size += Type(arg).getSize();
+            size += arg->getSize();
 
         if (size > 255)
             error("[ERROR] Too much data for call.");
@@ -329,7 +329,7 @@ public:
     {
         size_t size = 0;
         for (auto& t : inst->types)
-            size += Type(t).getSize();
+            size += t->getSize();
 
         if (size > 0)
         {
@@ -339,9 +339,23 @@ public:
             pos += 2;
         }
     }
+    void visit(InstPush* inst)
+    {
+        size_t size = 0;
+        for (auto& t : inst->types)
+            size += t->getSize();
+
+        if (size > 0)
+        {
+            if (size > 255)
+                error("[ERROR] Too much data for push.");
+            chunk->addCode(OpCode::PUSHN, size);
+            pos += 2;
+        }
+    }
     void visit(InstReturn* inst)
     {
-        size_t size = Type(inst->type).getSize();
+        size_t size = inst->type->getSize();
         chunk->addCode(OpCode::RETURN, size);
         pos += 2;
     }

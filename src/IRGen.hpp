@@ -24,6 +24,14 @@ public:
             currentEnviroment->define(val.first, val.second->type);
     }
 
+    std::vector<std::shared_ptr<Type>> makePrimTypeList(std::vector<TypeTag> tags)
+    {
+        std::vector<std::shared_ptr<Type>> types;
+        for (auto& tag : tags)
+            types.push_back(std::make_shared<TypePrimitive>(tag));
+        return types;
+    }
+
     std::vector<IRChunk*> generateIR()
     {
         chunks.push_back(chunk);
@@ -31,7 +39,7 @@ public:
             stmt->accept(this);
 
         chunk->addCode(new InstGetGlobal("main"));
-        chunk->addCode(new InstCall({TypeTag::VOID}, TypeTag::FUNCTION));
+        chunk->addCode(new InstCall(makePrimTypeList({TypeTag::VOID}), TypeTag::FUNCTION));
 
         return chunks;
     }
@@ -43,7 +51,7 @@ public:
 
     void endScope()
     {
-        std::vector<TypeTag> types = currentEnviroment->getEnvTypes();
+        auto types = currentEnviroment->getEnvTypes();
         chunk->addCode(new InstPop(types));
         Enviroment* env = currentEnviroment->closing;
         delete currentEnviroment;
@@ -72,16 +80,16 @@ public:
         switch (expr->op.type)
         {
         case TokenType::PLUS:
-            chunk->addCode(new InstAdd(expr->left->type.tag));
+            chunk->addCode(new InstAdd(expr->left->type->tag));
             break;
         case TokenType::MINUS:
-            chunk->addCode(new InstSub(expr->left->type.tag));
+            chunk->addCode(new InstSub(expr->left->type->tag));
             break;
         case TokenType::STAR:
-            chunk->addCode(new InstMul(expr->left->type.tag));
+            chunk->addCode(new InstMul(expr->left->type->tag));
             break;
         case TokenType::SLASH:
-            chunk->addCode(new InstDiv(expr->left->type.tag));
+            chunk->addCode(new InstDiv(expr->left->type->tag));
             break;
         case TokenType::MODULUS:
             chunk->addCode(new InstMod());
@@ -94,41 +102,41 @@ public:
             chunk->addCode(new InstBit(expr->op.type));
             break;
         case TokenType::LESS:
-            chunk->addCode(new InstLess(expr->left->type.tag));
+            chunk->addCode(new InstLess(expr->left->type->tag));
             break;
         case TokenType::LESS_EQUAL:
-            chunk->addCode(new InstLte(expr->left->type.tag));
+            chunk->addCode(new InstLte(expr->left->type->tag));
             break;
         case TokenType::GREAT:
-            chunk->addCode(new InstGreat(expr->left->type.tag));
+            chunk->addCode(new InstGreat(expr->left->type->tag));
             break;
         case TokenType::GREAT_EQUAL:
-            chunk->addCode(new InstGte(expr->left->type.tag));
+            chunk->addCode(new InstGte(expr->left->type->tag));
             break;
         case TokenType::EQUAL_EQUAL:
-            chunk->addCode(new InstEq(expr->left->type.tag));
+            chunk->addCode(new InstEq(expr->left->type->tag));
             break;
         case TokenType::BANG_EQUAL:
-            chunk->addCode(new InstNeq(expr->left->type.tag));
+            chunk->addCode(new InstNeq(expr->left->type->tag));
             break;
         }
     }
     void visit(ExprCall* expr)
     {
-        std::vector<TypeTag> args;
+        std::vector<std::shared_ptr<Type>> args;
         for (auto& arg : expr->args)
         {
             arg->accept(this);
-            args.push_back(arg->type.tag);
+            args.push_back(arg->type);
         }
 
         expr->callee->accept(this);
-        chunk->addCode(new InstCall(args, expr->callee->type.tag));
+        chunk->addCode(new InstCall(args, expr->callee->type->tag));
     }
     void visit(ExprCast* expr)
     {
         expr->expr->accept(this);
-        chunk->addCode(new InstCast(expr->from.tag, expr->to.tag));
+        chunk->addCode(new InstCast(expr->from->tag, expr->to->tag));
     }
     void visit(ExprLiteral* expr)
     {
@@ -142,7 +150,7 @@ public:
         {
             InstLabel* out = createLabel();
             chunk->addCode(new InstJump(-1, out, 1));
-            chunk->addCode(new InstPop({TypeTag::BOOL}));
+            chunk->addCode(new InstPop(makePrimTypeList({TypeTag::BOOL})));
             expr->right->accept(this);
             chunk->addCode(out);
         }
@@ -153,7 +161,7 @@ public:
             chunk->addCode(new InstJump(-1, l1, 1));
             chunk->addCode(new InstJump(-1, l2, 0));
             chunk->addCode(l1);
-            chunk->addCode(new InstPop({TypeTag::BOOL}));
+            chunk->addCode(new InstPop(makePrimTypeList({TypeTag::BOOL})));
             expr->right->accept(this);
             chunk->addCode(l2);
         }
@@ -192,7 +200,7 @@ public:
     void visit(StmtExpr* stmt)
     {
         stmt->expr->accept(this);
-        chunk->addCode(new InstPop({stmt->expr->type.tag}));
+        chunk->addCode(new InstPop({stmt->expr->type}));
     }
     void visit(StmtFunc* stmt)
     {
@@ -203,19 +211,17 @@ public:
         func->irChunk = chunk;
         func->data.valChunk = func->irChunk->chunk;
 
-        // currentEnviroment->define(stmt->name, func->type);
-
         beginScope(true);
-        for (auto& s : stmt->args)
-            currentEnviroment->define(s.first, s.second);
+        for (int i = 0; i < stmt->args.size(); i++)
+            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i]);
 
         for (auto& s : stmt->body->statements)
             s->accept(this);
 
         endScope();
 
-        if (func->type.intrinsicType->tag == TypeTag::VOID)
-            chunk->addCode(new InstReturn(TypeTag::VOID));
+        if (func->type->intrinsicType->tag == TypeTag::VOID)
+            chunk->addCode(new InstReturn(std::make_shared<TypePrimitive>(TypeTag::VOID)));
 
         chunks.push_back(func->irChunk);
 
@@ -224,15 +230,16 @@ public:
     void visit(StmtVarDecleration* stmt)
     {
         if (stmt->initializer == nullptr)
-            stmt->initializer = new ExprLiteral(new Value(0));
-        stmt->initializer->accept(this);
+            chunk->addCode(new InstPush({stmt->varType}));
+        else
+            stmt->initializer->accept(this);
 
         if (currentEnviroment->depth != 0)
             currentEnviroment->define(stmt->name, stmt->varType);
         if (currentEnviroment->depth == 0)
         {
             chunk->addCode(new InstSetGlobal(stmt->name.getString()));
-            chunk->addCode(new InstPop({stmt->varType.tag}));
+            chunk->addCode(new InstPop({stmt->varType}));
         }
         else
             chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
@@ -242,11 +249,11 @@ public:
         if (stmt->retVal != nullptr)
         {
             stmt->retVal->accept(this);
-            chunk->addCode(new InstReturn(stmt->retVal->type.tag));
+            chunk->addCode(new InstReturn(stmt->retVal->type));
         }
         else
         {
-            chunk->addCode(new InstReturn(TypeTag::VOID));
+            chunk->addCode(new InstReturn(std::make_shared<TypePrimitive>(TypeTag::VOID)));
         }
     }
     void visit(StmtIf* stmt)

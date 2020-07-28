@@ -276,6 +276,12 @@ bool VM::interpret(Chunk* entryChunk)
             stack.resize(stack.size() - toPop);
             break;
         }
+        case OpCode::PUSHN:
+        {
+            int toPop = advance();
+            stack.resize(stack.size() + toPop);
+            break;
+        }
         case OpCode::SET_GLOBAL:
         {
             size_t slot = advance();

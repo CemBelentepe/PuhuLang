@@ -66,7 +66,13 @@ size_t printJumpInstruction(const char* name, Chunk* chunk, size_t offset, int d
 
 size_t printCastInstruction(Chunk* chunk, size_t offset)
 {
-	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "      " << Type((TypeTag)(chunk->code[++offset])) << "->" << Type((TypeTag)(chunk->code[++offset])) << std::endl;
+	std::cout << offset << "\t" << std::setw(10) << std::left << "CAST" << "      ";
+	TypePrimitive t1((TypeTag)(chunk->code[++offset]));
+	TypePrimitive t2((TypeTag)(chunk->code[++offset]));
+	t1.print();
+	std::cout << "->";
+	t2.print();
+	std::cout << std::endl;
 	return offset;
 }
 
@@ -164,6 +170,8 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
 		return printCastInstruction(chunk, offset);
 	case OpCode::POPN:
 		return printPopInstruction("POPN", chunk, offset);
+	case OpCode::PUSHN:
+		return printPopInstruction("PUSH", chunk, offset);
 	case OpCode::SET_GLOBAL:
 		return printLocalInstruction("SET_GLOBAL", chunk, offset);
 	case OpCode::GET_GLOBAL:

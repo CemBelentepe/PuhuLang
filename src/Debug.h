@@ -123,7 +123,8 @@ public:
         {
             if (i != 0)
                 std::cout << ", ";
-            std::cout << stmt->args[i].second << " " << stmt->args[i].first.getString();
+            stmt->func_type->argTypes[i]->print();
+            std::cout << " " << stmt->args[i].getString();
         }
         std::cout << ")\n";
 
@@ -228,6 +229,12 @@ public:
     {
     }
 
+    void printTag(TypeTag tag)
+    {
+        TypePrimitive t(tag);
+        t.print();
+    }
+
     void debugAll()
     {
         for (auto& inst : irChunk->getCode())
@@ -243,7 +250,10 @@ public:
     }
     void visit(InstCast* inst)
     {
-        std::cout << "CAST\t" << Type(inst->from) << "\t" << Type(inst->to);
+        std::cout << "CAST\t";
+        printTag(inst->from);
+        std::cout << "\t";
+        printTag(inst->to);
     }
     void visit(InstAdd* inst)
     {
@@ -438,17 +448,33 @@ public:
             std::cout << "NATIVE_";
         std::cout << "CALL\t";
         for (auto& arg : inst->args)
-            std::cout << Type(arg) << " ";
+        {
+            arg->print();
+            std::cout <<  " ";
+        }
     }
     void visit(InstPop* inst)
     {
         std::cout << "POP\t";
         for (auto& arg : inst->types)
-            std::cout << Type(arg) << " ";
+        {
+            arg->print();
+            std::cout << " ";
+        }
+    }
+    void visit(InstPush* inst)
+    {
+        std::cout << "PUSH\t";
+        for (auto& arg : inst->types)
+        {
+            arg->print();
+            std::cout << " ";
+        }
     }
     void visit(InstReturn* inst)
     {
-        std::cout << "RETURN\t" << Type(inst->type);
+        std::cout << "RETURN\t";
+        inst->type->print();
     }
     void visit(InstJump* inst)
     {

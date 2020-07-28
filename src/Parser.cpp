@@ -6,10 +6,17 @@
 Parser::Parser(std::vector<Token>& tokens)
     : tokens(tokens), currentToken(0), depth(0)
 {
-    globals.insert({"print", new NativeFunc(native_print, TypeTag::VOID, {Type(TypeTag::STRING)}, true)});
-    globals.insert({"input", new NativeFunc(native_input, TypeTag::STRING, {})});
-    globals.insert({"clock", new NativeFunc(native_clock, TypeTag::DOUBLE, {})});
-    globals.insert({"inputInt", new NativeFunc(native_inputInt, TypeTag::INTEGER, {})});
+
+    std::vector<std::shared_ptr<Type>> s = {std::make_shared<TypePrimitive>(TypeTag::STRING)};
+    std::shared_ptr<TypeFunction> v2s = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::VOID), s, true);
+    std::shared_ptr<TypeFunction> sr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::STRING), std::vector<std::shared_ptr<Type>>(), false);
+    std::shared_ptr<TypeFunction> dr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::DOUBLE), std::vector<std::shared_ptr<Type>>(), false);
+    std::shared_ptr<TypeFunction> ir = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::INTEGER), std::vector<std::shared_ptr<Type>>(), false);
+
+    globals.insert({"print", new NativeFunc(native_print, v2s)});
+    globals.insert({"input", new NativeFunc(native_input, sr)});
+    globals.insert({"clock", new NativeFunc(native_clock, dr)});
+    globals.insert({"inputInt", new NativeFunc(native_inputInt, ir)});
 }
 
 std::vector<Stmt*> Parser::parse()
@@ -25,25 +32,29 @@ std::vector<Stmt*> Parser::parse()
     return root;
 }
 
-Type Parser::parseTypeName()
+std::shared_ptr<Type> Parser::parseTypeName()
 {
-    Type type;
-    TypeTag val = getDataType(peek());
-    int i = 0;
-    do
-    {
-        if (i > 0)
-            type.intrinsicType = std::make_shared<Type>(type);
-        type.tag = val;
-        if (type.isPrimitive() && type.intrinsicType != nullptr && type.intrinsicType->isPrimitive())
-        {
-            error("Invalid type name.");
-            break;
-        }
+    std::shared_ptr<Type> type;
+    TypeTag tag = getDataType();
 
-        advance();
-        i++;
-    } while ((val = getDataType(peek())) != TypeTag::ERROR);
+    if (tag == TypeTag::ERROR)
+        error("Invalid type name.");
+
+    if (tag <= TypeTag::ARRAY)
+        type = std::make_shared<TypePrimitive>(tag);
+    else
+        error("Initial type of any type must a primitive type.");
+
+    while ((tag = getDataType()) != TypeTag::ERROR)
+    {
+        if (tag < TypeTag::ARRAY)
+            error("Invalid type decleration.");
+        else if (tag == TypeTag::ARRAY)
+        {
+            type = std::make_shared<TypeArray>(consumed().getInteger(), type);
+            advance();
+        }
+    }
 
     return type;
 }
@@ -65,28 +76,38 @@ bool Parser::isTypeName(Token& token)
     }
 }
 
-TypeTag Parser::getDataType(Token& token)
+TypeTag Parser::getDataType()
 {
+    Token token = peek();
     switch (token.type)
     {
     case TokenType::INT:
+        advance();
         return TypeTag::INTEGER;
     case TokenType::FLOAT:
+        advance();
         return TypeTag::FLOAT;
     case TokenType::DOUBLE:
+        advance();
         return TypeTag::DOUBLE;
     case TokenType::CHAR:
+        advance();
         return TypeTag::CHAR;
     case TokenType::STRING:
+        advance();
         return TypeTag::STRING;
     case TokenType::BOOL:
+        advance();
         return TypeTag::BOOL;
     case TokenType::VOID:
+        advance();
         return TypeTag::VOID;
     case TokenType::STAR:
+        advance();
         return TypeTag::POINTER;
     case TokenType::OPEN_BRACKET:
-        if (peekNext().type == TokenType::CLOSE_BRACKET)
+        advance();
+        if (peek().type == TokenType::INTEGER_LITERAL && peekNext().type == TokenType::CLOSE_BRACKET)
         {
             advance();
             return TypeTag::ARRAY;
@@ -146,30 +167,15 @@ bool Parser::match(std::vector<TokenType> types)
 
 bool Parser::matchCast()
 {
-    return tokens[currentToken].type == TokenType::OPEN_PAREN && getCast() != TypeTag::ERROR && tokens[currentToken + 2].type == TokenType::CLOSE_PAREN;
+    return tokens[currentToken].type == TokenType::OPEN_PAREN && isTypeName(tokens[currentToken + 1]);
 }
 
-Type Parser::getCast()
+std::shared_ptr<Type> Parser::getCast()
 {
-    switch (tokens[currentToken + 1].type)
-    {
-    case TokenType::INT:
-        return TypeTag::INTEGER;
-    case TokenType::FLOAT:
-        return TypeTag::FLOAT;
-    case TokenType::DOUBLE:
-        return TypeTag::DOUBLE;
-    case TokenType::CHAR:
-        return TypeTag::CHAR;
-    case TokenType::STRING:
-        return TypeTag::STRING;
-    case TokenType::BOOL:
-        return TypeTag::BOOL;
-    case TokenType::VOID:
-        return TypeTag::VOID;
-    default:
-        return TypeTag::ERROR;
-    }
+    advance();
+    std::shared_ptr<Type> to = this->parseTypeName();
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after cast type.");
+    return to;
 }
 
 inline Expr* Parser::typeError(const char* message) const
@@ -245,7 +251,7 @@ Stmt* Parser::decleration()
     }
     else
     {
-        Type typeName = parseTypeName();
+        std::shared_ptr<Type> typeName = parseTypeName();
         if (peekNext().type == TokenType::OPEN_PAREN)
         {
             return functionDecleration(typeName);
@@ -259,7 +265,7 @@ Stmt* Parser::decleration()
     return nullptr;
 }
 
-Stmt* Parser::variableDecleration(Type type)
+Stmt* Parser::variableDecleration(std::shared_ptr<Type> type)
 {
     Token varName = advance();
     Expr* init = nullptr;
@@ -276,10 +282,11 @@ Stmt* Parser::variableDecleration(Type type)
     return new StmtVarDecleration(type, varName, init);
 }
 
-Stmt* Parser::functionDecleration(Type type)
+Stmt* Parser::functionDecleration(std::shared_ptr<Type> type)
 {
     Token funcName = advance();
-    std::vector<std::pair<Token, Type>> params;
+    std::vector<Token> params;
+    std::vector<std::shared_ptr<Type>> param_types;
     size_t totalSize = 0;
 
     this->depth++;
@@ -287,27 +294,31 @@ Stmt* Parser::functionDecleration(Type type)
 
     if (peek().type != TokenType::CLOSE_PAREN)
     {
-        Type type = parseTypeName();
+        std::shared_ptr<Type> type = parseTypeName();
         Token name = advance();
-        params.push_back(std::make_pair(name, type));
+        params.push_back(name);
+        param_types.push_back(type);
         totalSize++;
     }
     while (!match(TokenType::CLOSE_PAREN))
     {
         consume(TokenType::COMMA, "Expect ',' between parameters."); // consume ','
-        Type type = parseTypeName();
+        std::shared_ptr<Type> type = parseTypeName();
         Token name = advance();
-        params.push_back(std::make_pair(name, type));
+        params.push_back(name);
+        param_types.push_back(type);
         totalSize++;
     }
 
     consume(TokenType::OPEN_BRACE, "Expect '{' at function start."); // Opening {
     StmtBlock* body = (StmtBlock*)block();
 
-    this->depth--;
-    globals.insert(std::make_pair(funcName.getString(), new FuncValue(type, params)));
+    std::shared_ptr<TypeFunction> funcType = std::make_shared<TypeFunction>(TypeTag::FUNCTION, type, param_types, false);
 
-    return new StmtFunc(funcName, body, type, params);
+    this->depth--;
+    globals.insert(std::make_pair(funcName.getString(), new FuncValue(funcType, params)));
+
+    return new StmtFunc(funcName, body, funcType, params);
 }
 
 Stmt* Parser::statement()
@@ -636,7 +647,7 @@ Expr* Parser::unary()
     }
     else if (matchCast())
     {
-        Type type = getCast();
+        std::shared_ptr<Type> type = getCast();
         this->currentToken += 3;
         Expr* expr = unary();
         return new ExprCast(type, expr);

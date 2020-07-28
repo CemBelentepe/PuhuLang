@@ -21,9 +21,9 @@ private:
 	std::vector<Token>& tokens;
 	size_t currentToken;
 
-	Type parseTypeName();
+	std::shared_ptr<Type> parseTypeName();
 	bool isTypeName(Token& token);
-	TypeTag getDataType(Token& token);
+	TypeTag getDataType();
 	void consume(TokenType type, const char* message);
 	void consumeNext(TokenType type, const char* message);
 
@@ -46,7 +46,7 @@ private:
 	bool match(TokenType type);
 	bool match(std::vector<TokenType> types);
 	bool matchCast();
-	Type getCast();
+	std::shared_ptr<Type> getCast();
 
 	inline Expr* typeError(const char* message) const;
 	inline void error(const char* message);
@@ -54,8 +54,8 @@ private:
 	void panic();
 
 	Stmt* decleration();
-	Stmt* variableDecleration(Type type);
-	Stmt* functionDecleration(Type type);
+	Stmt* variableDecleration(std::shared_ptr<Type> type);
+	Stmt* functionDecleration(std::shared_ptr<Type> type);
 	Stmt* statement();
 	Stmt* block();
 	Stmt* ifStatement();

@@ -21,9 +21,9 @@ class Expr
 {
 public:
     const ExprType instance;
-    Type type;
+    std::shared_ptr<Type> type;
 
-    Expr(ExprType instance, Type type)
+    Expr(ExprType instance, std::shared_ptr<Type> type)
         : instance(instance), type(type)
     {
     }
@@ -40,7 +40,7 @@ public:
     Expr* assignment;
 
     ExprAssignment(Token name, Expr* assignment)
-        : Expr(ExprType::Assignment, TypeTag::NULL_TYPE), name(name), assignment(assignment)
+        : Expr(ExprType::Assignment, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), name(name), assignment(assignment)
     {
     }
 
@@ -60,7 +60,7 @@ public:
     Token op;
 
     ExprBinary(Expr* left, Expr* right, Token op)
-        : Expr(ExprType::Binary, TypeTag::NULL_TYPE), left(left), right(right), op(op)
+        : Expr(ExprType::Binary, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), left(left), right(right), op(op)
     {
     }
 
@@ -81,7 +81,7 @@ public:
     Token openParen;
 
     ExprCall(Expr* callee, std::vector<Expr*> args, Token openParen)
-        : Expr(ExprType::Call, callee->type.intrinsicType), callee(callee), args(args), openParen(openParen)
+        : Expr(ExprType::Call, callee->type->intrinsicType), callee(callee), args(args), openParen(openParen)
     {
     }
 
@@ -98,12 +98,12 @@ public:
 class ExprCast : public Expr
 {
 public:
-    Type from;
-    Type to;
+    std::shared_ptr<Type> from;
+    std::shared_ptr<Type> to;
     Expr* expr;
 
-    ExprCast(Type to, Expr* expr)
-        : Expr(ExprType::Cast, to), from(TypeTag::NULL_TYPE), to(to), expr(expr)
+    ExprCast(std::shared_ptr<Type> to, Expr* expr)
+        : Expr(ExprType::Cast, to), from(std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), to(to), expr(expr)
     {
     }
 
@@ -122,7 +122,7 @@ public:
     Token op;
 
     ExprUnary(Expr* expr, Token op)
-        : Expr(ExprType::Unary, TypeTag::NULL_TYPE), expr(expr), op(op)
+        : Expr(ExprType::Unary, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), expr(expr), op(op)
     {
     }
 
@@ -140,7 +140,7 @@ public:
     Token name;
 
     ExprVariable(Token name)
-        : Expr(ExprType::Variable, TypeTag::NULL_TYPE), name(name)
+        : Expr(ExprType::Variable, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), name(name)
     {
     }
 
@@ -167,7 +167,7 @@ public:
     Token op;
 
     ExprLogic(Expr* left, Expr* right, Token op)
-        : Expr(ExprType::Logic, TypeTag::BOOL), left(left), right(right), op(op)
+        : Expr(ExprType::Logic, std::make_shared<TypePrimitive>(TypeTag::BOOL)), left(left), right(right), op(op)
     {
     }
 
@@ -229,11 +229,11 @@ class StmtFunc : public Stmt
 public:
     Token name;
     StmtBlock* body;
-    Type ret_type;
-    std::vector<std::pair<Token, Type>> args;
+    std::shared_ptr<TypeFunction> func_type;
+    std::vector<Token> args;
 
-    StmtFunc(Token name, StmtBlock* body, Type ret_type, std::vector<std::pair<Token, Type>> args)
-        : name(name), ret_type(ret_type), body(body), args(args)
+    StmtFunc(Token name, StmtBlock* body, std::shared_ptr<TypeFunction> func_type, std::vector<Token> args)
+        : name(name), func_type(func_type), body(body), args(args)
     {
     }
 
@@ -248,11 +248,11 @@ public:
 class StmtVarDecleration : public Stmt
 {
 public:
-    Type varType;
+    std::shared_ptr<Type> varType;
     Token name;
     Expr* initializer;
 
-    StmtVarDecleration(Type varType, Token name, Expr* initializer)
+    StmtVarDecleration(std::shared_ptr<Type> varType, Token name, Expr* initializer)
         : varType(varType), name(name), initializer(initializer)
     {
     }

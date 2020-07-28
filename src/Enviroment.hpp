@@ -11,12 +11,12 @@ class Variable
 public:
     int depth;
     int position;
-    Type type;
+    std::shared_ptr<Type> type;
 
     Variable()
         : depth(0), position(0) {}
 
-    Variable(int depth, int position, Type type)
+    Variable(int depth, int position, std::shared_ptr<Type> type)
         : depth(depth), position(position), type(type) {}
 };
 
@@ -48,7 +48,7 @@ public:
         return Variable();
     }
 
-    void define(Token& name, Type type)
+    void define(Token& name, std::shared_ptr<Type> type)
     {
         if (values.find(name.getString()) == values.end())
         {
@@ -59,7 +59,7 @@ public:
             std::cout << "[ERROR] Variable '" << name.getString() << "' has already defined at this scope at line " << name.line << "\n";
     }
 
-    void define(std::string name, Type type)
+    void define(std::string name, std::shared_ptr<Type> type)
     {
         if (values.find(name) == values.end())
         {
@@ -70,11 +70,11 @@ public:
             std::cout << "[ERROR] Variable '" << name << "' has already defined at this scope\n";
     }
 
-    std::vector<TypeTag> getEnvTypes()
+    std::vector<std::shared_ptr<Type>> getEnvTypes()
     {
-        std::vector<TypeTag> types;
+        std::vector<std::shared_ptr<Type>> types;
         for (auto& var : values)
-            types.push_back(var.second.type.tag);
+            types.push_back(var.second.type);
         return types;
     }
 };

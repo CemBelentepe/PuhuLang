@@ -116,6 +116,11 @@ void InstPop::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstPush::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
 void InstReturn::accept(InstVisitor* visitor)
 {
 	visitor->visit(this);

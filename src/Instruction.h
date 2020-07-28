@@ -244,10 +244,10 @@ public:
 class InstCall : public Instruction
 {
 public:
-	std::vector<TypeTag> args;
+	std::vector<std::shared_ptr<Type>> args;
 	TypeTag callType;
 
-	InstCall(std::vector<TypeTag> args, TypeTag callType)
+	InstCall(std::vector<std::shared_ptr<Type>> args, TypeTag callType)
 		: args(args), callType(callType) { } 
 
 	 void accept(InstVisitor* visitor);
@@ -256,9 +256,20 @@ public:
 class InstPop : public Instruction
 {
 public:
-	std::vector<TypeTag> types;
+	std::vector<std::shared_ptr<Type>> types;
 
-	InstPop(std::vector<TypeTag> types)
+	InstPop(std::vector<std::shared_ptr<Type>> types)
+		: types(types) { } 
+
+	 void accept(InstVisitor* visitor);
+};
+
+class InstPush : public Instruction
+{
+public:
+	std::vector<std::shared_ptr<Type>> types;
+
+	InstPush(std::vector<std::shared_ptr<Type>> types)
 		: types(types) { } 
 
 	 void accept(InstVisitor* visitor);
@@ -267,9 +278,9 @@ public:
 class InstReturn : public Instruction
 {
 public:
-	TypeTag type;
+	std::shared_ptr<Type> type;
 
-	InstReturn(TypeTag type)
+	InstReturn(std::shared_ptr<Type> type)
 		: type(type) { } 
 
 	 void accept(InstVisitor* visitor);

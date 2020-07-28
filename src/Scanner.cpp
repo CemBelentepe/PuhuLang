@@ -413,7 +413,6 @@ std::string Token::getString()
     memcpy(lexeme, start, sizeof(char) * length);
     lexeme[length] = 0;
     return std::string(lexeme);
-    ;
 }
 
 char Token::getChar()

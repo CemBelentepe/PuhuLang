@@ -36,7 +36,6 @@ public:
 
     void endScope()
     {
-        std::vector<TypeTag> types = currentEnviroment->getEnvTypes();
         Enviroment* env = currentEnviroment->closing;
         delete currentEnviroment;
         currentEnviroment = env;
@@ -45,7 +44,7 @@ public:
     void visit(ExprAssignment* expr)
     {
         expr->assignment->accept(this);
-        Type type = currentEnviroment->get(expr->name).type;
+        auto type = currentEnviroment->get(expr->name).type;
         expr->type = type;
         if (expr->assignment->type != type)
         {
@@ -67,17 +66,17 @@ public:
         case TokenType::STAR:
         case TokenType::SLASH:
         {
-            if ((expr->left->type.tag == TypeTag::INTEGER || expr->left->type.tag == TypeTag::FLOAT || expr->left->type.tag == TypeTag::DOUBLE) && (expr->right->type.tag == TypeTag::INTEGER || expr->right->type.tag == TypeTag::FLOAT || expr->right->type.tag == TypeTag::DOUBLE))
+            if ((expr->left->type->tag == TypeTag::INTEGER || expr->left->type->tag == TypeTag::FLOAT || expr->left->type->tag == TypeTag::DOUBLE) && (expr->right->type->tag == TypeTag::INTEGER || expr->right->type->tag == TypeTag::FLOAT || expr->right->type->tag == TypeTag::DOUBLE))
             {
-                if (expr->left->type.tag > expr->right->type.tag)
+                if (expr->left->type->tag > expr->right->type->tag)
                 {
-                    Type from = expr->right->type;
+                    auto from = expr->right->type;
                     expr->right = new ExprCast(expr->left->type, expr->right);
                     ((ExprCast*)expr->right)->from = from;
                 }
-                else if (expr->right->type.tag > expr->left->type.tag)
+                else if (expr->right->type->tag > expr->left->type->tag)
                 {
-                    Type from = expr->left->type;
+                    auto from = expr->left->type;
                     expr->left = new ExprCast(expr->right->type, expr->left);
                     ((ExprCast*)expr->left)->from = from;
                 }
@@ -99,14 +98,14 @@ public:
         case TokenType::BITSHIFT_LEFT:
         case TokenType::BITSHIFT_RIGHT:
         {
-            if (expr->left->type != TypeTag::INTEGER || expr->right->type != TypeTag::INTEGER)
+            if (expr->left->type->tag != TypeTag::INTEGER || expr->right->type->tag != TypeTag::INTEGER)
             {
                 std::stringstream ss;
                 ss << "Both operands of '" << expr->op.getString() << "' must be a type of 'int'.";
                 error(ss.str(), expr->op);
             }
             else
-                expr->type = TypeTag::INTEGER;
+                expr->type = std::make_shared<TypePrimitive>(TypeTag::INTEGER);
             break;
         }
         case TokenType::LESS:
@@ -116,24 +115,24 @@ public:
         case TokenType::EQUAL_EQUAL:
         case TokenType::BANG_EQUAL:
         {
-            if (expr->left->type == TypeTag::INTEGER && expr->right->type == TypeTag::INTEGER)
-                expr->type = TypeTag::BOOL;
-            else if (expr->left->type.tag <= TypeTag::DOUBLE && expr->right->type.tag <= TypeTag::DOUBLE)
+            if (expr->left->type->tag == TypeTag::INTEGER && expr->right->type->tag == TypeTag::INTEGER)
+                expr->type = std::make_shared<TypePrimitive>(TypeTag::BOOL);
+            else if (expr->left->type->tag <= TypeTag::DOUBLE && expr->right->type->tag <= TypeTag::DOUBLE)
             {
-                if (expr->left->type.tag < TypeTag::DOUBLE)
+                if (expr->left->type->tag < TypeTag::DOUBLE)
                 {
-                    Type from = expr->left->type;
-                    expr->left = new ExprCast(TypeTag::DOUBLE, expr->left);
+                    auto from = expr->left->type;
+                    expr->left = new ExprCast(std::make_shared<TypePrimitive>(TypeTag::DOUBLE), expr->left);
                     ((ExprCast*)expr->left)->from = from;
                 }
-                if (expr->right->type.tag < TypeTag::DOUBLE)
+                if (expr->right->type->tag < TypeTag::DOUBLE)
                 {
-                    Type from = expr->right->type;
-                    expr->right = new ExprCast(TypeTag::DOUBLE, expr->right);
+                    auto from = expr->right->type;
+                    expr->right = new ExprCast(std::make_shared<TypePrimitive>(TypeTag::DOUBLE), expr->right);
                     ((ExprCast*)expr->right)->from = from;
                 }
 
-                expr->type = TypeTag::BOOL;
+                expr->type = std::make_shared<TypePrimitive>(TypeTag::BOOL);
             }
             else
             {
@@ -151,7 +150,7 @@ public:
     {
         expr->callee->accept(this);
 
-        if (expr->callee->type.tag != TypeTag::FUNCTION && expr->callee->type.tag != TypeTag::NATIVE)
+        if (expr->callee->type->tag != TypeTag::FUNCTION && expr->callee->type->tag != TypeTag::NATIVE)
             error("Only a type function can be called!", expr->openParen);
 
         // TODO: Compare with table
@@ -160,7 +159,7 @@ public:
             args->accept(this);
         }
 
-        expr->type = expr->callee->type.intrinsicType;
+        expr->type = expr->callee->type->intrinsicType;
     }
 
     void visit(ExprCast* expr)
@@ -178,7 +177,7 @@ public:
     {
         expr->left->accept(this);
         expr->right->accept(this);
-        if (expr->left->type != TypeTag::BOOL || expr->right->type != TypeTag::BOOL)
+        if (expr->left->type->tag != TypeTag::BOOL || expr->right->type->tag != TypeTag::BOOL)
         {
             std::stringstream ss;
             ss << "Both operands of '" << expr->op.getString() << "' must be a type of 'bool'.";
@@ -199,7 +198,7 @@ public:
         case TokenType::MINUS:
         case TokenType::PLUS_PLUS:
         case TokenType::MINUS_MINUS:
-            if (expr->type.tag != TypeTag::INTEGER && expr->type.tag != TypeTag::FLOAT && expr->type.tag != TypeTag::DOUBLE)
+            if (expr->type->tag != TypeTag::INTEGER && expr->type->tag != TypeTag::FLOAT && expr->type->tag != TypeTag::DOUBLE)
             {
                 ss << "int', 'float' or 'double'.";
                 error(ss.str(), expr->op);
@@ -207,7 +206,7 @@ public:
             break;
 
         case TokenType::BANG:
-            if (expr->type.tag != TypeTag::BOOL)
+            if (expr->type->tag != TypeTag::BOOL)
             {
                 ss << "bool'.";
                 error(ss.str(), expr->op);
@@ -215,7 +214,7 @@ public:
             break;
 
         case TokenType::TILDE:
-            if (expr->type.tag != TypeTag::INTEGER)
+            if (expr->type->tag != TypeTag::INTEGER)
             {
                 ss << "int'.";
                 error(ss.str(), expr->op);
@@ -250,8 +249,8 @@ public:
     void visit(StmtFunc* stmt)
     {
         beginScope();
-        for (auto& s : stmt->args)
-            currentEnviroment->define(s.first, s.second);
+        for (int i = 0; i < stmt->args.size(); i++)
+            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i]);
 
         for (auto& s : stmt->body->statements)
             s->accept(this);
@@ -263,7 +262,7 @@ public:
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
-            if (stmt->varType != stmt->initializer->type)
+            if (!stmt->varType->isSame(stmt->initializer->type))
                 error("Type of the initializer of the variable is not same as the variable type.", stmt->name);
         }
 
@@ -281,7 +280,7 @@ public:
     void visit(StmtIf* stmt)
     {
         stmt->condition->accept(this);
-        if (stmt->condition->type.tag != TypeTag::BOOL)
+        if (stmt->condition->type->tag != TypeTag::BOOL)
             error("Type of the if condition must be a 'bool'", stmt->paren);
         stmt->then->accept(this);
         if (stmt->els != nullptr)
@@ -302,7 +301,7 @@ public:
     void visit(StmtWhile* stmt)
     {
         stmt->condition->accept(this);
-        if (stmt->condition->type.tag != TypeTag::BOOL)
+        if (stmt->condition->type->tag != TypeTag::BOOL)
             error("Type of the while condition must be a 'bool'", stmt->paren);
         stmt->loop->accept(this);
     }
