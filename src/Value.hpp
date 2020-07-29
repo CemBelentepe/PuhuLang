@@ -166,7 +166,7 @@ public:
 
     size_t getSize()
     {
-        return size;
+        return size * intrinsicType->getSize();
     }
 
     void print()
@@ -185,7 +185,7 @@ public:
     {
         if(this->tag == type->tag && type.get()->getSize() == this->size)
         {
-            return this->intrinsicType->isSame(type);
+            return this->intrinsicType->isSame(type->intrinsicType);
         }
         return false;
     }
@@ -249,7 +249,7 @@ public:
                 argsSame = argTypes[i] == std::dynamic_pointer_cast<TypeFunction>(type);
             }
             
-            return this->intrinsicType->isSame(type) && argsSame;
+            return this->intrinsicType->isSame(type->intrinsicType) && argsSame;
         }
         return false;
     }

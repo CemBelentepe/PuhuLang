@@ -41,19 +41,48 @@ public:
         currentEnviroment = env;
     }
 
+    void visit(ExprArrGet* expr)
+    {
+        expr->callee->accept(this);
+        if (expr->callee->type->tag != TypeTag::ARRAY)
+            error("Array get can only be called on arrays.", expr->bracket);
+       
+        expr->index->accept(this);
+        if (expr->index->type->tag != TypeTag::INTEGER)
+            error("Index of an array must be a type of 'int'.", expr->bracket);
+        
+        expr->type = expr->callee->type->intrinsicType;
+    }
+
+    void visit(ExprArrSet* expr)
+    {
+        expr->callee->accept(this);
+        if (expr->callee->type->tag != TypeTag::ARRAY)
+            error("Array get can only be called on arrays.", expr->bracket);
+        
+        expr->index->accept(this);
+        if (expr->index->type->tag != TypeTag::INTEGER)
+            error("Index of an array must be a type of 'int'.", expr->bracket);
+        
+        expr->assignment->accept(this);
+        if (!expr->assignment->type->isSame(expr->callee->type->intrinsicType))
+            error("Invalid assignment due to type missmatch.", expr->bracket);
+
+        expr->type = expr->callee->type->intrinsicType;
+    }
+
     void visit(ExprAssignment* expr)
     {
         expr->assignment->accept(this);
         auto type = currentEnviroment->get(expr->name).type;
         expr->type = type;
-        if (expr->assignment->type != type)
+        if (!expr->assignment->type->isSame(type))
         {
             std::stringstream ss;
             ss << "Invalid assignment due to type missmatch, variable '" << expr->name.getString() << "' has the type '" << type << "' but the expression type is '" << expr->assignment->type;
             error(ss.str(), expr->name);
         }
     }
-
     void visit(ExprBinary* expr)
     {
         expr->left->accept(this);

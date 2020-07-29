@@ -492,6 +492,12 @@ Expr* Parser::assignment()
             Token name = ((ExprVariable*)expr)->name;
             return new ExprAssignment(name, asgn);
         }
+        else if (expr->instance == ExprType::ArrGet)
+        {
+            ExprArrGet* e = (ExprArrGet*)expr;
+            expr = new ExprArrSet(e->callee, e->index, asgn, e->bracket);
+            return expr;
+        }
 
         error("Invalid assignment target.");
     }
@@ -502,7 +508,7 @@ Expr* Parser::assignment()
 Expr* Parser::logic_or()
 {
     Expr* left = logic_and();
-    while (match(TokenType::AND))
+    while (match(TokenType::OR))
     {
         Token op = consumed();
         Expr* right = logic_and();
@@ -514,7 +520,7 @@ Expr* Parser::logic_or()
 Expr* Parser::logic_and()
 {
     Expr* left = bit_or();
-    while (match(TokenType::OR))
+    while (match(TokenType::AND))
     {
         Token op = consumed();
         Expr* right = bit_or();
@@ -666,19 +672,28 @@ Expr* Parser::call()
 {
     Expr* expr = primary();
 
-    if (match(TokenType::OPEN_PAREN))
+    while (match({TokenType::OPEN_PAREN, TokenType::OPEN_BRACKET}))
     {
-        Token openParen = consumed();
-        std::vector<Expr*> args;
-        if (peek().type != TokenType::CLOSE_PAREN)
+        Token token = consumed();
+        if (token.type == TokenType::OPEN_PAREN)
         {
-            do
+            std::vector<Expr*> args;
+            if (peek().type != TokenType::CLOSE_PAREN)
             {
-                args.push_back(parseExpression());
-            } while (match(TokenType::COMMA));
+                do
+                {
+                    args.push_back(parseExpression());
+                } while (match(TokenType::COMMA));
+            }
+            consume(TokenType::CLOSE_PAREN, "Expect ')' after arguments.");
+            expr = new ExprCall(expr, args, token);
         }
-        expr = new ExprCall(expr, args, openParen);
-        consume(TokenType::CLOSE_PAREN, "Expect ')' after arguments.");
+        else if (token.type == TokenType::OPEN_BRACKET)
+        {
+            Expr* index = parseExpression();
+            consume(TokenType::CLOSE_BRACKET, "Expect ']' after array indexing.");
+            expr = new ExprArrGet(expr, index, token);
+        }
     }
 
     return expr;

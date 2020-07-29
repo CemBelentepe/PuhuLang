@@ -10,14 +10,15 @@
 struct valInfo
 {
     size_t addr;
+    size_t size;
 
     valInfo()
-        : addr(0)
+        : addr(0), size(0)
     {
     }
 
-    valInfo(size_t addr)
-        : addr(addr)
+    valInfo(size_t addr, size_t size)
+        : addr(addr), size(size)
     {
     }
 };
@@ -40,7 +41,7 @@ public:
         {
             size_t addr = m_globals.size();
             m_globals.push_back(val.second->data);
-            globalInfo.insert(std::make_pair(val.first, valInfo(addr)));
+            globalInfo.insert(std::make_pair(val.first, valInfo(addr, val.second->type->getSize())));
             delete val.second;
         }
     }
@@ -53,7 +54,7 @@ public:
         for (auto& val : irChunk->getConstants())
         {
             size_t addr = chunk->addConstant(val->data);
-            constPositions.push_back(valInfo(addr));
+            constPositions.push_back(valInfo(addr, val->type->getSize()));
         }
 
         for (auto& inst : irChunk->getCode())
@@ -290,24 +291,83 @@ public:
     void visit(InstGetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::GET_GLOBAL, var.addr);
+
+        if (inst->offset)
+        {
+            chunk->addCode(OpCode::GET_GLOBAL_OFF, var.addr);
+        }
+        else
+        {
+            if (var.size == 1)
+                chunk->addCode(OpCode::GET_GLOBAL, var.addr);
+            else
+            {
+                chunk->addCode(OpCode::GET_GLOBALN, var.addr, var.size);
+                pos++;
+            }
+        }
+
         pos += 2;
     }
     void visit(InstSetGlobal* inst)
     {
         auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::SET_GLOBAL, var.addr);
+
+        if (inst->offset)
+        {
+            chunk->addCode(OpCode::SET_GLOBAL_OFF, var.addr);
+        }
+        else
+        {
+            if (var.size == 1)
+                chunk->addCode(OpCode::SET_GLOBAL, var.addr);
+            else
+            {
+                chunk->addCode(OpCode::SET_GLOBALN, var.addr, var.size);
+                pos++;
+            }
+        }
+
         pos += 2;
     }
     void visit(InstGetLocal* inst)
     {
-        chunk->addCode(OpCode::GET_LOCAL, inst->var.position);
+        Variable& var = inst->var;
+        if (inst->offset)
+        {
+            chunk->addCode(OpCode::GET_LOCAL_OFF, var.position);
+        }
+        else
+        {
+            if (var.type->getSize() == 1)
+                chunk->addCode(OpCode::GET_LOCAL, var.position);
+            else
+            {
+                chunk->addCode(OpCode::GET_LOCALN, var.position, var.type->getSize());
+                pos++;
+            }
+        }
+
         pos += 2;
     }
     void visit(InstSetLocal* inst)
     {
-        auto& var = globalInfo[inst->name];
-        chunk->addCode(OpCode::SET_LOCAL, inst->var.position);
+        Variable& var = inst->var;
+        if (inst->offset)
+        {
+            chunk->addCode(OpCode::SET_LOCAL_OFF, var.position);
+        }
+        else
+        {
+            if (var.type->getSize() == 1)
+                chunk->addCode(OpCode::SET_LOCAL, var.position);
+            else
+            {
+                chunk->addCode(OpCode::SET_LOCALN, var.position, var.type->getSize());
+                pos++;
+            }
+        }
+
         pos += 2;
     }
     void visit(InstCall* inst)

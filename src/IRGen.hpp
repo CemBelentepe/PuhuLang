@@ -63,6 +63,72 @@ public:
         return new InstLabel(-1, currentLabel++, {});
     }
 
+    void visit(ExprArrGet* expr)
+    {
+        if (expr->type->getSize() != 1)
+            expr->index = new ExprBinary(expr->index, new ExprLiteral(new Value((int)expr->type->getSize())), Token(TokenType::STAR, expr->bracket.line, expr->bracket.start, expr->bracket.length));
+
+        while (expr->callee->instance == ExprType::ArrGet)
+        {
+            ExprArrGet* child = (ExprArrGet*)expr->callee;
+            expr->callee = child->callee;
+
+            Token plus(TokenType::PLUS, expr->bracket.line, expr->bracket.start, expr->bracket.length);
+            child->index = new ExprBinary(child->index, new ExprLiteral(new Value((int)child->type->getSize())), Token(TokenType::STAR, child->bracket.line, child->bracket.start, child->bracket.length));
+            expr->index = new ExprBinary(expr->index, child->index, plus);
+        }
+
+        if (expr->callee->instance == ExprType::Variable)
+        {
+            ExprVariable* exprVar = (ExprVariable*)(expr->callee);
+            Variable var = currentEnviroment->get(exprVar->name);
+
+            expr->index->accept(this);
+
+            if (var.depth == 0)
+                chunk->addCode(new InstGetGlobal(exprVar->name.getString(), true));
+            else
+                chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), true));
+        }
+
+        // TODO: 2D Arrays
+    }
+
+    void visit(ExprArrSet* expr)
+    {
+        if (expr->type->getSize() != 1)
+            expr->index = new ExprBinary(expr->index, new ExprLiteral(new Value((int)expr->type->getSize())), Token(TokenType::STAR, expr->bracket.line, expr->bracket.start, expr->bracket.length));
+
+        while (expr->callee->instance == ExprType::ArrGet)
+        {
+            ExprArrGet* child = (ExprArrGet*)expr->callee;
+            expr->callee = child->callee;
+
+            Token plus(TokenType::PLUS, expr->bracket.line, expr->bracket.start, expr->bracket.length);
+            child->index = new ExprBinary(child->index, new ExprLiteral(new Value((int)child->type->getSize())), Token(TokenType::STAR, child->bracket.line, child->bracket.start, child->bracket.length));
+            expr->index = new ExprBinary(expr->index, child->index, plus);
+        }
+
+        expr->assignment->accept(this);
+
+        if (expr->callee->instance == ExprType::Variable)
+        {
+            ExprVariable* exprVar = (ExprVariable*)(expr->callee);
+            Variable var = currentEnviroment->get(exprVar->name);
+
+            expr->index->accept(this);
+
+            if (var.depth == 0)
+                chunk->addCode(new InstSetGlobal(exprVar->name.getString(), true));
+            else
+                chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), true));
+        }
+        else
+        {
+            // TODO: 2D Arrays
+        }
+    }
+
     void visit(ExprAssignment* expr)
     {
         expr->assignment->accept(this);
@@ -289,7 +355,10 @@ public:
         chunk->addCode(new InstJump(-1, out, 2));
         stmt->loop->accept(this);
         if (stmt->inc)
+        {
             stmt->inc->accept(this);
+            chunk->addCode(new InstPop({stmt->inc->type}));
+        }
         chunk->addCode(new InstJump(-1, start, 0));
         chunk->addCode(out);
         endScope();

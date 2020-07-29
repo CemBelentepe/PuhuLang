@@ -1,6 +1,15 @@
 #include "AST.h"
 #include "AstVisitor.hpp"
 
+void ExprArrGet::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+void ExprArrSet::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void ExprAssignment::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

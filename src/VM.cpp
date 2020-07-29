@@ -272,26 +272,26 @@ bool VM::interpret(Chunk* entryChunk)
         }
         case OpCode::POPN:
         {
-            int toPop = advance();
+            uint8_t toPop = advance();
             stack.resize(stack.size() - toPop);
             break;
         }
         case OpCode::PUSHN:
         {
-            int toPop = advance();
+            uint8_t toPop = advance();
             stack.resize(stack.size() + toPop);
             break;
         }
         case OpCode::SET_GLOBAL:
         {
-            size_t slot = advance();
+            uint8_t slot = advance();
             Data val = stack.back();
-            globals.push_back(val);
+            globals[slot] = val;
             break;
         }
         case OpCode::GET_GLOBAL:
         {
-            size_t slot = advance();
+            uint8_t slot = advance();
             stack.push_back(globals[slot]);
             break;
         }
@@ -305,6 +305,109 @@ bool VM::interpret(Chunk* entryChunk)
         {
             uint8_t slot = advance();
             stack.push_back(stack[slot + this->frames.back().frameStart]);
+            break;
+        }
+        case OpCode::SET_GLOBALN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            memcpy(&globals[slot], &stack[stack.size() - size], size * sizeof(Data));
+            break;
+        }
+        case OpCode::GET_GLOBALN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            uint8_t pos = stack.size();
+            stack.resize(pos + size);
+            memcpy(&stack[pos], &globals[slot], size * sizeof(Data));
+            break;
+        }
+        case OpCode::SET_LOCALN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            memcpy(&stack[slot + this->frames.back().frameStart], &stack[stack.size() - size], size * sizeof(Data));
+            break;
+        }
+        case OpCode::GET_LOCALN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            uint8_t pos = stack.size();
+            stack.resize(pos + size);
+            memcpy(&stack[pos], &stack[slot + this->frames.back().frameStart], size * sizeof(Data));
+            break;
+        }
+        case OpCode::SET_GLOBAL_OFF:
+        {
+            uint8_t slot = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            Data val = stack.back();
+            globals[slot + offset] = val;
+            break;
+        }
+        case OpCode::GET_GLOBAL_OFF:
+        {
+            uint8_t slot = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            stack.push_back(globals[slot + offset]);
+            break;
+        }
+        case OpCode::SET_LOCAL_OFF:
+        {
+            uint8_t slot = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            stack[slot + offset + this->frames.back().frameStart] = stack.back();
+            break;
+        }
+        case OpCode::GET_LOCAL_OFF:
+        {
+            uint8_t slot = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            stack.push_back(stack[slot + offset + this->frames.back().frameStart]);
+            break;
+        }
+        case OpCode::SET_GLOBAL_OFFN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            memcpy(&globals[slot + offset], &stack[stack.size() - size], size * sizeof(Data));
+            break;
+        }
+        case OpCode::GET_GLOBAL_OFFN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            memcpy(&stack[slot + this->frames.back().frameStart + offset], &stack[stack.size() - size], size * sizeof(Data));
+            break;
+        }
+        case OpCode::SET_LOCAL_OFFN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            memcpy(&stack[slot + this->frames.back().frameStart + offset], &stack[stack.size() - size], size * sizeof(Data));
+            break;
+        }
+        case OpCode::GET_LOCAL_OFFN:
+        {
+            uint8_t slot = advance();
+            uint8_t size = advance();
+            int32_t offset = stack.back().valInt;
+            stack.pop_back();
+            uint8_t pos = stack.size();
+            stack.resize(pos + size);
+            memcpy(&stack[pos], &stack[slot + this->frames.back().frameStart + offset], size * sizeof(Data));
             break;
         }
         case OpCode::SET_GLOBAL_POP:
@@ -376,10 +479,15 @@ bool VM::interpret(Chunk* entryChunk)
             auto frame = this->frames.back();
             this->frames.pop_back();
 
-            if (size != 0)
+            if (size == 1)
             {
                 stack[frame.frameStart] = stack.back();
             }
+            else if (size != 0)
+            {
+                memcpy(&stack[frame.frameStart], &stack[stack.size() - size], size * sizeof(Data));
+            }
+
             this->stack.resize(frame.frameStart + size);
 
             this->ip = frame.ip;

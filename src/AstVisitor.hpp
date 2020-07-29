@@ -4,6 +4,8 @@
 class AstVisitor
 {
 public:
+    virtual void visit(ExprArrGet* expr) = 0;
+    virtual void visit(ExprArrSet* expr) = 0;
     virtual void visit(ExprAssignment* expr) = 0;
     virtual void visit(ExprBinary* expr) = 0;
     virtual void visit(ExprCall* expr) = 0;

@@ -32,6 +32,26 @@ public:
         std::cout << "\n";
     }
 
+    void visit(ExprArrGet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "[";
+        expr->index->accept(this);
+        std::cout << "])";
+    }
+
+    void visit(ExprArrSet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "[";
+        expr->index->accept(this);
+        std::cout << "] = ";
+        expr->assignment->accept(this);
+        std::cout << ")";
+    }
+
     void visit(ExprAssignment* expr)
     {
         std::cout << "(" << expr->name.getString() << " = ";

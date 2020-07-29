@@ -6,6 +6,8 @@
 enum class ExprType
 {
     Assignment,
+    ArrGet,
+    ArrSet,
     Binary,
     Call,
     Cast,
@@ -31,6 +33,49 @@ public:
     virtual ~Expr() {}
 
     virtual void accept(AstVisitor* visitor) = 0;
+};
+
+class ExprArrGet : public Expr
+{
+public:
+    Expr* callee;
+    Expr* index;
+    Token bracket;
+
+    ExprArrGet(Expr* callee, Expr* index, Token bracket)
+        : Expr(ExprType::ArrGet, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), index(index), bracket(bracket)
+    {
+    }
+
+    ~ExprArrGet()
+    {
+        delete callee;
+        delete index;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprArrSet : public Expr
+{
+public:
+    Expr* callee;
+    Expr* index;
+    Expr* assignment;
+    Token bracket;
+
+    ExprArrSet(Expr* callee, Expr* index, Expr* assignment, Token bracket)
+        : Expr(ExprType::ArrSet, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), index(index), assignment(assignment), bracket(bracket)
+    {
+    }
+
+    ~ExprArrSet()
+    {
+        delete callee;
+        delete index;
+    }
+
+    void accept(AstVisitor* visitor);
 };
 
 class ExprAssignment : public Expr
@@ -183,7 +228,7 @@ public:
 class Stmt
 {
 public:
-    virtual ~Stmt(){}
+    virtual ~Stmt() {}
     virtual void accept(AstVisitor* visitor) = 0;
 };
 

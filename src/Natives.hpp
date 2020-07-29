@@ -46,24 +46,6 @@ Data native_print(int argc, Data* args)
     return Data{0};
 }
 
-/*
-uint8_t* native_println(int argc, uint8_t* args)
-{
-	puts(*(char**)(args));
-	return nullptr;
-}
-uint8_t* native_printlnDouble(int argc, uint8_t* args)
-{
-	std::cout << *(double*)args << "\n";
-	return nullptr;
-}
-uint8_t* native_printlnInt(int argc, uint8_t* args)
-{
-	std::cout << *(int*)args << "\n";
-	return nullptr;
-}
-*/
-
 Data native_input(int argc, Data* args)
 {
     std::string in;

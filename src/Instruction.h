@@ -5,285 +5,289 @@ class InstVisitor;
 class Instruction
 {
 public:
-	virtual void accept(InstVisitor* visitor) = 0;
+    virtual void accept(InstVisitor* visitor) = 0;
 };
 
 class InstConst : public Instruction
 {
 public:
-	int id;
+    int id;
 
-	InstConst(int id)
-		: id(id) { } 
+    InstConst(int id)
+        : id(id) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstCast : public Instruction
 {
 public:
-	TypeTag from;
-	TypeTag to;
+    TypeTag from;
+    TypeTag to;
 
-	InstCast(TypeTag from, TypeTag to)
-		: from(from), to(to) { } 
+    InstCast(TypeTag from, TypeTag to)
+        : from(from), to(to) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstAdd : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstAdd(TypeTag type)
-		: type(type) { } 
+    InstAdd(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstSub : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstSub(TypeTag type)
-		: type(type) { } 
+    InstSub(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstMul : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstMul(TypeTag type)
-		: type(type) { } 
+    InstMul(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstDiv : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstDiv(TypeTag type)
-		: type(type) { } 
+    InstDiv(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstNeg : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstNeg(TypeTag type)
-		: type(type) { } 
+    InstNeg(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstMod : public Instruction
 {
 public:
+    InstMod()
+    {
+    }
 
-	InstMod()
-		 { } 
-
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstBit : public Instruction
 {
 public:
-	TokenType op_type;
+    TokenType op_type;
 
-	InstBit(TokenType op_type)
-		: op_type(op_type) { } 
+    InstBit(TokenType op_type)
+        : op_type(op_type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstNot : public Instruction
 {
 public:
+    InstNot()
+    {
+    }
 
-	InstNot()
-		 { } 
-
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstInc : public Instruction
 {
 public:
-	TypeTag type;
-	int inc;
+    TypeTag type;
+    int inc;
 
-	InstInc(TypeTag type, int inc)
-		: type(type), inc(inc) { } 
+    InstInc(TypeTag type, int inc)
+        : type(type), inc(inc) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstLess : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstLess(TypeTag type)
-		: type(type) { } 
+    InstLess(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstLte : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstLte(TypeTag type)
-		: type(type) { } 
+    InstLte(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstGreat : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstGreat(TypeTag type)
-		: type(type) { } 
+    InstGreat(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstGte : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstGte(TypeTag type)
-		: type(type) { } 
+    InstGte(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstEq : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstEq(TypeTag type)
-		: type(type) { } 
+    InstEq(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstNeq : public Instruction
 {
 public:
-	TypeTag type;
+    TypeTag type;
 
-	InstNeq(TypeTag type)
-		: type(type) { } 
+    InstNeq(TypeTag type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstGetGlobal : public Instruction
 {
 public:
-	std::string name;
+    std::string name;
+    bool offset;
 
-	InstGetGlobal(std::string name)
-		: name(name) { } 
+    InstGetGlobal(std::string name, bool offset = false)
+        : name(name), offset(offset) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstSetGlobal : public Instruction
 {
 public:
-	std::string name;
+    std::string name;
+    bool offset;
 
-	InstSetGlobal(std::string name)
-		: name(name) { } 
+    InstSetGlobal(std::string name, bool offset = false)
+        : name(name), offset(offset) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstGetLocal : public Instruction
 {
 public:
-	std::string name;
-	Variable var;
+    std::string name;
+    Variable var;
+    bool offset;
 
-	InstGetLocal(std::string name, Variable var)
-		: name(name), var(var) { } 
+    InstGetLocal(std::string name, Variable var, bool offset = false)
+        : name(name), var(var), offset(offset) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstSetLocal : public Instruction
 {
 public:
-	std::string name;
-	Variable var;
+    std::string name;
+    Variable var;
+    bool offset;
 
-	InstSetLocal(std::string name, Variable var)
-		: name(name), var(var) { } 
+    InstSetLocal(std::string name, Variable var, bool offset = false)
+        : name(name), var(var), offset(offset) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstCall : public Instruction
 {
 public:
-	std::vector<std::shared_ptr<Type>> args;
-	TypeTag callType;
+    std::vector<std::shared_ptr<Type>> args;
+    TypeTag callType;
 
-	InstCall(std::vector<std::shared_ptr<Type>> args, TypeTag callType)
-		: args(args), callType(callType) { } 
+    InstCall(std::vector<std::shared_ptr<Type>> args, TypeTag callType)
+        : args(args), callType(callType) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstPop : public Instruction
 {
 public:
-	std::vector<std::shared_ptr<Type>> types;
+    std::vector<std::shared_ptr<Type>> types;
 
-	InstPop(std::vector<std::shared_ptr<Type>> types)
-		: types(types) { } 
+    InstPop(std::vector<std::shared_ptr<Type>> types)
+        : types(types) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstPush : public Instruction
 {
 public:
-	std::vector<std::shared_ptr<Type>> types;
+    std::vector<std::shared_ptr<Type>> types;
 
-	InstPush(std::vector<std::shared_ptr<Type>> types)
-		: types(types) { } 
+    InstPush(std::vector<std::shared_ptr<Type>> types)
+        : types(types) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstReturn : public Instruction
 {
 public:
-	std::shared_ptr<Type> type;
+    std::shared_ptr<Type> type;
 
-	InstReturn(std::shared_ptr<Type> type)
-		: type(type) { } 
+    InstReturn(std::shared_ptr<Type> type)
+        : type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstLabel;
@@ -291,26 +295,25 @@ class InstLabel;
 class InstJump : public Instruction
 {
 public:
-	int pos;
-	InstLabel* label;
-	int type;
+    int pos;
+    InstLabel* label;
+    int type;
 
-	InstJump(int pos, InstLabel* label, int type)
-		: pos(pos), label(label), type(type) { } 
+    InstJump(int pos, InstLabel* label, int type)
+        : pos(pos), label(label), type(type) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
 
 class InstLabel : public Instruction
 {
 public:
-	int pos;
-	size_t id;
-	std::vector<InstJump*> patches;
+    int pos;
+    size_t id;
+    std::vector<InstJump*> patches;
 
-	InstLabel(int pos, size_t id, std::vector<InstJump*> patches)
-		: pos(pos), id(id), patches(patches) { } 
+    InstLabel(int pos, size_t id, std::vector<InstJump*> patches)
+        : pos(pos), id(id), patches(patches) {}
 
-	 void accept(InstVisitor* visitor);
+    void accept(InstVisitor* visitor);
 };
-
