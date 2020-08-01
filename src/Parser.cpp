@@ -12,11 +12,14 @@ Parser::Parser(std::vector<Token>& tokens)
     std::shared_ptr<TypeFunction> sr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::STRING), std::vector<std::shared_ptr<Type>>(), false);
     std::shared_ptr<TypeFunction> dr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::DOUBLE), std::vector<std::shared_ptr<Type>>(), false);
     std::shared_ptr<TypeFunction> ir = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::INTEGER), std::vector<std::shared_ptr<Type>>(), false);
+    std::shared_ptr<TypeFunction> fr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::FLOAT), std::vector<std::shared_ptr<Type>>(), false);
 
     globals.insert({"print", new NativeFunc(native_print, v2s)});
     globals.insert({"input", new NativeFunc(native_input, sr)});
     globals.insert({"clock", new NativeFunc(native_clock, dr)});
     globals.insert({"inputInt", new NativeFunc(native_inputInt, ir)});
+    globals.insert({"rand", new NativeFunc(native_rand, fr)});
+    srand(time(NULL));
 }
 
 std::vector<Stmt*> Parser::parse()
@@ -167,7 +170,8 @@ bool Parser::match(std::vector<TokenType> types)
 
 bool Parser::matchCast()
 {
-    return tokens[currentToken].type == TokenType::OPEN_PAREN && isTypeName(tokens[currentToken + 1]);
+    // TODO: fix
+    return tokens[currentToken].type == TokenType::OPEN_PAREN && isTypeName(tokens[currentToken + 1]) && tokens[currentToken + 2].type == TokenType::CLOSE_PAREN;
 }
 
 std::shared_ptr<Type> Parser::getCast()
@@ -654,7 +658,6 @@ Expr* Parser::unary()
     else if (matchCast())
     {
         std::shared_ptr<Type> type = getCast();
-        this->currentToken += 3;
         Expr* expr = unary();
         return new ExprCast(type, expr);
     }

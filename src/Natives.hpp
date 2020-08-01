@@ -67,6 +67,12 @@ Data native_clock(int argc, Data* args)
 {
     Data t;
     t.valDouble = (double)clock() / CLOCKS_PER_SEC;
-    ;
+    return t;
+}
+
+Data native_rand(int argc, Data* args)
+{
+    Data t;
+    t.valFloat = (float)rand() / (float)RAND_MAX;
     return t;
 }
