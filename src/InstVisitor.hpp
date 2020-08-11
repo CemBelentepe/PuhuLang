@@ -26,6 +26,10 @@ public:
     virtual void visit(InstSetGlobal* inst) = 0;
     virtual void visit(InstGetLocal* inst) = 0;
     virtual void visit(InstSetLocal* inst) = 0;
+    virtual void visit(InstAlloc* inst) = 0;
+    virtual void visit(InstFree* inst) = 0;
+    virtual void visit(InstGetDeref* inst) = 0;
+    virtual void visit(InstSetDeref* inst) = 0;
     virtual void visit(InstCall* inst) = 0;
     virtual void visit(InstPop* inst) = 0;
     virtual void visit(InstPush* inst) = 0;

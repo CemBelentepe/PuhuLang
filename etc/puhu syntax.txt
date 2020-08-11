@@ -37,7 +37,7 @@ bitshift	-> addition (("<<" | ">>") addition)*
 addition 	-> multiplication (("+" | "-") multiplication)*
 multiplication -> prefix (("*" | "/" | "%") prefix)*
 prefix 		-> ("-" | "+" | "++" | "--")? unary
-unary 		-> ("!" | "~" | "*" | "&" | cast) unary | postfix
+unary 		-> ("!" | "~" | "^" | "ref" | cast) unary | postfix
 postfix		-> call ("++" | "--")?
 call		-> primary ( ("(" arguments? ")") | ( "." IDENTIFIER) | ("[" expression "]") )*
 primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | IDENTIFIER

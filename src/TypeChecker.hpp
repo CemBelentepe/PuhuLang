@@ -17,7 +17,7 @@ public:
         : hadError(false), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
     {
         for (auto& val : globals)
-            currentEnviroment->define(val.first, val.second->type);
+            currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
 
         for (auto& stmt : root)
             stmt->accept(this);
@@ -46,11 +46,11 @@ public:
         expr->callee->accept(this);
         if (expr->callee->type->tag != TypeTag::ARRAY)
             error("Array get can only be called on arrays.", expr->bracket);
-       
+
         expr->index->accept(this);
         if (expr->index->type->tag != TypeTag::INTEGER)
             error("Index of an array must be a type of 'int'.", expr->bracket);
-        
+
         expr->type = expr->callee->type->intrinsicType;
     }
 
@@ -59,11 +59,11 @@ public:
         expr->callee->accept(this);
         if (expr->callee->type->tag != TypeTag::ARRAY)
             error("Array get can only be called on arrays.", expr->bracket);
-        
+
         expr->index->accept(this);
         if (expr->index->type->tag != TypeTag::INTEGER)
             error("Index of an array must be a type of 'int'.", expr->bracket);
-        
+
         expr->assignment->accept(this);
         if (!expr->assignment->type->isSame(expr->callee->type->intrinsicType))
             error("Invalid assignment due to type missmatch.", expr->bracket);
@@ -83,6 +83,7 @@ public:
             error(ss.str(), expr->name);
         }
     }
+
     void visit(ExprBinary* expr)
     {
         expr->left->accept(this);
@@ -261,6 +262,54 @@ public:
             expr->type = var.type;
     }
 
+    void visit(ExprHeap* expr)
+    {
+    }
+
+    void visit(ExprGetDeref* expr)
+    {
+        expr->callee->accept(this);
+        if (expr->callee->type->tag != TypeTag::POINTER)
+            error("Invalid dereferance.", expr->token);
+        expr->type = expr->callee->type->intrinsicType;
+    }
+
+    void visit(ExprSetDeref* expr)
+    {
+        expr->callee->accept(this);
+        if (expr->callee->type->tag != TypeTag::POINTER)
+            error("Invalid dereferance.", expr->token);
+        expr->asgn->accept(this);
+        if (!expr->asgn->type->isSame(expr->callee->type->intrinsicType))
+            error("Type mismatch on assignment.", expr->equal);
+        expr->type = expr->callee->type->intrinsicType;
+    }
+
+    void visit(ExprRef* expr)
+    {
+        expr->callee->accept(this);
+
+        if (!(expr->callee->type->tag == TypeTag::POINTER && ((TypePointer*)expr->callee->type.get())->is_owner))
+            error("Invalid referance.", expr->token);
+        else
+        {
+            expr->type = expr->callee->type;
+            ((TypePointer*)expr->type.get())->is_owner = false;
+        }
+    }
+
+    void visit(ExprTake* expr)
+    {
+        expr->source->accept(this);
+
+        if (!(expr->source->type->tag == TypeTag::POINTER && ((TypePointer*)expr->source->type.get())->is_owner))
+            error("Invalid referance.", expr->token);
+        else
+        {
+            expr->type = expr->source->type;
+        }
+    }
+
     void visit(StmtBlock* stmt)
     {
         beginScope();
@@ -279,7 +328,7 @@ public:
     {
         beginScope();
         for (int i = 0; i < stmt->args.size(); i++)
-            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i]);
+            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i], true);
 
         for (auto& s : stmt->body->statements)
             s->accept(this);
@@ -296,7 +345,7 @@ public:
         }
 
         if (currentEnviroment->depth != 0)
-            currentEnviroment->define(stmt->name, stmt->varType);
+            currentEnviroment->define(stmt->name, stmt->varType, stmt->initializer);
     }
     void visit(StmtReturn* stmt)
     {

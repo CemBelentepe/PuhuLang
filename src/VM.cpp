@@ -425,6 +425,43 @@ bool VM::interpret(Chunk* entryChunk)
             stack.pop_back();
             break;
         }
+        case OpCode::ALLOC:
+        {
+            uint8_t size = advance();
+            Data data;
+            data.valPtr = new Data[size];
+            stack.push_back(data);
+            break;
+        }
+        case OpCode::FREE:
+        {
+            Data ptr = stack.back();
+            stack.pop_back();
+            delete[] ptr.valPtr;
+            break;
+        }
+        case OpCode::SET_DEREF:
+        {
+            uint8_t size = advance();
+            Data ptr = stack.back();
+            stack.pop_back();
+            // TODO: optimize
+            for (int i = 0; i < size; i++)
+            {
+                ptr.valPtr[i] = stack.back();
+                stack[stack.size() - i];
+            }
+            break;
+        }
+        case OpCode::GET_DEREF:
+        {
+            uint8_t size = advance();
+            Data ptr = stack.back();
+            stack.pop_back();
+            for (int i = 0; i < size; i++)
+                stack.push_back(ptr.valPtr[i]);
+            break;
+        }
         case OpCode::JUMP:
         {
             uint8_t offset = advance();
@@ -467,9 +504,10 @@ bool VM::interpret(Chunk* entryChunk)
             uint8_t argSize = advance();
             NativeFn func = stack.back().valNative;
             stack.pop_back();
-            Data result = func(argSize, argSize > 0 ? &stack[this->stack.size() - argSize] : nullptr);
+            std::vector<Data> result = func(argSize, argSize > 0 ? &stack[this->stack.size() - argSize] : nullptr);
             this->stack.resize(this->stack.size() - argSize);
-            stack.push_back(result);
+            for(int i = 0; i < result.size(); i++)
+                stack.push_back(result[i]);
             break;
         }
         case OpCode::RETURN:

@@ -14,6 +14,11 @@ public:
     virtual void visit(ExprLogic* expr) = 0;
     virtual void visit(ExprUnary* expr) = 0;
     virtual void visit(ExprVariable* expr) = 0;
+    virtual void visit(ExprHeap* expr) = 0;
+    virtual void visit(ExprGetDeref* expr) = 0;
+    virtual void visit(ExprSetDeref* expr) = 0;
+    virtual void visit(ExprRef* expr) = 0;
+    virtual void visit(ExprTake* expr) = 0;
 
     virtual void visit(StmtBlock* stmt) = 0;
     virtual void visit(StmtExpr* stmt) = 0;

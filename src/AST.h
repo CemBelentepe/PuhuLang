@@ -14,7 +14,12 @@ enum class ExprType
     Literal,
     Logic,
     Unary,
-    Variable
+    Variable,
+    Heap,
+    GetDeref,
+    SetDeref,
+    Ref,
+    Take
 };
 
 class AstVisitor;
@@ -220,6 +225,96 @@ public:
     {
         delete left;
         delete right;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprHeap : public Expr
+{
+public:
+    std::shared_ptr<Type> constructType;
+    Token token;
+
+    ExprHeap(std::shared_ptr<Type> constructType, Token token)
+        : Expr(ExprType::Heap, std::make_shared<TypePointer>(true, constructType)), constructType(constructType), token(token)
+    {
+    }
+
+    ~ExprHeap()
+    {
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprGetDeref : public Expr
+{
+public:
+    Expr* callee;
+    Token token;
+
+    ExprGetDeref(Expr* callee, Token token)
+        : Expr(ExprType::GetDeref, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), token(token) {}
+
+    ~ExprGetDeref()
+    {
+        delete callee;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprSetDeref : public Expr
+{
+public:
+    Expr* callee;
+    Expr* asgn;
+    Token token;
+    Token equal;
+
+    ExprSetDeref(Expr* callee, Expr* asgn, Token token, Token equal)
+        : Expr(ExprType::SetDeref, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), asgn(asgn), token(token), equal(equal) {}
+
+    ~ExprSetDeref()
+    {
+        delete callee;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprRef : public Expr
+{
+public:
+    Expr* callee;
+    Token token;
+
+    ExprRef(Expr* callee, Token token)
+        : Expr(ExprType::Ref, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), token(token)
+    {
+    }
+
+    ~ExprRef()
+    {
+        delete callee;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprTake : public Expr
+{
+public:
+    Expr* source;
+    Token token;
+
+    ExprTake(Expr* source, Token token)
+        : Expr(ExprType::Ref, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), source(source), token(token) {}
+
+    ~ExprTake()
+    {
+        delete source;
     }
 
     void accept(AstVisitor* visitor);

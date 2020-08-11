@@ -3,9 +3,9 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
-#include <sstream>
 
 #include "Scanner.h"
 
@@ -150,6 +150,48 @@ public:
     }
 };
 
+class TypePointer : public Type
+{
+public:
+    bool is_owner;
+    TypePointer(bool is_owner, std::shared_ptr<Type> intrinsicType)
+        : Type(TypeTag::POINTER, intrinsicType), is_owner(is_owner)
+    {
+    }
+
+    bool isPrimitive()
+    {
+        return false;
+    }
+
+    size_t getSize()
+    {
+        return 1;
+    }
+
+    void print()
+    {
+        intrinsicType->print();
+        std::cout << (is_owner ? "&" : "*");
+    }
+
+    std::stringstream getName()
+    {
+        auto ss = intrinsicType->getName();
+        ss << (is_owner ? "&" : "*");
+        return ss;
+    }
+
+    bool isSame(std::shared_ptr<Type> type)
+    {
+        if (this->tag == type->tag && ((TypePointer*)type.get())->is_owner == this->is_owner)
+        {
+            return this->intrinsicType->isSame(type->intrinsicType);
+        }
+        return false;
+    }
+};
+
 class TypeArray : public Type
 {
 public:
@@ -174,7 +216,7 @@ public:
         intrinsicType->print();
         std::cout << "[]";
     }
-    
+
     std::stringstream getName()
     {
         auto ss = intrinsicType->getName();
@@ -183,7 +225,7 @@ public:
     }
     bool isSame(std::shared_ptr<Type> type)
     {
-        if(this->tag == type->tag && type.get()->getSize() == this->size)
+        if (this->tag == type->tag && type.get()->getSize() == this->size)
         {
             return this->intrinsicType->isSame(type->intrinsicType);
         }
@@ -198,9 +240,7 @@ public:
     bool is_variadic = false;
 
     TypeFunction(TypeTag funcType, std::shared_ptr<Type> retType, std::vector<std::shared_ptr<Type>> argTypes, bool is_variadic)
-        : Type(funcType, retType), argTypes(argTypes), is_variadic(is_variadic)
-    {
-    }
+        : Type(funcType, retType), argTypes(argTypes), is_variadic(is_variadic) {}
 
     bool isPrimitive()
     {
@@ -216,9 +256,9 @@ public:
     {
         intrinsicType->print();
         std::cout << "<(";
-        for(int i = 0; i < argTypes.size(); i++)
+        for (int i = 0; i < argTypes.size(); i++)
         {
-            if(i != 0)
+            if (i != 0)
                 std::cout << ", ";
             argTypes[i]->print();
         }
@@ -229,26 +269,26 @@ public:
     {
         auto ss = intrinsicType->getName();
         ss << "<(";
-        for(int i = 0; i < argTypes.size(); i++)
+        for (int i = 0; i < argTypes.size(); i++)
         {
-            if(i != 0)
+            if (i != 0)
                 ss << ", ";
             ss << argTypes[i]->getName().str();
         }
         ss << ")";
         return ss;
     }
-    
+
     bool isSame(std::shared_ptr<Type> type)
     {
-        if(this->tag == type->tag)
+        if (this->tag == type->tag)
         {
             bool argsSame = argTypes.size() == std::dynamic_pointer_cast<TypeFunction>(type)->argTypes.size();
-            for(int i = 0; i < argTypes.size() && argsSame; i++)
+            for (int i = 0; i < argTypes.size() && argsSame; i++)
             {
                 argsSame = argTypes[i] == std::dynamic_pointer_cast<TypeFunction>(type);
             }
-            
+
             return this->intrinsicType->isSame(type->intrinsicType) && argsSame;
         }
         return false;
@@ -264,10 +304,11 @@ union Data
     double valDouble;
     char* valString;
     Chunk* valChunk;
-    Data (*valNative)(int, Data*);
+    std::vector<Data> (*valNative)(int, Data*);
+    Data* valPtr;
 };
 
-typedef Data (*NativeFn)(int, Data*);
+typedef std::vector<Data> (*NativeFn)(int, Data*);
 
 class Value
 {

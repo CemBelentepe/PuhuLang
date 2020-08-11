@@ -113,6 +113,41 @@ public:
         std::cout << ")";
     }
 
+    void visit(ExprHeap* expr)
+    {
+        std::cout << "(heap " << expr->constructType->getName().str() << ")";
+    }
+
+    void visit(ExprGetDeref* expr)
+    {
+        std::cout << "(^ ";
+        expr->callee->accept(this);
+        std::cout << ")";
+    }
+
+    void visit(ExprSetDeref* expr)
+    {
+        std::cout << "(^ ";
+        expr->callee->accept(this);
+        std::cout << " = ";
+        expr->asgn->accept(this);
+        std::cout << ")";
+    }
+
+    void visit(ExprRef* expr)
+    {
+        std::cout << "(ref ";
+        expr->callee->accept(this);
+        std::cout << ")";
+    }
+
+    void visit(ExprTake* expr)
+    {
+        std::cout << "(take ";
+        expr->source->accept(this);
+        std::cout << ")";
+    }
+
     void visit(StmtBlock* stmt)
     {
         indentCode();
@@ -462,6 +497,22 @@ public:
     {
         std::cout << "SET_LOCAL\t" << inst->name;
     }
+    void visit(InstAlloc* inst)
+    {
+        std::cout << "ALLOC\t" << inst->type;
+    }
+    void visit(InstFree* inst)
+    {
+        std::cout << "FREE";
+    }
+    void visit(InstGetDeref* inst)
+    {
+        std::cout << "GET_DEREF\t" << inst->type;
+    }
+    void visit(InstSetDeref* inst)
+    {
+        std::cout << "SET_DEREF\t" << inst->type;
+    }
     void visit(InstCall* inst)
     {
         if (inst->callType == TypeTag::NATIVE)
@@ -470,7 +521,7 @@ public:
         for (auto& arg : inst->args)
         {
             arg->print();
-            std::cout <<  " ";
+            std::cout << " ";
         }
     }
     void visit(InstPop* inst)

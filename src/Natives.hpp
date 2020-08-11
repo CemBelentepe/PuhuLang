@@ -3,7 +3,7 @@
 #include "Value.hpp"
 #include <ctime>
 
-Data native_print(int argc, Data* args)
+std::vector<Data> native_print(int argc, Data* args)
 {
     const char* str = args[0].valString;
     size_t args_start = 1;
@@ -43,36 +43,36 @@ Data native_print(int argc, Data* args)
         }
     }
 
-    return Data{0};
+    return {};
 }
 
-Data native_input(int argc, Data* args)
+std::vector<Data> native_input(int argc, Data* args)
 {
     std::string in;
     getline(std::cin, in);
     Data data;
     data.valString = new char[in.size() + 1];
     strcpy(data.valString, in.c_str());
-    return data;
+    return {data};
 }
 
-Data native_inputInt(int argc, Data* args)
+std::vector<Data> native_inputInt(int argc, Data* args)
 {
     Data i;
     std::cin >> i.valInt;
-    return i;
+    return {i};
 }
 
-Data native_clock(int argc, Data* args)
+std::vector<Data> native_clock(int argc, Data* args)
 {
     Data t;
     t.valDouble = (double)clock() / CLOCKS_PER_SEC;
-    return t;
+    return {t};
 }
 
-Data native_rand(int argc, Data* args)
+std::vector<Data> native_rand(int argc, Data* args)
 {
     Data t;
     t.valFloat = (float)rand() / (float)RAND_MAX;
-    return t;
+    return {t};
 }

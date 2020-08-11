@@ -11,13 +11,14 @@ class Variable
 public:
     int depth;
     int position;
+    bool inited;
     std::shared_ptr<Type> type;
 
     Variable()
-        : depth(0), position(0) {}
+        : depth(0), position(0), inited(false) {}
 
-    Variable(int depth, int position, std::shared_ptr<Type> type)
-        : depth(depth), position(position), type(type) {}
+    Variable(int depth, int position, bool inited, std::shared_ptr<Type> type)
+        : depth(depth), position(position), inited(inited), type(type) {}
 };
 
 class Enviroment
@@ -48,22 +49,22 @@ public:
         return Variable();
     }
 
-    void define(Token& name, std::shared_ptr<Type> type)
+    void define(Token& name, std::shared_ptr<Type> type, bool inited)
     {
         if (values.find(name.getString()) == values.end())
         {
-            values.insert({name.getString(), Variable(depth, currentPos, type)});
+            values.insert({name.getString(), Variable(depth, currentPos, inited, type)});
             currentPos += type->getSize();
         }
         else
             std::cout << "[ERROR] Variable '" << name.getString() << "' has already defined at this scope at line " << name.line << "\n";
     }
 
-    void define(std::string name, std::shared_ptr<Type> type)
+    void define(std::string name, std::shared_ptr<Type> type, bool inited)
     {
         if (values.find(name) == values.end())
         {
-            values.insert({name, Variable(depth, currentPos, type)});
+            values.insert({name, Variable(depth, currentPos, inited, type)});
             currentPos += type->getSize();
         }
         else

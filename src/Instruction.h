@@ -199,10 +199,11 @@ class InstGetGlobal : public Instruction
 {
 public:
     std::string name;
+    std::shared_ptr<Type> type;
     bool offset;
 
-    InstGetGlobal(std::string name, bool offset = false)
-        : name(name), offset(offset) {}
+    InstGetGlobal(std::string name, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), type(type), offset(offset) {}
 
     void accept(InstVisitor* visitor);
 };
@@ -211,10 +212,11 @@ class InstSetGlobal : public Instruction
 {
 public:
     std::string name;
+    std::shared_ptr<Type> type;
     bool offset;
 
-    InstSetGlobal(std::string name, bool offset = false)
-        : name(name), offset(offset) {}
+    InstSetGlobal(std::string name, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), type(type), offset(offset) {}
 
     void accept(InstVisitor* visitor);
 };
@@ -224,10 +226,11 @@ class InstGetLocal : public Instruction
 public:
     std::string name;
     Variable var;
+    std::shared_ptr<Type> type;
     bool offset;
 
-    InstGetLocal(std::string name, Variable var, bool offset = false)
-        : name(name), var(var), offset(offset) {}
+    InstGetLocal(std::string name, Variable var, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), var(var), type(type), offset(offset) {}
 
     void accept(InstVisitor* visitor);
 };
@@ -237,10 +240,52 @@ class InstSetLocal : public Instruction
 public:
     std::string name;
     Variable var;
+    std::shared_ptr<Type> type;
     bool offset;
 
-    InstSetLocal(std::string name, Variable var, bool offset = false)
-        : name(name), var(var), offset(offset) {}
+    InstSetLocal(std::string name, Variable var, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), var(var), type(type), offset(offset) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstAlloc : public Instruction
+{
+public:
+    std::shared_ptr<Type> type;
+
+    InstAlloc(std::shared_ptr<Type> type)
+        : type(type) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstFree : public Instruction
+{
+public:
+    InstFree() {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstGetDeref : public Instruction
+{
+public:
+    std::shared_ptr<Type> type;
+
+    InstGetDeref(std::shared_ptr<Type> type)
+        : type(type) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstSetDeref : public Instruction
+{
+public:
+    std::shared_ptr<Type> type;
+
+    InstSetDeref(std::shared_ptr<Type> type)
+        : type(type) {}
 
     void accept(InstVisitor* visitor);
 };

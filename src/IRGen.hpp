@@ -21,7 +21,7 @@ public:
         : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0)
     {
         for (auto& val : globals)
-            currentEnviroment->define(val.first, val.second->type);
+            currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
     }
 
     std::vector<std::shared_ptr<Type>> makePrimTypeList(std::vector<TypeTag> tags)
@@ -38,7 +38,7 @@ public:
         for (auto& stmt : root)
             stmt->accept(this);
 
-        chunk->addCode(new InstGetGlobal("main"));
+        chunk->addCode(new InstGetGlobal("main", globals["main"]->type));
         chunk->addCode(new InstCall(makePrimTypeList({TypeTag::VOID}), TypeTag::FUNCTION));
 
         return chunks;
@@ -51,6 +51,14 @@ public:
 
     void endScope()
     {
+        for (auto& var : currentEnviroment->values)
+        {
+            if (var.second.type->tag == TypeTag::POINTER && ((TypePointer*)(var.second.type.get()))->is_owner)
+            {
+                chunk->addCode(new InstGetLocal(var.first, var.second, var.second.type));
+                chunk->addCode(new InstFree());
+            }
+        }
         auto types = currentEnviroment->getEnvTypes();
         chunk->addCode(new InstPop(types));
         Enviroment* env = currentEnviroment->closing;
@@ -86,9 +94,9 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(exprVar->name.getString(), true));
+                chunk->addCode(new InstGetGlobal(exprVar->name.getString(), expr->type, true));
             else
-                chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), true));
+                chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
 
         // TODO: 2D Arrays
@@ -119,9 +127,9 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstSetGlobal(exprVar->name.getString(), true));
+                chunk->addCode(new InstSetGlobal(exprVar->name.getString(), expr->type, true));
             else
-                chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), true));
+                chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
         else
         {
@@ -131,12 +139,22 @@ public:
 
     void visit(ExprAssignment* expr)
     {
-        expr->assignment->accept(this);
         Variable var = currentEnviroment->get(expr->name);
+
+        if (expr->assignment->instance == ExprType::Heap)
+        {
+            if (var.depth == 0)
+                chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
+            else
+                chunk->addCode(new InstGetLocal(expr->name.getString(), var, expr->type));
+            chunk->addCode(new InstFree());
+        }
+
+        expr->assignment->accept(this);
         if (var.depth == 0)
-            chunk->addCode(new InstSetGlobal(expr->name.getString()));
+            chunk->addCode(new InstSetGlobal(expr->name.getString(), expr->type));
         else
-            chunk->addCode(new InstSetLocal(expr->name.getString(), var));
+            chunk->addCode(new InstSetLocal(expr->name.getString(), var, expr->type));
     }
     void visit(ExprBinary* expr)
     {
@@ -249,9 +267,43 @@ public:
     {
         Variable var = currentEnviroment->get(expr->name);
         if (var.depth == 0)
-            chunk->addCode(new InstGetGlobal(expr->name.getString()));
+            chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
         else
-            chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name)));
+            chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name), expr->type));
+    }
+    void visit(ExprHeap* expr)
+    {
+        chunk->addCode(new InstAlloc(expr->type));
+    }
+    void visit(ExprGetDeref* expr)
+    {
+        expr->callee->accept(this);
+        chunk->addCode(new InstGetDeref(expr->type));
+    }
+    void visit(ExprSetDeref* expr)
+    {
+        expr->asgn->accept(this);
+        expr->callee->accept(this);
+        chunk->addCode(new InstSetDeref(expr->type));
+    }
+    void visit(ExprRef* expr)
+    {
+        expr->callee->accept(this);
+    }
+    void visit(ExprTake* expr)
+    {
+        expr->source->accept(this);
+
+        if (expr->source->instance == ExprType::Variable)
+        {
+            ExprVariable* e = (ExprVariable*)expr->source;
+            Value* val = new Value();
+            val->type = e->type;
+            val->data.valPtr = nullptr;
+            Expr* asgn = new ExprAssignment(e->name, new ExprLiteral(val));
+            asgn->accept(this);
+            chunk->addCode(new InstPop({e->type}));
+        }
     }
 
     void visit(StmtBlock* stmt)
@@ -279,7 +331,7 @@ public:
 
         beginScope(true);
         for (int i = 0; i < stmt->args.size(); i++)
-            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i]);
+            currentEnviroment->define(stmt->args[i], stmt->func_type->argTypes[i], true);
 
         for (auto& s : stmt->body->statements)
             s->accept(this);
@@ -301,17 +353,44 @@ public:
             stmt->initializer->accept(this);
 
         if (currentEnviroment->depth != 0)
-            currentEnviroment->define(stmt->name, stmt->varType);
+            currentEnviroment->define(stmt->name, stmt->varType, stmt->initializer);
         if (currentEnviroment->depth == 0)
         {
-            chunk->addCode(new InstSetGlobal(stmt->name.getString()));
+            chunk->addCode(new InstSetGlobal(stmt->name.getString(), stmt->varType));
             chunk->addCode(new InstPop({stmt->varType}));
         }
         else
-            chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name)));
+            chunk->addCode(new InstSetLocal(stmt->name.getString(), currentEnviroment->get(stmt->name), stmt->varType));
     }
     void visit(StmtReturn* stmt)
     {
+        auto vars = currentEnviroment->values;
+        if (stmt->retVal && stmt->retVal->instance == ExprType::Variable)
+        {
+            for (auto& var : vars)
+            {
+                if (var.second.type->tag == TypeTag::POINTER && ((TypePointer*)(var.second.type.get()))->is_owner)
+                {
+                    if (((ExprVariable*)stmt->retVal)->name.getString() != var.first)
+                    {
+                        chunk->addCode(new InstGetLocal(var.first, var.second, var.second.type));
+                        chunk->addCode(new InstFree());
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (auto& var : vars)
+            {
+                if (var.second.type->tag == TypeTag::POINTER && ((TypePointer*)(var.second.type.get()))->is_owner)
+                {
+                    chunk->addCode(new InstGetLocal(var.first, var.second, var.second.type));
+                    chunk->addCode(new InstFree());
+                }
+            }
+        }
+
         if (stmt->retVal != nullptr)
         {
             stmt->retVal->accept(this);

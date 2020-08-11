@@ -29,6 +29,7 @@ enum class TokenType
 	WHILE, FOR,
 	TRUE, FALSE, NULL_TOKEN,
 	RETURN,
+	HEAP, REF, TAKE,
 
 	// Util
 	ERROR, EOF_TOKEN

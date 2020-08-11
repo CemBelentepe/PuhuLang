@@ -50,6 +50,31 @@ void ExprVariable::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
+void ExprHeap::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void ExprGetDeref::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void ExprSetDeref::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void ExprRef::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void ExprTake::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void StmtBlock::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

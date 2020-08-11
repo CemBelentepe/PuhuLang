@@ -8,7 +8,7 @@
             "args": [
                 "-std=c++17",
                 "-O3",
-                "${workspaceFolder}/src/*cpp",
+                "${workspaceFolder}/src/*.cpp",
                 "-o",
                 "${workspaceFolder}/bin/puhuc.out"
             ],
@@ -30,7 +30,7 @@
             "args": [
                 "-g",
                 "-std=c++17",
-                "${workspaceFolder}/src/*cpp",
+                "${workspaceFolder}/src/*.cpp",
                 "-o",
                 "${workspaceFolder}/bin/puhuc_debug.out"
             ],

@@ -217,6 +217,14 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
         return printLocalInstruction("SET_GLOBAL_POP", chunk, offset);
     case OpCode::SET_LOCAL_POP:
         return printLocalInstruction("SET_LOCAL_POP", chunk, offset);
+    case OpCode::ALLOC:
+        return printPopInstruction("ALLOC", chunk, offset);
+    case OpCode::FREE:
+        return printInstruction("FREE", offset);
+    case OpCode::SET_DEREF:
+        return printPopInstruction("SET_DEREF", chunk, offset);
+    case OpCode::GET_DEREF:
+        return printPopInstruction("GET_DEREF", chunk, offset);
     case OpCode::JUMP:
         return printJumpInstruction("JUMP", chunk, offset, 1);
     case OpCode::JUMP_NT_POP:

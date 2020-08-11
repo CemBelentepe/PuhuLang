@@ -1,27 +1,15 @@
 void main()
 {
-    int[10] nums;
-    for(int i = 0; i < 10; i += 1)
-        nums[i] = (int)(rand() * 100);
+    int& i = makeInt(13);
+    print("i: %i\n", ^i);
+    int& j = take i;
+    print("j: %i\n", ^j);
+}
 
-    for(int i = 0; i < 10; i += 1)
-        print("%i ", nums[i]);
-    print("\n");
-    
-    for(int i = 0; i < 9; i += 1)
-    {
-        for(int j = 0; j < 9-i; j += 1)
-        {
-            if(nums[j] > nums[j+1])
-            {
-                int temp = nums[j];
-                nums[j] = nums[j+1];
-                nums[j+1] = temp;
-            }
-        }
-    }
-
-    for(int i = 0; i < 10; i += 1)
-        print("%i ", nums[i]);
-    print("\n");
+int& makeInt(int i)
+{
+    int& j = heap int;
+    int& _int = heap int;
+    ^_int = i;
+    return _int;
 }

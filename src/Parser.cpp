@@ -57,6 +57,11 @@ std::shared_ptr<Type> Parser::parseTypeName()
             type = std::make_shared<TypeArray>(consumed().getInteger(), type);
             advance();
         }
+        else if (tag == TypeTag::POINTER)
+        {
+            bool is_owner = consumed().type == TokenType::BIT_AND;
+            type = std::make_shared<TypePointer>(is_owner, type);
+        }
     }
 
     return type;
@@ -106,6 +111,9 @@ TypeTag Parser::getDataType()
         advance();
         return TypeTag::VOID;
     case TokenType::STAR:
+        advance();
+        return TypeTag::POINTER;
+    case TokenType::BIT_AND:
         advance();
         return TypeTag::POINTER;
     case TokenType::OPEN_BRACKET:
@@ -274,7 +282,16 @@ Stmt* Parser::variableDecleration(std::shared_ptr<Type> type)
     Token varName = advance();
     Expr* init = nullptr;
     if (match(TokenType::EQUAL))
-        init = parseExpression();
+    {
+        if (match(TokenType::HEAP))
+        {
+            Token token = consumed();
+            std::shared_ptr<Type> type = parseTypeName();
+            init = new ExprHeap(type, token);
+        }
+        else
+            init = parseExpression();
+    }
 
     consume(TokenType::SEMI_COLON, "Expect ';' after variable decleration.");
 
@@ -455,7 +472,16 @@ Expr* Parser::assignment()
                TokenType::BIT_AND_EQUAL, TokenType::BIT_OR_EQUAL, TokenType::BIT_XOR_EQUAL, TokenType::BITSHIFT_LEFT_EQUAL, TokenType::BITSHIFT_RIGHT_EQUAL}))
     {
         Token t = consumed();
-        Expr* asgn = parseExpression();
+        Expr* asgn;
+
+        if (match(TokenType::HEAP))
+        {
+            Token token = consumed();
+            std::shared_ptr<Type> type = parseTypeName();
+            asgn = new ExprHeap(type, token);
+        }
+        else
+            asgn = parseExpression();
 
         switch (t.type)
         {
@@ -500,6 +526,12 @@ Expr* Parser::assignment()
         {
             ExprArrGet* e = (ExprArrGet*)expr;
             expr = new ExprArrSet(e->callee, e->index, asgn, e->bracket);
+            return expr;
+        }
+        else if (expr->instance == ExprType::GetDeref)
+        {
+            ExprGetDeref* e = (ExprGetDeref*)expr;
+            expr = new ExprSetDeref(e->callee, asgn, e->token, t);
             return expr;
         }
 
@@ -654,6 +686,24 @@ Expr* Parser::unary()
         Token op = consumed();
         Expr* expr = unary();
         return new ExprUnary(expr, op);
+    }
+    else if (match(TokenType::BIT_XOR))
+    {
+        Token token = consumed();
+        Expr* expr = unary();
+        return new ExprGetDeref(expr, token);
+    }
+    else if (match(TokenType::REF))
+    {
+        Token token = consumed();
+        Expr* expr = unary();
+        return new ExprRef(expr, token);
+    }
+    else if (match(TokenType::TAKE))
+    {
+        Token token = consumed();
+        Expr* expr = unary();
+        return new ExprTake(expr, token);
     }
     else if (matchCast())
     {

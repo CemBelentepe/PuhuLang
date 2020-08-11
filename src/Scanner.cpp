@@ -304,6 +304,12 @@ Token Scanner::identifierLiteral(char start)
         return makeToken(TokenType::NULL_TOKEN);
     if (lexeme.str() == "return")
         return makeToken(TokenType::RETURN);
+    if (lexeme.str() == "heap")
+        return makeToken(TokenType::HEAP);
+    if (lexeme.str() == "ref")
+        return makeToken(TokenType::REF);
+    if (lexeme.str() == "take")
+        return makeToken(TokenType::TAKE);
 
     return makeToken(TokenType::IDENTIFIER);
 }
@@ -379,7 +385,8 @@ void Scanner::skipWhitespace()
 
 std::ostream& operator<<(std::ostream& os, const Token& token)
 {
-    os << "Token length: " << token.length << ", line: " << std::setw(2) << (int)token.line << ", type: " << std::setw(2) << (int)token.type << ", lexeme: " << std::string_view(token.start, token.length);
+    os << "Token length: " << token.length << ", line: " << std::setw(2) << (int)token.line << ", type: " << std::setw(2) 
+        << (int)token.type << ", lexeme: " << std::string_view(token.start, token.length);
     return os;
 }
 

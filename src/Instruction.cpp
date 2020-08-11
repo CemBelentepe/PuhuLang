@@ -106,6 +106,26 @@ void InstSetLocal::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstAlloc::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstFree::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstGetDeref::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstSetDeref::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
 void InstCall::accept(InstVisitor* visitor)
 {
 	visitor->visit(this);
