@@ -1,6 +1,6 @@
 void main()
 {
-    int& i = makeInt(13);
+    var i = makeInt(13);
     print("i: %i\n", ^i);
     int& j = take i;
     print("j: %i\n", ^j);
@@ -8,8 +8,7 @@ void main()
 
 int& makeInt(int i)
 {
-    int& j = heap int;
-    int& _int = heap int;
+    var _int = heap int;
     ^_int = i;
     return _int;
 }

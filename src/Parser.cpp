@@ -263,7 +263,15 @@ Stmt* Parser::decleration()
     }
     else
     {
-        std::shared_ptr<Type> typeName = parseTypeName();
+        std::shared_ptr<Type> typeName;
+        if(peek().type == TokenType::VAR)
+        {
+            typeName = std::make_shared<TypePrimitive>(TypeTag::AUTO);
+            advance();
+        }
+        else
+            typeName = parseTypeName();
+        
         if (peekNext().type == TokenType::OPEN_PAREN)
         {
             return functionDecleration(typeName);
@@ -385,6 +393,8 @@ Stmt* Parser::block()
     {
         if (isTypeName(peek()))
             stmts.push_back(variableDecleration(parseTypeName()));
+        else if(match(TokenType::VAR))
+            stmts.push_back(variableDecleration(std::make_shared<TypePrimitive>(TypeTag::AUTO)));
         else
             stmts.push_back(statement());
     }

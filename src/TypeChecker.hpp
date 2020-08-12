@@ -340,7 +340,9 @@ public:
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
-            if (!stmt->varType->isSame(stmt->initializer->type))
+            if(stmt->varType->tag == TypeTag::AUTO)
+                stmt->varType = stmt->initializer->type;
+            else if (!stmt->varType->isSame(stmt->initializer->type))
                 error("Type of the initializer of the variable is not same as the variable type.", stmt->name);
         }
 

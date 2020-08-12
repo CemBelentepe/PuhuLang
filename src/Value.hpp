@@ -27,6 +27,7 @@ enum class TypeTag
     NATIVE,
     USER_DEFINED,
     NULL_TYPE,
+    AUTO,
     ERROR
 };
 
@@ -96,6 +97,9 @@ public:
         case TypeTag::NULL_TYPE:
             std::cout << "nl";
             break;
+        case TypeTag::AUTO:
+            std::cout << "auto";
+            break;
         case TypeTag::ERROR:
             std::cout << "err";
             break;
@@ -133,6 +137,9 @@ public:
             break;
         case TypeTag::NULL_TYPE:
             data << "nl";
+            break;
+        case TypeTag::AUTO:
+            data << "auto";
             break;
         case TypeTag::ERROR:
             data << "err";

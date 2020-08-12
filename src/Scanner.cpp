@@ -274,6 +274,8 @@ Token Scanner::identifierLiteral(char start)
         return makeToken(TokenType::NAMESPACE);
     if (lexeme.str() == "class")
         return makeToken(TokenType::CLASS);
+    if (lexeme.str() == "var")
+        return makeToken(TokenType::VAR);
     if (lexeme.str() == "if")
         return makeToken(TokenType::IF);
     if (lexeme.str() == "else")

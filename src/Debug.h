@@ -189,7 +189,7 @@ public:
     void visit(StmtVarDecleration* stmt)
     {
         indentCode();
-        std::cout << "-> " << stmt->varType << " " << stmt->name.getString();
+        std::cout << "-> " << stmt->varType->getName().str() << " " << stmt->name.getString();
         if (stmt->initializer != nullptr)
         {
             std::cout << " = ";
