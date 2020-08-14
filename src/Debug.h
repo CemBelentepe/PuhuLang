@@ -164,6 +164,13 @@ public:
         std::cout << ")";
     }
 
+    void visit(ExprAddr* expr)
+    {
+        std::cout << "(& ";
+        expr->callee->accept(this);
+        std::cout << ")";
+    }
+
     void visit(StmtBlock* stmt)
     {
         indentCode();
@@ -290,7 +297,7 @@ public:
         indentCode();
         std::cout << "->class " << stmt->type->name.getString() << "\n";
         indent++;
-        for(auto& var : stmt->type->members)
+        for (auto& var : stmt->type->members)
         {
             indentCode();
             std::cout << var.second.type->getName().str() << " " << var.second.name.getString() << "\n";
@@ -550,6 +557,20 @@ public:
     void visit(InstSetDerefOff* inst)
     {
         std::cout << "SET_DEREF_OFF\t" << inst->type;
+    }
+    void visit(InstAddrLocal* inst)
+    {
+        if (inst->offset)
+            std::cout << "ADDR_LOCAL_OFF\t" << inst->name;
+        else
+            std::cout << "ADDR_LOCAL\t" << inst->name;
+    }
+    void visit(InstAddrGlobal* inst)
+    {
+        if (inst->offset)
+            std::cout << "ADDR_GLOBAL_OFF\t" << inst->name;
+        else
+            std::cout << "ADDR_GLOBAL\t" << inst->name;
     }
     void visit(InstCall* inst)
     {

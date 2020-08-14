@@ -356,6 +356,12 @@ public:
             error("Invalid set expression.", expr->get);
     }
 
+    void visit(ExprAddr* expr)
+    {
+        expr->callee->accept(this);
+        expr->type = std::make_shared<TypePointer>(false, expr->callee->type);
+    }
+
     void visit(StmtBlock* stmt)
     {
         beginScope();

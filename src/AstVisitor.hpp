@@ -21,6 +21,7 @@ public:
     virtual void visit(ExprTake* expr) = 0;
     virtual void visit(ExprGet* expr) = 0;
     virtual void visit(ExprSet* expr) = 0;
+    virtual void visit(ExprAddr* expr) = 0;
 
     virtual void visit(StmtBlock* stmt) = 0;
     virtual void visit(StmtExpr* stmt) = 0;

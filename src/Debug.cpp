@@ -229,6 +229,14 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
         return printPopInstruction("SET_DEREF_OFF", chunk, offset);
     case OpCode::GET_DEREF_OFF:
         return printPopInstruction("GET_DEREF_OFF", chunk, offset);
+    case OpCode::ADDR_LOCAL:
+        return printLocalInstruction("ADDR_LOCAL", chunk, offset);
+    case OpCode::ADDR_LOCAL_OFF:
+        return printLocalInstruction("ADDR_LOCAL_OFF", chunk, offset);
+    case OpCode::ADDR_GLOBAL:
+        return printLocalInstruction("ADDR_GLOBAL", chunk, offset);
+    case OpCode::ADDR_GLOBAL_OFF:
+        return printLocalInstruction("ADDR_GLOBAL_OFF", chunk, offset);
     case OpCode::JUMP:
         return printJumpInstruction("JUMP", chunk, offset, 1);
     case OpCode::JUMP_NT_POP:

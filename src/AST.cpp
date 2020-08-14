@@ -85,6 +85,11 @@ void ExprSet::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
+void ExprAddr::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void StmtBlock::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

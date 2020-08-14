@@ -32,6 +32,8 @@ public:
     virtual void visit(InstSetDeref* inst) = 0;
     virtual void visit(InstGetDerefOff* inst) = 0;
     virtual void visit(InstSetDerefOff* inst) = 0;
+    virtual void visit(InstAddrLocal* inst) = 0;
+    virtual void visit(InstAddrGlobal* inst) = 0;
     virtual void visit(InstCall* inst) = 0;
     virtual void visit(InstPop* inst) = 0;
     virtual void visit(InstPush* inst) = 0;

@@ -488,6 +488,42 @@ bool VM::interpret(Chunk* entryChunk)
                 stack.push_back(ptr.valPtr[i+offset.valInt]);
             break;
         }
+        case OpCode::ADDR_LOCAL:
+        {
+            uint8_t slot = advance();
+            Data addr;
+            addr.valPtr = &stack[slot + this->frames.back().frameStart];
+            stack.push_back(addr);
+            break;
+        }
+        case OpCode::ADDR_GLOBAL:
+        {
+            uint8_t slot = advance();
+            Data addr;
+            addr.valPtr = &globals[slot];
+            stack.push_back(addr);
+            break;
+        }
+        case OpCode::ADDR_LOCAL_OFF:
+        {
+            uint8_t slot = advance();
+            Data offset = stack.back();
+            stack.pop_back();
+            Data addr;
+            addr.valPtr = &stack[slot + this->frames.back().frameStart + offset.valInt];
+            stack.push_back(addr);
+            break;
+        }
+        case OpCode::ADDR_GLOBAL_OFF:
+        {
+            uint8_t slot = advance();
+            Data offset = stack.back();
+            stack.pop_back();
+            Data addr;
+            addr.valPtr = &globals[slot + offset.valInt];
+            stack.push_back(addr);
+            break;
+        }
         case OpCode::JUMP:
         {
             uint8_t offset = advance();

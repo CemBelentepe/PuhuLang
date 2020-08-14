@@ -290,7 +290,6 @@ public:
     void accept(InstVisitor* visitor);
 };
 
-
 class InstGetDerefOff : public Instruction
 {
 public:
@@ -309,6 +308,33 @@ public:
 
     InstSetDerefOff(std::shared_ptr<Type> type)
         : type(type) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstAddrLocal : public Instruction
+{
+public:
+    std::string name;
+    Variable var;
+    std::shared_ptr<Type> type;
+    bool offset;
+
+    InstAddrLocal(std::string name, Variable var, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), var(var), type(type), offset(offset) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstAddrGlobal : public Instruction
+{
+public:
+    std::string name;
+    std::shared_ptr<Type> type;
+    bool offset;
+
+    InstAddrGlobal(std::string name, std::shared_ptr<Type> type, bool offset = false)
+        : name(name), type(type), offset(offset) {}
 
     void accept(InstVisitor* visitor);
 };

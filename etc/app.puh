@@ -2,23 +2,32 @@ struct MyClass
 {
     int i;
     int j;
-    int[10] arr;
+    int[5] arr;
 }
- 
-void initMyClass(MyClass* x, int i, int j)
+
+void init(MyClass* s, int i, int j)
 {
-    x->i = i;
-    x->j = j;
-    for(int i = 0; i < 10; i += 1)
-        x->arr[i] = i;
+    s->i = i;
+    s->j = j;
 }
 
 void main()
 {
-    MyClass& x = heap MyClass;
-    initMyClass(ref x, 3, 7);
-
-    for(int i = 0; i < 10; i += 1)
-        print("%i, ", x->arr[i]);
+    MyClass s;
+    init(&s, 1, 2);
+    print("%i, %i\n", s.i, s.j);
+   
+    int* ptr = &s.i;
+    ^ptr *= 2;
+    print("%i, %i\n", s.i, s.j);
+    
+    ptr = &s.j;
+    ^ptr *= 2;
+    print("%i, %i\n", s.i, s.j);
+    
+    ptr = &s.arr[2];
+    ^ptr = 9;
+    for(int i = 0; i < 5; i+= 1)
+        print("%i, ", s.arr[i]);
     print("\n");
 }

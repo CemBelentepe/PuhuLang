@@ -410,6 +410,63 @@ public:
         }
     }
 
+    void visit(ExprAddr* expr)
+    {
+        if (expr->callee->instance == ExprType::Variable)
+        {
+            ExprVariable* exprVar = (ExprVariable*)(expr->callee);
+            Variable var = currentEnviroment->get(exprVar->name);
+
+            if (var.depth == 0)
+                chunk->addCode(new InstAddrGlobal(exprVar->name.getString(), expr->type, false));
+            else
+                chunk->addCode(new InstAddrLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, false));
+        }
+        else if (expr->callee->instance == ExprType::ArrGet)
+        {
+            ExprArrGet* arrGet = (ExprArrGet*)expr->callee;
+            ExprAddr* inner = new ExprAddr(arrGet->callee, expr->token);
+            inner->accept(this);
+            chunk->addCode(new InstConst(chunk->addConstant(new Value((int)(sizeof(Data) * arrGet->type->getSize())))));
+            arrGet->index->accept(this);
+            chunk->addCode(new InstMul(TypeTag::INTEGER));
+            chunk->addCode(new InstAdd(TypeTag::INTEGER));
+            // delete inner;
+            // TODO: there is a leak.
+        }
+        else if (expr->callee->instance == ExprType::Get)
+        {
+            ExprGet* get = (ExprGet*)expr->callee;
+
+            if (get->callee->instance == ExprType::Variable)
+            {
+                ExprAddr* inner = new ExprAddr(get->callee, expr->token);
+                inner->accept(this);
+                TypeStruct* type = (TypeStruct*)get->callee->type.get();
+                std::string getName = get->get.getString();
+                ExprVariable* exprVar = (ExprVariable*)get->callee;
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)(sizeof(Data) * (int)m.offset)))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+                delete inner;
+            }
+            else if (get->callee->instance == ExprType::GetDeref)
+            {
+                ExprGetDeref* exprGet = (ExprGetDeref*)get->callee;
+                exprGet->callee->accept(this);
+                TypeStruct* type = (TypeStruct*)exprGet->callee->type->intrinsicType.get();
+                std::string getName = get->get.getString();
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+            }
+        }
+        else
+        {
+            std::cout << "[ERROR] Invalid address of at '" << expr->token.getString() << "', line " << expr->token.line << ".\n";
+        }
+    }
+
     void visit(StmtBlock* stmt)
     {
         beginScope(false);

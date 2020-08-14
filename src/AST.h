@@ -23,7 +23,8 @@ enum class ExprType
     Ref,
     Take,
     Get,
-    Set
+    Set,
+    Addr
 };
 
 class AstVisitor;
@@ -355,6 +356,24 @@ public:
     {
         delete callee;
         delete asgn;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprAddr : public Expr
+{
+public:
+    Expr* callee;
+    Token token;
+
+    ExprAddr(Expr* callee, Token token)
+        : Expr(ExprType::Addr, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), token(token)
+    {}
+
+    ~ExprAddr()
+    {
+        delete callee;
     }
 
     void accept(AstVisitor* visitor);

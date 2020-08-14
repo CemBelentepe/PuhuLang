@@ -770,6 +770,12 @@ Expr* Parser::unary()
         Expr* expr = unary();
         return new ExprTake(expr, token);
     }
+    else if (match(TokenType::BIT_AND))
+    {
+        Token token = consumed();
+        Expr* expr = unary();
+        return new ExprAddr(expr, token);
+    }
     else if (matchCast())
     {
         std::shared_ptr<Type> type = getCast();

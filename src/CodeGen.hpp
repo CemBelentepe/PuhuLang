@@ -371,6 +371,34 @@ public:
 
         pos += 2;
     }
+    void visit(InstSetLocal* inst)
+    {
+        Variable& var = inst->var;
+        size_t size = inst->type->getSize();
+
+        if (inst->offset)
+        {
+            if (size == 1)
+                chunk->addCode(OpCode::SET_LOCAL_OFF, var.position);
+            else
+            {
+                chunk->addCode(OpCode::SET_LOCAL_OFFN, var.position, size);
+                pos++;
+            }
+        }
+        else
+        {
+            if (size == 1)
+                chunk->addCode(OpCode::SET_LOCAL, var.position);
+            else
+            {
+                chunk->addCode(OpCode::SET_LOCALN, var.position, size);
+                pos++;
+            }
+        }
+
+        pos += 2;
+    }
     void visit(InstAlloc* inst)
     {
         chunk->addCode(OpCode::ALLOC, inst->type->getSize());
@@ -401,31 +429,27 @@ public:
         chunk->addCode(OpCode::SET_DEREF_OFF, inst->type->getSize());
         pos += 2;
     }
-    void visit(InstSetLocal* inst)
+    void visit(InstAddrLocal* inst)
     {
         Variable& var = inst->var;
         size_t size = inst->type->getSize();
 
         if (inst->offset)
-        {
-            if (size == 1)
-                chunk->addCode(OpCode::SET_LOCAL_OFF, var.position);
-            else
-            {
-                chunk->addCode(OpCode::SET_LOCAL_OFFN, var.position, size);
-                pos++;
-            } 
-        }
+            chunk->addCode(OpCode::ADDR_LOCAL_OFF, var.position, size);
         else
-        {
-            if (size == 1)
-                chunk->addCode(OpCode::SET_LOCAL, var.position);
-            else
-            {
-                chunk->addCode(OpCode::SET_LOCALN, var.position, size);
-                pos++;
-            }
-        }
+            chunk->addCode(OpCode::ADDR_LOCAL, var.position);
+
+        pos += 2;
+    }
+    void visit(InstAddrGlobal* inst)
+    {
+        auto& var = globalInfo[inst->name];
+        size_t size = inst->type->getSize();
+
+        if (inst->offset)
+            chunk->addCode(OpCode::ADDR_GLOBAL, var.addr);
+        else
+            chunk->addCode(OpCode::ADDR_GLOBAL_OFF, var.addr);
 
         pos += 2;
     }
