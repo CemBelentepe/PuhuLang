@@ -20,7 +20,9 @@ public:
 private:
 	std::vector<Token>& tokens;
 	size_t currentToken;
+	std::unordered_map<std::string, std::shared_ptr<TypeStruct>> userTypes;
 
+	void parseUserDefinedTypes();
 	std::shared_ptr<Type> parseTypeName();
 	bool isTypeName(Token& token);
 	TypeTag getDataType();
@@ -54,6 +56,7 @@ private:
 	void panic();
 
 	Stmt* decleration();
+	Stmt* structDecleration();
 	Stmt* variableDecleration(std::shared_ptr<Type> type);
 	Stmt* functionDecleration(std::shared_ptr<Type> type);
 	Stmt* statement();

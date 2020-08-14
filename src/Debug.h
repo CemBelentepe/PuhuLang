@@ -148,6 +148,22 @@ public:
         std::cout << ")";
     }
 
+    void visit(ExprGet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "." << expr->get.getString() << ")";
+    }
+
+    void visit(ExprSet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "." << expr->get.getString() << " = ";
+        expr->asgn->accept(this);
+        std::cout << ")";
+    }
+
     void visit(StmtBlock* stmt)
     {
         indentCode();
@@ -268,6 +284,20 @@ public:
         stmt->loop->accept(this);
         indent--;
         std::cout << "\n";
+    }
+    void visit(StmtStruct* stmt)
+    {
+        indentCode();
+        std::cout << "->class " << stmt->type->name.getString() << "\n";
+        indent++;
+        for(auto& var : stmt->type->members)
+        {
+            indentCode();
+            std::cout << var.second.type->getName().str() << " " << var.second.name.getString() << "\n";
+        }
+
+        std::cout << "\n";
+        indent--;
     }
 };
 
@@ -512,6 +542,14 @@ public:
     void visit(InstSetDeref* inst)
     {
         std::cout << "SET_DEREF\t" << inst->type;
+    }
+    void visit(InstGetDerefOff* inst)
+    {
+        std::cout << "GET_DEREF_OFF\t" << inst->type;
+    }
+    void visit(InstSetDerefOff* inst)
+    {
+        std::cout << "SET_DEREF_OFF\t" << inst->type;
     }
     void visit(InstCall* inst)
     {

@@ -290,6 +290,29 @@ public:
     void accept(InstVisitor* visitor);
 };
 
+
+class InstGetDerefOff : public Instruction
+{
+public:
+    std::shared_ptr<Type> type;
+
+    InstGetDerefOff(std::shared_ptr<Type> type)
+        : type(type) {}
+
+    void accept(InstVisitor* visitor);
+};
+
+class InstSetDerefOff : public Instruction
+{
+public:
+    std::shared_ptr<Type> type;
+
+    InstSetDerefOff(std::shared_ptr<Type> type)
+        : type(type) {}
+
+    void accept(InstVisitor* visitor);
+};
+
 class InstCall : public Instruction
 {
 public:

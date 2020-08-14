@@ -462,6 +462,32 @@ bool VM::interpret(Chunk* entryChunk)
                 stack.push_back(ptr.valPtr[i]);
             break;
         }
+        case OpCode::SET_DEREF_OFF:
+        {
+            uint8_t size = advance();
+            Data offset = stack.back();
+            stack.pop_back();
+            Data ptr = stack.back();
+            stack.pop_back();
+            // TODO: optimize
+            for (int i = 0; i < size; i++)
+            {
+                ptr.valPtr[i+offset.valInt] = stack.back();
+                stack[stack.size() - i];
+            }
+            break;
+        }
+        case OpCode::GET_DEREF_OFF:
+        {
+            uint8_t size = advance();
+            Data offset = stack.back();
+            stack.pop_back();
+            Data ptr = stack.back();
+            stack.pop_back();
+            for (int i = 0; i < size; i++)
+                stack.push_back(ptr.valPtr[i+offset.valInt]);
+            break;
+        }
         case OpCode::JUMP:
         {
             uint8_t offset = advance();

@@ -391,6 +391,16 @@ public:
         chunk->addCode(OpCode::SET_DEREF, inst->type->getSize());
         pos += 2;
     }
+    void visit(InstGetDerefOff* inst)
+    {
+        chunk->addCode(OpCode::GET_DEREF_OFF, inst->type->getSize());
+        pos += 2;
+    }
+    void visit(InstSetDerefOff* inst)
+    {
+        chunk->addCode(OpCode::SET_DEREF_OFF, inst->type->getSize());
+        pos += 2;
+    }
     void visit(InstSetLocal* inst)
     {
         Variable& var = inst->var;

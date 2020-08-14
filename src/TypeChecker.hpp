@@ -310,6 +310,52 @@ public:
         }
     }
 
+    void visit(ExprGet* expr)
+    {
+        expr->callee->accept(this);
+        if (expr->callee->type->tag == TypeTag::STRUCT)
+        {
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
+            std::string getName = expr->get.getString();
+            if (type->members.find(getName) != type->members.end())
+            {
+                expr->type = type->members[getName].type;
+            }
+            else
+            {
+                error("Invalid member access.", expr->get);
+            }
+        }
+        else
+            error("Invalid get expression.", expr->get);
+    }
+
+    void visit(ExprSet* expr)
+    {
+        expr->callee->accept(this);
+        expr->asgn->accept(this);
+        if (expr->callee->type->tag == TypeTag::STRUCT)
+        {
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
+            std::string getName = expr->get.getString();
+            if (type->members.find(getName) != type->members.end())
+            {
+                expr->type = type->members[getName].type;
+
+                if (!expr->asgn->type->isSame(expr->type))
+                {
+                    error("Type missmatch.", expr->get);
+                }
+            }
+            else
+            {
+                error("Invalid member access.", expr->get);
+            }
+        }
+        else
+            error("Invalid set expression.", expr->get);
+    }
+
     void visit(StmtBlock* stmt)
     {
         beginScope();
@@ -340,7 +386,7 @@ public:
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
-            if(stmt->varType->tag == TypeTag::AUTO)
+            if (stmt->varType->tag == TypeTag::AUTO)
                 stmt->varType = stmt->initializer->type;
             else if (!stmt->varType->isSame(stmt->initializer->type))
                 error("Type of the initializer of the variable is not same as the variable type.", stmt->name);
@@ -384,5 +430,12 @@ public:
         if (stmt->condition->type->tag != TypeTag::BOOL)
             error("Type of the while condition must be a 'bool'", stmt->paren);
         stmt->loop->accept(this);
+    }
+    void visit(StmtStruct* stmt)
+    {
+        for (auto& m : stmt->methodes)
+        {
+            m.second->accept(this);
+        }
     }
 };

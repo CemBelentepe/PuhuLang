@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,7 +26,8 @@ enum class TypeTag
     POINTER,
     FUNCTION,
     NATIVE,
-    USER_DEFINED,
+    METHODE,
+    STRUCT,
     NULL_TYPE,
     AUTO,
     ERROR
@@ -302,6 +304,73 @@ public:
     }
 };
 
+struct structMember
+{
+    std::shared_ptr<Type> type;
+    Token name;
+    size_t offset;
+    
+    structMember(){}
+
+    structMember(std::shared_ptr<Type> type, Token name, size_t offset)
+        : type(type), name(name), offset(offset) {}
+};
+
+class TypeStruct : public Type
+{
+private:
+    size_t size;
+public:
+    Token name;
+    std::unordered_map<std::string, structMember> members;
+
+    TypeStruct(Token name)
+        : Type(TypeTag::STRUCT, nullptr), name(name), size(0)
+    {
+    }
+
+    bool isPrimitive()
+    {
+        return false;
+    }
+
+    size_t getSize()
+    {
+        return size;
+    }
+
+    void print()
+    {
+        std::cout << "struct " << name.getString();
+    }
+
+    std::stringstream getName()
+    {
+        std::stringstream ss;
+        ss << "class " << name.getString();
+        return ss;
+    }
+
+    bool isSame(std::shared_ptr<Type> type)
+    {
+        return type->tag == this->tag && ((TypeStruct*)type.get())->name.getString() == name.getString();
+    }
+
+    void addMember(std::shared_ptr<Type> type, Token name)
+    {
+        if (members.find(name.getString()) == members.end())
+        {
+            size_t pos = size;
+            size += type->getSize();
+            members.insert({name.getString(), structMember(type, name, pos)});
+        }
+        else
+        {
+            std::cout << "[ERROR " << name.line << "] Member " << name.getString() << " is defined before.\n";
+        }
+    }
+};
+
 union Data
 {
     bool valBool;
@@ -443,11 +512,10 @@ public:
 class FuncValue : public Value
 {
 public:
-    std::vector<Token> params;
     IRChunk* irChunk;
 
-    FuncValue(std::shared_ptr<TypeFunction> type, std::vector<Token> params)
-        : Value(type), params(params), irChunk(nullptr)
+    FuncValue(std::shared_ptr<TypeFunction> type)
+        : Value(type), irChunk(nullptr)
     {
     }
 

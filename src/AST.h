@@ -3,6 +3,8 @@
 #include "Scanner.h"
 #include "Value.hpp"
 
+#include <unordered_map>
+
 enum class ExprType
 {
     Assignment,
@@ -19,7 +21,9 @@ enum class ExprType
     GetDeref,
     SetDeref,
     Ref,
-    Take
+    Take,
+    Get,
+    Set
 };
 
 class AstVisitor;
@@ -320,6 +324,42 @@ public:
     void accept(AstVisitor* visitor);
 };
 
+class ExprGet : public Expr
+{
+public:
+    Expr* callee;
+    Token get;
+
+    ExprGet(Expr* callee, Token get)
+        : Expr(ExprType::Get, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), get(get) {}
+
+    ~ExprGet()
+    {
+        delete callee;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class ExprSet : public Expr
+{
+public:
+    Expr* callee;
+    Expr* asgn;
+    Token get;
+
+    ExprSet(Expr* callee, Expr* asgn, Token get)
+        : Expr(ExprType::Set, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), asgn(asgn), get(get) {}
+
+    ~ExprSet()
+    {
+        delete callee;
+        delete asgn;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
 class Stmt
 {
 public:
@@ -491,6 +531,29 @@ public:
     {
         delete condition;
         delete loop;
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class StmtStruct : public Stmt
+{
+public:
+    std::shared_ptr<TypeStruct> type;
+    std::unordered_map<std::string, StmtFunc*> methodes;
+    Token token;
+
+    StmtStruct(std::shared_ptr<TypeStruct> type, Token token)
+        : type(type), token(token)
+    {
+    }
+
+    ~StmtStruct()
+    {
+        for (auto& f : methodes)
+        {
+            delete f.second;
+        }
     }
 
     void accept(AstVisitor* visitor);
