@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,7 +26,8 @@ enum class TypeTag
     POINTER,
     FUNCTION,
     NATIVE,
-    USER_DEFINED,
+    METHODE,
+    CLASS,
     NULL_TYPE,
     AUTO,
     ERROR
@@ -302,6 +304,102 @@ public:
     }
 };
 
+enum class AccessModifier
+{
+    PRIVATE,
+    PROTECTED,
+    PUBLIC
+};
+
+struct classMemberVar
+{
+    AccessModifier mod;
+    std::shared_ptr<Type> type;
+    Token name;
+    size_t offset;
+
+    classMemberVar(AccessModifier mod, std::shared_ptr<Type> type, Token name, size_t offset)
+        : mod(mod), type(type), name(name), offset(offset) {}
+};
+
+struct classMemberFunc
+{
+    AccessModifier mod;
+    std::shared_ptr<Type> type;
+    Token name;
+
+    classMemberFunc(AccessModifier mod, std::shared_ptr<Type> type, Token name)
+        : mod(mod), type(type), name(name) {}
+};
+
+class TypeClass : public Type
+{
+public:
+    std::vector<classMemberVar> memberVars;
+    std::vector<classMemberFunc> memberFuncs;
+    Token name;
+    std::unordered_map<std::string, bool> fields;
+
+    TypeClass(Token name)
+        : Type(TypeTag::CLASS, nullptr), name(name)
+    {
+    }
+
+    bool isPrimitive()
+    {
+        return false;
+    }
+
+    size_t getSize()
+    {
+        return memberVars.size() > 0 ? memberVars.back().offset + memberVars.back().type->getSize() : 0;
+    }
+
+    void print()
+    {
+        std::cout << "class " << name;
+    }
+
+    std::stringstream getName()
+    {
+        std::stringstream ss;
+        ss << "class " << name;
+        return ss;
+    }
+
+    bool isSame(std::shared_ptr<Type> type)
+    {
+        return type->tag == this->tag && ((TypeClass*)type.get())->name.getString() == name.getString();
+    }
+
+    void addMemberVar(AccessModifier mod, std::shared_ptr<Type> type, Token name)
+    {
+        if (fields.find(name.getString()) == fields.end())
+        {
+            size_t pos = memberVars.size() > 0 ? memberVars.back().offset + memberVars.back().type->getSize() : 0;
+            memberVars.emplace_back(mod, type, name, pos);
+            fields.insert({name.getString(), true});
+        }
+        else
+        {
+            std::cout << "[ERROR " << name.line << "] Member " << name.getString() << " is defined before.\n";
+        }
+    }
+
+    void addMemberFunc(AccessModifier mod, std::shared_ptr<Type> type)
+    {
+        if (fields.find(name.getString()) == fields.end())
+        {
+            memberFuncs.emplace_back(mod, type, name);
+            fields.insert({name.getString(), false});
+        }
+        else
+        {
+            std::cout << "[ERROR " << name.line << "] Member " << name.getString() << " is defined before.\n";
+        }
+    }
+};
+
 union Data
 {
     bool valBool;
@@ -443,11 +541,10 @@ public:
 class FuncValue : public Value
 {
 public:
-    std::vector<Token> params;
     IRChunk* irChunk;
 
-    FuncValue(std::shared_ptr<TypeFunction> type, std::vector<Token> params)
-        : Value(type), params(params), irChunk(nullptr)
+    FuncValue(std::shared_ptr<TypeFunction> type)
+        : Value(type), irChunk(nullptr)
     {
     }
 

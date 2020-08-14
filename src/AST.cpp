@@ -75,6 +75,16 @@ void ExprTake::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
+void ExprGet::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+void ExprSet::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void StmtBlock::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
@@ -114,3 +124,9 @@ void StmtFor::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }
+
+void StmtClass::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+

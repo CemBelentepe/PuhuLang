@@ -19,6 +19,8 @@ public:
     virtual void visit(ExprSetDeref* expr) = 0;
     virtual void visit(ExprRef* expr) = 0;
     virtual void visit(ExprTake* expr) = 0;
+    virtual void visit(ExprGet* expr) = 0;
+    virtual void visit(ExprSet* expr) = 0;
 
     virtual void visit(StmtBlock* stmt) = 0;
     virtual void visit(StmtExpr* stmt) = 0;
@@ -28,4 +30,5 @@ public:
     virtual void visit(StmtIf* stmt) = 0;
     virtual void visit(StmtFor* stmt) = 0;
     virtual void visit(StmtWhile* stmt) = 0;
+    virtual void visit(StmtClass* stmt) = 0;
 };

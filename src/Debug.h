@@ -148,6 +148,22 @@ public:
         std::cout << ")";
     }
 
+    void visit(ExprGet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "." << expr->get.getString() << ")";
+    }
+
+    void visit(ExprSet* expr)
+    {
+        std::cout << "(";
+        expr->callee->accept(this);
+        std::cout << "." << expr->get.getString() << " = ";
+        expr->asgn->accept(this);
+        std::cout << ")";
+    }
+
     void visit(StmtBlock* stmt)
     {
         indentCode();
@@ -268,6 +284,25 @@ public:
         stmt->loop->accept(this);
         indent--;
         std::cout << "\n";
+    }
+    void visit(StmtClass* stmt)
+    {
+        indentCode();
+        std::cout << "->class " << stmt->type->name.getString() << "\n";
+        indent++;
+        for(auto& var : stmt->type->memberVars)
+        {
+            indentCode();
+            std::cout << var.type->getName().str() << " " << var.name.getString() << "\n";
+        }
+
+        for(auto& m : stmt->methodes)
+        {
+            m.second->accept(this);
+        }
+
+        std::cout << "\n";
+        indent--;
     }
 };
 

@@ -305,6 +305,84 @@ public:
             chunk->addCode(new InstPop({e->type}));
         }
     }
+    void visit(ExprGet* expr)
+    {
+        if (expr->callee->instance == ExprType::Variable)
+        {
+            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            std::string getName = expr->get.getString();
+            ExprVariable* exprVar = (ExprVariable*)expr->callee;
+            Variable var = currentEnviroment->get(exprVar->name);
+            if (type->fields[getName])
+            {
+                for (auto& m : type->memberVars)
+                {
+                    if (m.name.getString() == getName)
+                    {
+                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                        chunk->addCode(new InstGetLocal(exprVar->name.getString(), var, m.type, true));
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // TODO: What to do?
+            }
+        }
+    }
+
+    void visit(ExprSet* expr)
+    {
+        expr->asgn->accept(this);
+        if (expr->callee->instance == ExprType::Variable)
+        {
+            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            std::string getName = expr->get.getString();
+            ExprVariable* exprVar = (ExprVariable*)expr->callee;
+            Variable var = currentEnviroment->get(exprVar->name);
+            if (type->fields[getName])
+            {
+                for (auto& m : type->memberVars)
+                {
+                    if (m.name.getString() == getName)
+                    {
+                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                        chunk->addCode(new InstSetLocal(exprVar->name.getString(), var, m.type, true));
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // TODO: What to do?
+            }
+        }
+        else if (expr->callee->instance == ExprType::GetDeref)
+        {
+            ExprGetDeref* exprGet = (ExprGetDeref*)expr->callee;
+            exprGet->callee->accept(this);
+
+            TypeClass* type = (TypeClass*)exprGet->callee->type.get();
+            std::string getName = expr->get.getString();
+            if (type->fields[getName])
+            {
+                for (auto& m : type->memberVars)
+                {
+                    if (m.name.getString() == getName)
+                    {
+                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                        chunk->addCode(new InstSetDeref(exprVar->name.getString(), var, m.type, true));
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // TODO: What to do?
+            }
+        }
+    }
 
     void visit(StmtBlock* stmt)
     {
@@ -452,5 +530,12 @@ public:
         stmt->loop->accept(this);
         chunk->addCode(new InstJump(-1, start, 0));
         chunk->addCode(out);
+    }
+    void visit(StmtClass* stmt)
+    {
+        for (auto& m : stmt->methodes)
+        {
+            m.second->accept(this);
+        }
     }
 };

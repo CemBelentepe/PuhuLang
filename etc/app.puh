@@ -1,14 +1,13 @@
-void main()
+class MyClass
 {
-    var i = makeInt(13);
-    print("i: %i\n", ^i);
-    int& j = take i;
-    print("j: %i\n", ^j);
+    public int i;
+    public int j;
 }
 
-int& makeInt(int i)
+void main()
 {
-    var _int = heap int;
-    ^_int = i;
-    return _int;
+    MyClass x;
+    x.i = 2;
+    x.j = 9;
+    print("%i, %i\n", x.i, x.j);
 }

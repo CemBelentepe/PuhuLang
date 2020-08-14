@@ -24,6 +24,8 @@ Parser::Parser(std::vector<Token>& tokens)
 
 std::vector<Stmt*> Parser::parse()
 {
+    parseUserDefinedTypes();
+
     this->currentToken = 0;
 
     std::vector<Stmt*> root;
@@ -33,6 +35,18 @@ std::vector<Stmt*> Parser::parse()
     }
 
     return root;
+}
+
+void Parser::parseUserDefinedTypes()
+{
+    for (int i = 0; i < tokens.size(); i++)
+    {
+        if (tokens[i].type == TokenType::CLASS && tokens[i + 1].type == TokenType::IDENTIFIER)
+        {
+            i++;
+            userTypes.insert({tokens[i].getString(), std::make_shared<TypeClass>(tokens[i])});
+        }
+    }
 }
 
 std::shared_ptr<Type> Parser::parseTypeName()
@@ -45,8 +59,10 @@ std::shared_ptr<Type> Parser::parseTypeName()
 
     if (tag <= TypeTag::ARRAY)
         type = std::make_shared<TypePrimitive>(tag);
+    else if (tag == TypeTag::CLASS)
+        type = userTypes[consumed().getString()];
     else
-        error("Initial type of any type must a primitive type.");
+        error("Initial type of any type must a primitive or a class type.");
 
     while ((tag = getDataType()) != TypeTag::ERROR)
     {
@@ -79,6 +95,8 @@ bool Parser::isTypeName(Token& token)
     case TokenType::BOOL:
     case TokenType::VOID:
         return true;
+    case TokenType::IDENTIFIER:
+        return userTypes.find(token.getString()) != userTypes.end();
     default:
         return false;
     }
@@ -122,6 +140,14 @@ TypeTag Parser::getDataType()
         {
             advance();
             return TypeTag::ARRAY;
+        }
+        else
+            return TypeTag::ERROR;
+    case TokenType::IDENTIFIER:
+        if (userTypes.find(token.getString()) != userTypes.end())
+        {
+            advance();
+            return TypeTag::CLASS;
         }
         else
             return TypeTag::ERROR;
@@ -255,7 +281,7 @@ Stmt* Parser::decleration()
     TokenType token = peek().type;
     if (token == TokenType::CLASS)
     {
-        // TODO parse a class
+        return classDecleration();
     }
     else if (token == TokenType::NAMESPACE)
     {
@@ -264,14 +290,14 @@ Stmt* Parser::decleration()
     else
     {
         std::shared_ptr<Type> typeName;
-        if(peek().type == TokenType::VAR)
+        if (peek().type == TokenType::VAR)
         {
             typeName = std::make_shared<TypePrimitive>(TypeTag::AUTO);
             advance();
         }
         else
             typeName = parseTypeName();
-        
+
         if (peekNext().type == TokenType::OPEN_PAREN)
         {
             return functionDecleration(typeName);
@@ -282,6 +308,49 @@ Stmt* Parser::decleration()
         }
     }
 
+    return nullptr;
+}
+
+Stmt* Parser::classDecleration()
+{
+    Token classTok = advance();
+    Token name = advance();
+    std::shared_ptr<TypeClass> type = userTypes[name.getString()];
+    consume(TokenType::OPEN_BRACE, "Expect '{' after a class decleration.");
+
+    StmtClass* stmtClass = new StmtClass(type, name);
+    std::unordered_map<std::string, StmtFunc*> methodes;
+
+    while (match({TokenType::PUBLIC, TokenType::PRIVATE, TokenType::PROTECTED}))
+    {
+        Token modifier = consumed();
+        AccessModifier mod = AccessModifier::PUBLIC;
+        if (modifier.type == TokenType::PRIVATE)
+            mod = AccessModifier::PRIVATE;
+        else if (modifier.type == TokenType::PROTECTED)
+            mod = AccessModifier::PROTECTED;
+
+        std::shared_ptr<Type> typeName = parseTypeName();
+        if (peekNext().type == TokenType::OPEN_PAREN)
+        {
+            Stmt* dec = parseMethode(typeName, type);
+            // type->addMemberFunc();
+        }
+        else
+        {
+            Token varName = advance();
+            consume(TokenType::SEMI_COLON, "Expect ';' after member variable decleration.");
+            stmtClass->type->addMemberVar(mod, typeName, varName);
+        }
+    }
+
+    consume(TokenType::CLOSE_BRACE, "Expect '}' at the end of a class decleration.");
+
+    return stmtClass;
+}
+
+Stmt* Parser::parseMethode(std::shared_ptr<Type> type, std::shared_ptr<TypeClass> classType)
+{
     return nullptr;
 }
 
@@ -345,7 +414,7 @@ Stmt* Parser::functionDecleration(std::shared_ptr<Type> type)
     std::shared_ptr<TypeFunction> funcType = std::make_shared<TypeFunction>(TypeTag::FUNCTION, type, param_types, false);
 
     this->depth--;
-    globals.insert(std::make_pair(funcName.getString(), new FuncValue(funcType, params)));
+    globals.insert(std::make_pair(funcName.getString(), new FuncValue(funcType)));
 
     return new StmtFunc(funcName, body, funcType, params);
 }
@@ -393,7 +462,7 @@ Stmt* Parser::block()
     {
         if (isTypeName(peek()))
             stmts.push_back(variableDecleration(parseTypeName()));
-        else if(match(TokenType::VAR))
+        else if (match(TokenType::VAR))
             stmts.push_back(variableDecleration(std::make_shared<TypePrimitive>(TypeTag::AUTO)));
         else
             stmts.push_back(statement());
@@ -542,6 +611,12 @@ Expr* Parser::assignment()
         {
             ExprGetDeref* e = (ExprGetDeref*)expr;
             expr = new ExprSetDeref(e->callee, asgn, e->token, t);
+            return expr;
+        }
+        else if (expr->instance == ExprType::Get)
+        {
+            ExprGet* e = (ExprGet*)expr;
+            expr = new ExprSet(e->callee, asgn, e->get);
             return expr;
         }
 
@@ -735,7 +810,7 @@ Expr* Parser::call()
 {
     Expr* expr = primary();
 
-    while (match({TokenType::OPEN_PAREN, TokenType::OPEN_BRACKET}))
+    while (match({TokenType::OPEN_PAREN, TokenType::OPEN_BRACKET, TokenType::DOT}))
     {
         Token token = consumed();
         if (token.type == TokenType::OPEN_PAREN)
@@ -756,6 +831,11 @@ Expr* Parser::call()
             Expr* index = parseExpression();
             consume(TokenType::CLOSE_BRACKET, "Expect ']' after array indexing.");
             expr = new ExprArrGet(expr, index, token);
+        }
+        else if (token.type == TokenType::DOT)
+        {
+            Token get = advance();
+            expr = new ExprGet(expr, get);
         }
     }
 
