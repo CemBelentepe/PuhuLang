@@ -225,6 +225,10 @@ size_t dissambleInstruction(Chunk* chunk, size_t offset)
         return printPopInstruction("SET_DEREF", chunk, offset);
     case OpCode::GET_DEREF:
         return printPopInstruction("GET_DEREF", chunk, offset);
+    case OpCode::SET_DEREF_OFF:
+        return printPopInstruction("SET_DEREF_OFF", chunk, offset);
+    case OpCode::GET_DEREF_OFF:
+        return printPopInstruction("GET_DEREF_OFF", chunk, offset);
     case OpCode::JUMP:
         return printJumpInstruction("JUMP", chunk, offset, 1);
     case OpCode::JUMP_NT_POP:

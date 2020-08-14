@@ -126,6 +126,16 @@ void InstSetDeref::accept(InstVisitor* visitor)
 	visitor->visit(this);
 }
 
+void InstGetDerefOff::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
+void InstSetDerefOff::accept(InstVisitor* visitor)
+{
+	visitor->visit(this);
+}
+
 void InstCall::accept(InstVisitor* visitor)
 {
 	visitor->visit(this);

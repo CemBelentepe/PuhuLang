@@ -65,6 +65,7 @@
         "valarray": "cpp",
         "variant": "cpp",
         "csignal": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "*.def": "cpp"
     }
 }

@@ -317,30 +317,9 @@ public:
         {
             TypeClass* type = (TypeClass*)expr->callee->type.get();
             std::string getName = expr->get.getString();
-            if (type->fields.find(getName) != type->fields.end())
+            if (type->members.find(getName) != type->members.end())
             {
-                if (type->fields[getName])
-                {
-                    for (auto& m : type->memberVars)
-                    {
-                        if (m.name.getString() == getName)
-                        {
-                            expr->type = m.type;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (auto& m : type->memberFuncs)
-                    {
-                        if (m.name.getString() == getName)
-                        {
-                            expr->type = m.type;
-                            break;
-                        }
-                    }
-                }
+                expr->type = type->members[getName].type;
             }
             else
             {
@@ -359,33 +338,9 @@ public:
         {
             TypeClass* type = (TypeClass*)expr->callee->type.get();
             std::string getName = expr->get.getString();
-            if (type->fields.find(getName) != type->fields.end())
+            if (type->members.find(getName) != type->members.end())
             {
-                if (type->fields[getName])
-                {
-                    for (auto& m : type->memberVars)
-                    {
-                        if (m.name.getString() == getName)
-                        {
-                            if (m.mod == AccessModifier::PUBLIC)
-                                expr->type = m.type;
-                            else
-                                error("Invalid access to a member variable.", expr->get);
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (auto& m : type->memberFuncs)
-                    {
-                        if (m.name.getString() == getName)
-                        {
-                            expr->type = m.type;
-                            break;
-                        }
-                    }
-                }
+                expr->type = type->members[getName].type;
 
                 if (!expr->asgn->type->isSame(expr->type))
                 {

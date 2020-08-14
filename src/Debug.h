@@ -290,15 +290,10 @@ public:
         indentCode();
         std::cout << "->class " << stmt->type->name.getString() << "\n";
         indent++;
-        for(auto& var : stmt->type->memberVars)
+        for(auto& var : stmt->type->members)
         {
             indentCode();
-            std::cout << var.type->getName().str() << " " << var.name.getString() << "\n";
-        }
-
-        for(auto& m : stmt->methodes)
-        {
-            m.second->accept(this);
+            std::cout << var.second.type->getName().str() << " " << var.second.name.getString() << "\n";
         }
 
         std::cout << "\n";
@@ -547,6 +542,14 @@ public:
     void visit(InstSetDeref* inst)
     {
         std::cout << "SET_DEREF\t" << inst->type;
+    }
+    void visit(InstGetDerefOff* inst)
+    {
+        std::cout << "GET_DEREF_OFF\t" << inst->type;
+    }
+    void visit(InstSetDerefOff* inst)
+    {
+        std::cout << "SET_DEREF_OFF\t" << inst->type;
     }
     void visit(InstCall* inst)
     {

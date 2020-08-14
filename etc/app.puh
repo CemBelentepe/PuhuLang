@@ -1,13 +1,13 @@
 class MyClass
 {
-    public int i;
-    public int j;
+    int i;
+    int j;
 }
 
 void main()
 {
-    MyClass x;
-    x.i = 2;
-    x.j = 9;
-    print("%i, %i\n", x.i, x.j);
+    MyClass& x = heap MyClass;
+    x->i = 2;
+    x->j = 9;
+    print("%i, %i\n", x->i, x->j);
 }

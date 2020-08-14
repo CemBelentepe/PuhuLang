@@ -321,37 +321,17 @@ Stmt* Parser::classDecleration()
     StmtClass* stmtClass = new StmtClass(type, name);
     std::unordered_map<std::string, StmtFunc*> methodes;
 
-    while (match({TokenType::PUBLIC, TokenType::PRIVATE, TokenType::PROTECTED}))
+    while (isTypeName(peek()))
     {
-        Token modifier = consumed();
-        AccessModifier mod = AccessModifier::PUBLIC;
-        if (modifier.type == TokenType::PRIVATE)
-            mod = AccessModifier::PRIVATE;
-        else if (modifier.type == TokenType::PROTECTED)
-            mod = AccessModifier::PROTECTED;
-
         std::shared_ptr<Type> typeName = parseTypeName();
-        if (peekNext().type == TokenType::OPEN_PAREN)
-        {
-            Stmt* dec = parseMethode(typeName, type);
-            // type->addMemberFunc();
-        }
-        else
-        {
-            Token varName = advance();
-            consume(TokenType::SEMI_COLON, "Expect ';' after member variable decleration.");
-            stmtClass->type->addMemberVar(mod, typeName, varName);
-        }
+        Token varName = advance();
+        consume(TokenType::SEMI_COLON, "Expect ';' after member variable decleration.");
+        stmtClass->type->addMember(typeName, varName);
     }
 
     consume(TokenType::CLOSE_BRACE, "Expect '}' at the end of a class decleration.");
 
     return stmtClass;
-}
-
-Stmt* Parser::parseMethode(std::shared_ptr<Type> type, std::shared_ptr<TypeClass> classType)
-{
-    return nullptr;
 }
 
 Stmt* Parser::variableDecleration(std::shared_ptr<Type> type)
@@ -810,7 +790,7 @@ Expr* Parser::call()
 {
     Expr* expr = primary();
 
-    while (match({TokenType::OPEN_PAREN, TokenType::OPEN_BRACKET, TokenType::DOT}))
+    while (match({TokenType::OPEN_PAREN, TokenType::OPEN_BRACKET, TokenType::DOT, TokenType::ARROW}))
     {
         Token token = consumed();
         if (token.type == TokenType::OPEN_PAREN)
@@ -837,6 +817,11 @@ Expr* Parser::call()
             Token get = advance();
             expr = new ExprGet(expr, get);
         }
+        else if (token.type == TokenType::ARROW)
+        {
+            Token get = advance();
+            expr = new ExprGet(new ExprGetDeref(expr, get), get);
+        }
     }
 
     return expr;
@@ -858,6 +843,8 @@ Expr* Parser::primary()
         return new ExprLiteral(new Value(token.getDouble()));
     case TokenType::FLOAT_LITERAL:
         return new ExprLiteral(new Value(token.getFloat()));
+    case TokenType::CHAR_LITERAL:
+        return new ExprLiteral(new Value(token.getChar()));
     case TokenType::STRING_LITERAL:
         return new ExprLiteral(new Value(token.getString()));
     case TokenType::OPEN_PAREN:
@@ -873,7 +860,7 @@ Expr* Parser::primary()
         return new ExprVariable(token);
 
     default:
-        std::cout << "[Error]Invalid identifier: " << token.getString();
+        std::cout << "[Error]Invalid identifier: " << token.getString() << std::endl;
         return nullptr;
     }
 }

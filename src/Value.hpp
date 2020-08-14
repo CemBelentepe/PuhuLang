@@ -304,44 +304,28 @@ public:
     }
 };
 
-enum class AccessModifier
+struct classMember
 {
-    PRIVATE,
-    PROTECTED,
-    PUBLIC
-};
-
-struct classMemberVar
-{
-    AccessModifier mod;
     std::shared_ptr<Type> type;
     Token name;
     size_t offset;
+    
+    classMember(){}
 
-    classMemberVar(AccessModifier mod, std::shared_ptr<Type> type, Token name, size_t offset)
-        : mod(mod), type(type), name(name), offset(offset) {}
-};
-
-struct classMemberFunc
-{
-    AccessModifier mod;
-    std::shared_ptr<Type> type;
-    Token name;
-
-    classMemberFunc(AccessModifier mod, std::shared_ptr<Type> type, Token name)
-        : mod(mod), type(type), name(name) {}
+    classMember(std::shared_ptr<Type> type, Token name, size_t offset)
+        : type(type), name(name), offset(offset) {}
 };
 
 class TypeClass : public Type
 {
+private:
+    size_t size;
 public:
-    std::vector<classMemberVar> memberVars;
-    std::vector<classMemberFunc> memberFuncs;
     Token name;
-    std::unordered_map<std::string, bool> fields;
+    std::unordered_map<std::string, classMember> members;
 
     TypeClass(Token name)
-        : Type(TypeTag::CLASS, nullptr), name(name)
+        : Type(TypeTag::CLASS, nullptr), name(name), size(0)
     {
     }
 
@@ -352,18 +336,18 @@ public:
 
     size_t getSize()
     {
-        return memberVars.size() > 0 ? memberVars.back().offset + memberVars.back().type->getSize() : 0;
+        return size;
     }
 
     void print()
     {
-        std::cout << "class " << name;
+        std::cout << "class " << name.getString();
     }
 
     std::stringstream getName()
     {
         std::stringstream ss;
-        ss << "class " << name;
+        ss << "class " << name.getString();
         return ss;
     }
 
@@ -372,26 +356,13 @@ public:
         return type->tag == this->tag && ((TypeClass*)type.get())->name.getString() == name.getString();
     }
 
-    void addMemberVar(AccessModifier mod, std::shared_ptr<Type> type, Token name)
+    void addMember(std::shared_ptr<Type> type, Token name)
     {
-        if (fields.find(name.getString()) == fields.end())
+        if (members.find(name.getString()) == members.end())
         {
-            size_t pos = memberVars.size() > 0 ? memberVars.back().offset + memberVars.back().type->getSize() : 0;
-            memberVars.emplace_back(mod, type, name, pos);
-            fields.insert({name.getString(), true});
-        }
-        else
-        {
-            std::cout << "[ERROR " << name.line << "] Member " << name.getString() << " is defined before.\n";
-        }
-    }
-
-    void addMemberFunc(AccessModifier mod, std::shared_ptr<Type> type)
-    {
-        if (fields.find(name.getString()) == fields.end())
-        {
-            memberFuncs.emplace_back(mod, type, name);
-            fields.insert({name.getString(), false});
+            size_t pos = size;
+            size += type->getSize();
+            members.insert({name.getString(), classMember(type, name, pos)});
         }
         else
         {

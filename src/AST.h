@@ -349,7 +349,7 @@ public:
     Token get;
 
     ExprSet(Expr* callee, Expr* asgn, Token get)
-        : Expr(ExprType::Get, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), asgn(asgn), get(get) {}
+        : Expr(ExprType::Set, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), asgn(asgn), get(get) {}
 
     ~ExprSet()
     {

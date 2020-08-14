@@ -57,8 +57,6 @@ private:
 
 	Stmt* decleration();
 	Stmt* classDecleration();
-	Stmt* parseMethode(std::shared_ptr<Type> type, std::shared_ptr<TypeClass> classType);
-	Stmt* parseField(std::shared_ptr<Type> type);
 	Stmt* variableDecleration(std::shared_ptr<Type> type);
 	Stmt* functionDecleration(std::shared_ptr<Type> type);
 	Stmt* statement();

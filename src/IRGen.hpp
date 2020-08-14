@@ -313,22 +313,19 @@ public:
             std::string getName = expr->get.getString();
             ExprVariable* exprVar = (ExprVariable*)expr->callee;
             Variable var = currentEnviroment->get(exprVar->name);
-            if (type->fields[getName])
-            {
-                for (auto& m : type->memberVars)
-                {
-                    if (m.name.getString() == getName)
-                    {
-                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
-                        chunk->addCode(new InstGetLocal(exprVar->name.getString(), var, m.type, true));
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                // TODO: What to do?
-            }
+            classMember m = type->members[getName];
+            chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+            chunk->addCode(new InstGetLocal(exprVar->name.getString(), var, m.type, true));
+        }
+        else if (expr->callee->instance == ExprType::GetDeref)
+        {
+            ExprGetDeref* exprGet = (ExprGetDeref*)expr->callee;
+            exprGet->callee->accept(this);
+            TypeClass* type = (TypeClass*)exprGet->callee->type->intrinsicType.get();
+            std::string getName = expr->get.getString();
+            classMember m = type->members[getName];
+            chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+            chunk->addCode(new InstGetDerefOff(m.type));
         }
     }
 
@@ -341,46 +338,19 @@ public:
             std::string getName = expr->get.getString();
             ExprVariable* exprVar = (ExprVariable*)expr->callee;
             Variable var = currentEnviroment->get(exprVar->name);
-            if (type->fields[getName])
-            {
-                for (auto& m : type->memberVars)
-                {
-                    if (m.name.getString() == getName)
-                    {
-                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
-                        chunk->addCode(new InstSetLocal(exprVar->name.getString(), var, m.type, true));
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                // TODO: What to do?
-            }
+            classMember m = type->members[getName];
+            chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+            chunk->addCode(new InstSetLocal(exprVar->name.getString(), var, m.type, true));
         }
         else if (expr->callee->instance == ExprType::GetDeref)
         {
             ExprGetDeref* exprGet = (ExprGetDeref*)expr->callee;
             exprGet->callee->accept(this);
-
-            TypeClass* type = (TypeClass*)exprGet->callee->type.get();
+            TypeClass* type = (TypeClass*)exprGet->callee->type->intrinsicType.get();
             std::string getName = expr->get.getString();
-            if (type->fields[getName])
-            {
-                for (auto& m : type->memberVars)
-                {
-                    if (m.name.getString() == getName)
-                    {
-                        chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
-                        chunk->addCode(new InstSetDeref(exprVar->name.getString(), var, m.type, true));
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                // TODO: What to do?
-            }
+            classMember m = type->members[getName];
+            chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+            chunk->addCode(new InstSetDerefOff(m.type));
         }
     }
 

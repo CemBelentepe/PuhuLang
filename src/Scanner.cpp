@@ -273,13 +273,7 @@ Token Scanner::identifierLiteral(char start)
     if (lexeme.str() == "namespace")
         return makeToken(TokenType::NAMESPACE);
     if (lexeme.str() == "class")
-        return makeToken(TokenType::CLASS);
-    if (lexeme.str() == "public")
-        return makeToken(TokenType::PUBLIC);
-    if (lexeme.str() == "private")
-        return makeToken(TokenType::PRIVATE);
-    if (lexeme.str() == "protected")
-        return makeToken(TokenType::PROTECTED);
+        return makeToken(TokenType::CLASS);c
     if (lexeme.str() == "var")
         return makeToken(TokenType::VAR);
     if (lexeme.str() == "if")

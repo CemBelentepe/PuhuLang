@@ -24,8 +24,7 @@ enum class TokenType
 
 	// Keywords
 	USING, NAMESPACE, 
-	CLASS, PUBLIC, PRIVATE, PROTECTED,
-	VAR,
+	CLASS, VAR,
 	IF, ELSE,
 	INT, FLOAT, DOUBLE, CHAR, STRING, BOOL, VOID,
 	WHILE, FOR,
@@ -44,6 +43,10 @@ public:
 	const int line;
 	const char* start;
 	const int length;
+
+	Token()
+		: type(TokenType::NULL_TOKEN), line(-1), start(nullptr), length(-1)
+	{}
 
 	Token(TokenType type, int line, const char* start, int length)
 		:type(type), line(line), start(start), length(length)
