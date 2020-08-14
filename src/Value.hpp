@@ -27,7 +27,7 @@ enum class TypeTag
     FUNCTION,
     NATIVE,
     METHODE,
-    CLASS,
+    STRUCT,
     NULL_TYPE,
     AUTO,
     ERROR
@@ -304,28 +304,28 @@ public:
     }
 };
 
-struct classMember
+struct structMember
 {
     std::shared_ptr<Type> type;
     Token name;
     size_t offset;
     
-    classMember(){}
+    structMember(){}
 
-    classMember(std::shared_ptr<Type> type, Token name, size_t offset)
+    structMember(std::shared_ptr<Type> type, Token name, size_t offset)
         : type(type), name(name), offset(offset) {}
 };
 
-class TypeClass : public Type
+class TypeStruct : public Type
 {
 private:
     size_t size;
 public:
     Token name;
-    std::unordered_map<std::string, classMember> members;
+    std::unordered_map<std::string, structMember> members;
 
-    TypeClass(Token name)
-        : Type(TypeTag::CLASS, nullptr), name(name), size(0)
+    TypeStruct(Token name)
+        : Type(TypeTag::STRUCT, nullptr), name(name), size(0)
     {
     }
 
@@ -341,7 +341,7 @@ public:
 
     void print()
     {
-        std::cout << "class " << name.getString();
+        std::cout << "struct " << name.getString();
     }
 
     std::stringstream getName()
@@ -353,7 +353,7 @@ public:
 
     bool isSame(std::shared_ptr<Type> type)
     {
-        return type->tag == this->tag && ((TypeClass*)type.get())->name.getString() == name.getString();
+        return type->tag == this->tag && ((TypeStruct*)type.get())->name.getString() == name.getString();
     }
 
     void addMember(std::shared_ptr<Type> type, Token name)
@@ -362,7 +362,7 @@ public:
         {
             size_t pos = size;
             size += type->getSize();
-            members.insert({name.getString(), classMember(type, name, pos)});
+            members.insert({name.getString(), structMember(type, name, pos)});
         }
         else
         {

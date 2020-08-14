@@ -313,9 +313,9 @@ public:
     void visit(ExprGet* expr)
     {
         expr->callee->accept(this);
-        if (expr->callee->type->tag == TypeTag::CLASS)
+        if (expr->callee->type->tag == TypeTag::STRUCT)
         {
-            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
             std::string getName = expr->get.getString();
             if (type->members.find(getName) != type->members.end())
             {
@@ -334,9 +334,9 @@ public:
     {
         expr->callee->accept(this);
         expr->asgn->accept(this);
-        if (expr->callee->type->tag == TypeTag::CLASS)
+        if (expr->callee->type->tag == TypeTag::STRUCT)
         {
-            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
             std::string getName = expr->get.getString();
             if (type->members.find(getName) != type->members.end())
             {
@@ -431,7 +431,7 @@ public:
             error("Type of the while condition must be a 'bool'", stmt->paren);
         stmt->loop->accept(this);
     }
-    void visit(StmtClass* stmt)
+    void visit(StmtStruct* stmt)
     {
         for (auto& m : stmt->methodes)
         {

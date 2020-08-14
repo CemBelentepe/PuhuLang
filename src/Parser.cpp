@@ -41,10 +41,10 @@ void Parser::parseUserDefinedTypes()
 {
     for (int i = 0; i < tokens.size(); i++)
     {
-        if (tokens[i].type == TokenType::CLASS && tokens[i + 1].type == TokenType::IDENTIFIER)
+        if (tokens[i].type == TokenType::STRUCT && tokens[i + 1].type == TokenType::IDENTIFIER)
         {
             i++;
-            userTypes.insert({tokens[i].getString(), std::make_shared<TypeClass>(tokens[i])});
+            userTypes.insert({tokens[i].getString(), std::make_shared<TypeStruct>(tokens[i])});
         }
     }
 }
@@ -59,7 +59,7 @@ std::shared_ptr<Type> Parser::parseTypeName()
 
     if (tag <= TypeTag::ARRAY)
         type = std::make_shared<TypePrimitive>(tag);
-    else if (tag == TypeTag::CLASS)
+    else if (tag == TypeTag::STRUCT)
         type = userTypes[consumed().getString()];
     else
         error("Initial type of any type must a primitive or a class type.");
@@ -147,7 +147,7 @@ TypeTag Parser::getDataType()
         if (userTypes.find(token.getString()) != userTypes.end())
         {
             advance();
-            return TypeTag::CLASS;
+            return TypeTag::STRUCT;
         }
         else
             return TypeTag::ERROR;
@@ -249,7 +249,7 @@ void Parser::panic()
         {
         case TokenType::USING:
         case TokenType::NAMESPACE:
-        case TokenType::CLASS:
+        case TokenType::STRUCT:
         case TokenType::IF:
         case TokenType::INT:
         case TokenType::FLOAT:
@@ -279,9 +279,9 @@ void Parser::panic()
 Stmt* Parser::decleration()
 {
     TokenType token = peek().type;
-    if (token == TokenType::CLASS)
+    if (token == TokenType::STRUCT)
     {
-        return classDecleration();
+        return structDecleration();
     }
     else if (token == TokenType::NAMESPACE)
     {
@@ -311,14 +311,14 @@ Stmt* Parser::decleration()
     return nullptr;
 }
 
-Stmt* Parser::classDecleration()
+Stmt* Parser::structDecleration()
 {
     Token classTok = advance();
     Token name = advance();
-    std::shared_ptr<TypeClass> type = userTypes[name.getString()];
+    std::shared_ptr<TypeStruct> type = userTypes[name.getString()];
     consume(TokenType::OPEN_BRACE, "Expect '{' after a class decleration.");
 
-    StmtClass* stmtClass = new StmtClass(type, name);
+    StmtStruct* stmtClass = new StmtStruct(type, name);
     std::unordered_map<std::string, StmtFunc*> methodes;
 
     while (isTypeName(peek()))

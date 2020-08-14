@@ -98,6 +98,35 @@ public:
             else
                 chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
+        else if (expr->callee->instance == ExprType::Get)
+        {
+            ExprGet* get = (ExprGet*)expr->callee;
+
+            if (get->callee->instance == ExprType::Variable)
+            {
+                expr->index->accept(this);
+                TypeStruct* type = (TypeStruct*)get->callee->type.get();
+                std::string getName = get->get.getString();
+                ExprVariable* exprVar = (ExprVariable*)get->callee;
+                Variable var = currentEnviroment->get(exprVar->name);
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+                chunk->addCode(new InstGetLocal(exprVar->name.getString(), var, expr->type, true));
+            }
+            else if (get->callee->instance == ExprType::GetDeref)
+            {
+                ExprGetDeref* exprGet = (ExprGetDeref*)get->callee;
+                exprGet->callee->accept(this);
+                expr->index->accept(this);
+                TypeStruct* type = (TypeStruct*)exprGet->callee->type->intrinsicType.get();
+                std::string getName = get->get.getString();
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+                chunk->addCode(new InstGetDerefOff(expr->type));
+            }
+        }
 
         // TODO: 2D Arrays
     }
@@ -131,10 +160,37 @@ public:
             else
                 chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
-        else
+        else if (expr->callee->instance == ExprType::Get)
         {
-            // TODO: 2D Arrays
+            ExprGet* get = (ExprGet*)expr->callee;
+
+            if (get->callee->instance == ExprType::Variable)
+            {
+                expr->index->accept(this);
+                TypeStruct* type = (TypeStruct*)get->callee->type.get();
+                std::string getName = get->get.getString();
+                ExprVariable* exprVar = (ExprVariable*)get->callee;
+                Variable var = currentEnviroment->get(exprVar->name);
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+                chunk->addCode(new InstSetLocal(exprVar->name.getString(), var, expr->type, true));
+            }
+            else if (get->callee->instance == ExprType::GetDeref)
+            {
+                ExprGetDeref* exprGet = (ExprGetDeref*)get->callee;
+                exprGet->callee->accept(this);
+                expr->index->accept(this);
+                TypeStruct* type = (TypeStruct*)exprGet->callee->type->intrinsicType.get();
+                std::string getName = get->get.getString();
+                structMember m = type->members[getName];
+                chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
+                chunk->addCode(new InstAdd(TypeTag::INTEGER));
+                chunk->addCode(new InstSetDerefOff(expr->type));
+            }
         }
+
+        // TODO: 2D Arrays
     }
 
     void visit(ExprAssignment* expr)
@@ -309,11 +365,11 @@ public:
     {
         if (expr->callee->instance == ExprType::Variable)
         {
-            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
             std::string getName = expr->get.getString();
             ExprVariable* exprVar = (ExprVariable*)expr->callee;
             Variable var = currentEnviroment->get(exprVar->name);
-            classMember m = type->members[getName];
+            structMember m = type->members[getName];
             chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
             chunk->addCode(new InstGetLocal(exprVar->name.getString(), var, m.type, true));
         }
@@ -321,9 +377,9 @@ public:
         {
             ExprGetDeref* exprGet = (ExprGetDeref*)expr->callee;
             exprGet->callee->accept(this);
-            TypeClass* type = (TypeClass*)exprGet->callee->type->intrinsicType.get();
+            TypeStruct* type = (TypeStruct*)exprGet->callee->type->intrinsicType.get();
             std::string getName = expr->get.getString();
-            classMember m = type->members[getName];
+            structMember m = type->members[getName];
             chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
             chunk->addCode(new InstGetDerefOff(m.type));
         }
@@ -334,11 +390,11 @@ public:
         expr->asgn->accept(this);
         if (expr->callee->instance == ExprType::Variable)
         {
-            TypeClass* type = (TypeClass*)expr->callee->type.get();
+            TypeStruct* type = (TypeStruct*)expr->callee->type.get();
             std::string getName = expr->get.getString();
             ExprVariable* exprVar = (ExprVariable*)expr->callee;
             Variable var = currentEnviroment->get(exprVar->name);
-            classMember m = type->members[getName];
+            structMember m = type->members[getName];
             chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
             chunk->addCode(new InstSetLocal(exprVar->name.getString(), var, m.type, true));
         }
@@ -346,9 +402,9 @@ public:
         {
             ExprGetDeref* exprGet = (ExprGetDeref*)expr->callee;
             exprGet->callee->accept(this);
-            TypeClass* type = (TypeClass*)exprGet->callee->type->intrinsicType.get();
+            TypeStruct* type = (TypeStruct*)exprGet->callee->type->intrinsicType.get();
             std::string getName = expr->get.getString();
-            classMember m = type->members[getName];
+            structMember m = type->members[getName];
             chunk->addCode(new InstConst(chunk->addConstant(new Value((int)m.offset))));
             chunk->addCode(new InstSetDerefOff(m.type));
         }
@@ -501,7 +557,7 @@ public:
         chunk->addCode(new InstJump(-1, start, 0));
         chunk->addCode(out);
     }
-    void visit(StmtClass* stmt)
+    void visit(StmtStruct* stmt)
     {
         for (auto& m : stmt->methodes)
         {

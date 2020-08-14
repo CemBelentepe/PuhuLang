@@ -272,8 +272,8 @@ Token Scanner::identifierLiteral(char start)
         return makeToken(TokenType::USING);
     if (lexeme.str() == "namespace")
         return makeToken(TokenType::NAMESPACE);
-    if (lexeme.str() == "class")
-        return makeToken(TokenType::CLASS);c
+    if (lexeme.str() == "struct")
+        return makeToken(TokenType::STRUCT);
     if (lexeme.str() == "var")
         return makeToken(TokenType::VAR);
     if (lexeme.str() == "if")

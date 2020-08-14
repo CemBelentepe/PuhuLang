@@ -125,7 +125,7 @@ void StmtFor::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
-void StmtClass::accept(AstVisitor* visitor)
+void StmtStruct::accept(AstVisitor* visitor)
 {
     visitor->visit(this);
 }

@@ -30,5 +30,5 @@ public:
     virtual void visit(StmtIf* stmt) = 0;
     virtual void visit(StmtFor* stmt) = 0;
     virtual void visit(StmtWhile* stmt) = 0;
-    virtual void visit(StmtClass* stmt) = 0;
+    virtual void visit(StmtStruct* stmt) = 0;
 };

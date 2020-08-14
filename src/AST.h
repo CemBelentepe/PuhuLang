@@ -536,19 +536,19 @@ public:
     void accept(AstVisitor* visitor);
 };
 
-class StmtClass : public Stmt
+class StmtStruct : public Stmt
 {
 public:
-    std::shared_ptr<TypeClass> type;
+    std::shared_ptr<TypeStruct> type;
     std::unordered_map<std::string, StmtFunc*> methodes;
     Token token;
 
-    StmtClass(std::shared_ptr<TypeClass> type, Token token)
+    StmtStruct(std::shared_ptr<TypeStruct> type, Token token)
         : type(type), token(token)
     {
     }
 
-    ~StmtClass()
+    ~StmtStruct()
     {
         for (auto& f : methodes)
         {

@@ -285,7 +285,7 @@ public:
         indent--;
         std::cout << "\n";
     }
-    void visit(StmtClass* stmt)
+    void visit(StmtStruct* stmt)
     {
         indentCode();
         std::cout << "->class " << stmt->type->name.getString() << "\n";

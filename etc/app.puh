@@ -1,13 +1,24 @@
-class MyClass
+struct MyClass
 {
     int i;
     int j;
+    int[10] arr;
+}
+ 
+void initMyClass(MyClass* x, int i, int j)
+{
+    x->i = i;
+    x->j = j;
+    for(int i = 0; i < 10; i += 1)
+        x->arr[i] = i;
 }
 
 void main()
 {
     MyClass& x = heap MyClass;
-    x->i = 2;
-    x->j = 9;
-    print("%i, %i\n", x->i, x->j);
+    initMyClass(ref x, 3, 7);
+
+    for(int i = 0; i < 10; i += 1)
+        print("%i, ", x->arr[i]);
+    print("\n");
 }
