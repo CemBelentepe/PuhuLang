@@ -3,8 +3,8 @@
 #include "Natives.hpp"
 #include "Value.hpp"
 
-Parser::Parser(std::vector<Token>& tokens)
-    : tokens(tokens), currentToken(0), depth(0)
+Parser::Parser()
+    : currentToken(0), depth(0)
 {
 
     std::vector<std::shared_ptr<Type>> s = {std::make_shared<TypePrimitive>(TypeTag::STRING)};
@@ -22,11 +22,11 @@ Parser::Parser(std::vector<Token>& tokens)
     srand(time(NULL));
 }
 
-std::vector<Stmt*> Parser::parse()
+StmtCompUnit* Parser::parseUnit(std::vector<Token> tokens)
 {
-    parseUserDefinedTypes();
-
+    this->tokens = tokens;
     this->currentToken = 0;
+    this->depth = 0;
 
     std::vector<Stmt*> root;
     while (!match(TokenType::EOF_TOKEN))
@@ -34,17 +34,17 @@ std::vector<Stmt*> Parser::parse()
         root.push_back(decleration());
     }
 
-    return root;
+    return new StmtCompUnit(root);
 }
 
-void Parser::parseUserDefinedTypes()
+void Parser::parseUserDefinedTypes(std::vector<Token> t)
 {
-    for (int i = 0; i < tokens.size(); i++)
+    for (int i = 0; i < t.size(); i++)
     {
-        if (tokens[i].type == TokenType::STRUCT && tokens[i + 1].type == TokenType::IDENTIFIER)
+        if (t[i].type == TokenType::STRUCT && t[i + 1].type == TokenType::IDENTIFIER)
         {
             i++;
-            userTypes.insert({tokens[i].getString(), std::make_shared<TypeStruct>(tokens[i])});
+            userTypes.insert({t[i].getString(), std::make_shared<TypeStruct>(t[i])});
         }
     }
 }
@@ -802,6 +802,14 @@ Expr* Parser::call()
         if (token.type == TokenType::OPEN_PAREN)
         {
             std::vector<Expr*> args;
+            Expr* callee = expr;
+            if(expr->instance == ExprType::Get)
+            {
+                ExprGet* get = (ExprGet*)expr;
+                args.push_back(get->callee);
+                callee = new ExprVariable(get->get);
+            }
+
             if (peek().type != TokenType::CLOSE_PAREN)
             {
                 do
@@ -810,7 +818,7 @@ Expr* Parser::call()
                 } while (match(TokenType::COMMA));
             }
             consume(TokenType::CLOSE_PAREN, "Expect ')' after arguments.");
-            expr = new ExprCall(expr, args, token);
+            expr = new ExprCall(callee, args, token);
         }
         else if (token.type == TokenType::OPEN_BRACKET)
         {

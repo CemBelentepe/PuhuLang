@@ -5,11 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "g++ - Debug project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/puhuc_debug.out",
+            "args": [
+                "${workspaceFolder}/etc/app.puh",
+                "${workspaceFolder}/etc/app2.puh"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "g++ - Build and debug project",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/puhuc_debug.out",
-            "args": ["${workspaceFolder}/etc/app.puh"],
+            "args": [
+                "${workspaceFolder}/etc/app.puh",
+                "${workspaceFolder}/etc/app2.puh"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

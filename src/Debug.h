@@ -306,6 +306,11 @@ public:
         std::cout << "\n";
         indent--;
     }
+    void visit(StmtCompUnit* stmt)
+    {
+        for(auto& s : stmt->stmts)
+            s->accept(this);
+    }
 };
 
 void debugAST(std::vector<Stmt*>& expr);

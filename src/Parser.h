@@ -12,17 +12,17 @@ class Expr;
 class Parser
 {
 public:
-	Parser(std::vector<Token>& tokens);
-	std::vector<Stmt*> parse();
+	Parser();
+	StmtCompUnit* parseUnit(std::vector<Token> tokens);
+	void parseUserDefinedTypes(std::vector<Token> tokens);
 	std::unordered_map<std::string, Value*> globals;
 	int depth;
 
 private:
-	std::vector<Token>& tokens;
+	std::vector<Token> tokens;
 	size_t currentToken;
 	std::unordered_map<std::string, std::shared_ptr<TypeStruct>> userTypes;
 
-	void parseUserDefinedTypes();
 	std::shared_ptr<Type> parseTypeName();
 	bool isTypeName(Token& token);
 	TypeTag getDataType();
@@ -33,15 +33,15 @@ private:
 	{
 		return this->tokens[this->currentToken++];
 	}
-	inline Token& consumed() const
+	inline Token& consumed()
 	{
 		return this->tokens[this->currentToken - 1];
 	}
-	inline Token& peek() const
+	inline Token& peek()
 	{
 		return this->tokens[this->currentToken];
 	}
-	inline Token& peekNext() const
+	inline Token& peekNext()
 	{
 		return this->tokens[this->currentToken + 1];
 	}

@@ -1,0 +1,33 @@
+struct MyClass
+{
+    int i;
+    int j;
+    int[5] arr;
+}
+
+void init(MyClass* s, int i, int j)
+{
+    s->i = i;
+    s->j = j;
+}
+
+void main()
+{
+    MyClass s;
+    (&s).init(1, 2);
+    print("%i, %i\n", s.i, s.j);
+   
+    int* ptr = &s.i;
+    ^ptr *= 2;
+    print("%i, %i\n", s.i, s.j);
+    
+    ptr = &s.j;
+    ^ptr *= 2;
+    ("%i, %i\n").print(s.i, s.j);
+    
+    ptr = &s.arr[2];
+    ^ptr = 9;
+    for(int i = 0; i < 5; i+= 1)
+        print("%i, ", s.arr[i]);
+    print("\n");
+}

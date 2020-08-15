@@ -444,4 +444,9 @@ public:
             m.second->accept(this);
         }
     }
+    void visit(StmtCompUnit* stmt)
+    {
+        for(auto& s : stmt->stmts)
+            s->accept(this);
+    }
 };

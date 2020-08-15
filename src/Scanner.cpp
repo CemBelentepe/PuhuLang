@@ -338,9 +338,14 @@ Token Scanner::numberLiteral()
     return makeToken(TokenType::INTEGER_LITERAL);
 }
 
-Token Scanner::errorToken(const char* msg)
+Token Scanner::errorToken(char* msg)
 {
     return Token(TokenType::ERROR, line, msg, strlen(msg));
+}
+
+Token Scanner::errorToken(const char* msg)
+{
+    return Token(TokenType::ERROR, line, (char*)msg, strlen(msg));
 }
 
 void Scanner::skipWhitespace()

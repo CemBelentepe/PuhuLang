@@ -369,7 +369,8 @@ public:
 
     ExprAddr(Expr* callee, Token token)
         : Expr(ExprType::Addr, std::make_shared<TypePrimitive>(TypeTag::NULL_TYPE)), callee(callee), token(token)
-    {}
+    {
+    }
 
     ~ExprAddr()
     {
@@ -573,6 +574,23 @@ public:
         {
             delete f.second;
         }
+    }
+
+    void accept(AstVisitor* visitor);
+};
+
+class StmtCompUnit : public Stmt
+{
+public:
+    std::vector<Stmt*> stmts;
+
+    StmtCompUnit(std::vector<Stmt*> stmts)
+        : stmts(stmts) {}
+
+    ~StmtCompUnit()
+    {
+        for (auto& s : stmts)
+            delete s;
     }
 
     void accept(AstVisitor* visitor);

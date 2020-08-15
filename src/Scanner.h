@@ -40,15 +40,15 @@ class Token
 {
 public:
 	TokenType type;
-	const int line;
-	const char* start;
-	const int length;
+	int line;
+	char* start;
+	int length;
 
 	Token()
 		: type(TokenType::NULL_TOKEN), line(-1), start(nullptr), length(-1)
 	{}
 
-	Token(TokenType type, int line, const char* start, int length)
+	Token(TokenType type, int line, char* start, int length)
 		:type(type), line(line), start(start), length(length)
 	{}
 
@@ -80,6 +80,7 @@ private:
 	Token charLiteral(); // scans to a '
 	Token identifierLiteral(char start); // scans the next identifier
 	Token numberLiteral(); // scans the next number
+	Token errorToken(char* msg);
 	Token errorToken(const char* msg);
 
 	void skipWhitespace(); // advances while in a whitespace

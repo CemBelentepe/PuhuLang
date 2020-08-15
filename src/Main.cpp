@@ -1,7 +1,7 @@
 #define DEBUG
 
 #ifdef DEBUG
-// #define DEBUG_TOKENS
+#define DEBUG_TOKENS
 #define DEBUG_BARE_AST
 #define DEBUG_AST
 #define DEBUG_IR
@@ -24,29 +24,41 @@
 #include "Debug.h"
 #endif
 
-void run(const char* path)
+void run(char** paths, int n)
 {
-    std::ifstream file(path);
-    if (file.fail())
+    Parser parser;
+    std::vector<Stmt*> root;
+    std::vector<std::string> ss;
+    std::vector<std::vector<Token>> tokenList;
+    ss.resize(n);
+    for (int i = 0; i < n; i++)
     {
-        std::cout << "[Error] Unable to open file: " << path << std::endl;
-        return;
-    }
+        std::ifstream file(paths[i]);
+        if (file.fail())
+        {
+            std::cout << "[Error] Unable to open file: " << paths[i] << std::endl;
+            return;
+        }
 
-    std::stringstream sourceStream;
-    sourceStream << file.rdbuf();
-    std::string source = sourceStream.str();
-    
-    Scanner scanner(source);
-    std::vector<Token> tokens = scanner.scanTokens();
-    file.close();
+        std::stringstream sourceStream;
+        sourceStream << file.rdbuf();
+        ss[i] = sourceStream.str();
+
+        Scanner scanner(ss[i]);
+        tokenList.push_back(scanner.scanTokens());
+        file.close();
 
 #ifdef DEBUG_TOKENS
-    debugTokens(tokens);
+        debugTokens(tokenList[i]);
 #endif
 
-    Parser parser(tokens);
-    std::vector<Stmt*> root = parser.parse();
+        parser.parseUserDefinedTypes(tokenList[i]);
+    }
+
+    for(int i = 0; i < n; i++)
+    {
+        root.push_back(parser.parseUnit(tokenList[i]));
+    }
 
 #ifdef DEBUG_BARE_AST
     debugAST(root);
@@ -61,7 +73,7 @@ void run(const char* path)
     IRGen irGen(root, parser.globals);
     std::vector<IRChunk*> irChunks = irGen.generateIR();
 
-    for(auto& stmt : root)
+    for (auto& stmt : root)
         delete stmt;
     root.clear();
 
@@ -88,7 +100,7 @@ void run(const char* path)
 #endif
 
     std::vector<Chunk*> chunks;
-    for(auto& irc : irChunks)
+    for (auto& irc : irChunks)
     {
         chunks.push_back(irc->chunk);
         delete irc;
@@ -101,9 +113,9 @@ void run(const char* path)
 
 int main(int argc, char* argv[])
 {
-    if (argc == 2)
+    if (argc >= 2)
     {
-        run(argv[1]);
+        run(&argv[1], argc - 1);
     }
     else
     {
