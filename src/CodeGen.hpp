@@ -28,21 +28,25 @@ class CodeGen : public InstVisitor
 private:
     Chunk* chunk;
     std::vector<valInfo> constPositions;
-    std::unordered_map<std::string, valInfo> globalInfo;
+    std::vector<std::pair<std::string, valInfo>> globalInfo;
     std::vector<Data> m_globals;
     int pos;
     bool hadError;
 
 public:
-    CodeGen(std::unordered_map<std::string, Value*>& globals)
+    CodeGen(std::unordered_map<std::string, EnvNamespace*>& allNamespaces)
         : hadError(false)
     {
-        for (auto& val : globals)
+        m_globals.resize(EnvNamespace::currentPos);
+        for (auto& ns : allNamespaces)
         {
-            size_t addr = m_globals.size();
-            m_globals.push_back(val.second->data);
-            globalInfo.insert(std::make_pair(val.first, valInfo(addr, val.second->type->getSize())));
-            delete val.second;
+            for (std::pair<const std::string, GlobalVar>& var : ns.second->vars)
+            {
+                for (int i = 0; i < var.second.type->getSize(); i++)
+                    m_globals[var.second.position + i] = var.second.val[i].data;
+                globalInfo.push_back({var.second.fullName, valInfo(var.second.position, var.second.type->getSize())});
+                delete var.second.val;
+            }
         }
     }
 
@@ -289,7 +293,14 @@ public:
     }
     void visit(InstGetGlobal* inst)
     {
-        auto& var = globalInfo[inst->name];
+        valInfo var;
+        for(auto v : globalInfo)
+            if(v.first == inst->name)
+            {
+                var = v.second;
+                break;
+            }
+
         size_t size = inst->type->getSize();
 
         if (inst->offset)
@@ -317,7 +328,14 @@ public:
     }
     void visit(InstSetGlobal* inst)
     {
-        auto& var = globalInfo[inst->name];
+        valInfo var;
+        for(auto v : globalInfo)
+            if(v.first == inst->name)
+            {
+                var = v.second;
+                break;
+            }
+
         size_t size = inst->type->getSize();
 
         if (inst->offset)
@@ -443,7 +461,14 @@ public:
     }
     void visit(InstAddrGlobal* inst)
     {
-        auto& var = globalInfo[inst->name];
+        valInfo var;
+        for(auto v : globalInfo)
+            if(v.first == inst->name)
+            {
+                var = v.second;
+                break;
+            }
+
         size_t size = inst->type->getSize();
 
         if (inst->offset)

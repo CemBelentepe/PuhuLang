@@ -306,6 +306,15 @@ public:
         std::cout << "\n";
         indent--;
     }
+    void visit(StmtNamespace* stmt)
+    {
+        indentCode();
+        std::cout << "namespace " << stmt->name << ":\n";
+        indent++;
+        for(auto& s : stmt->stmts)
+            s->accept(this);
+        indent--;
+    }
     void visit(StmtCompUnit* stmt)
     {
         for(auto& s : stmt->stmts)

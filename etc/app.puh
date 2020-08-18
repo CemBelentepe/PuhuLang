@@ -1,14 +1,10 @@
-int add(int i, int j)
-{
-    return i + j;
-}
+int[5] arr;
 
 void main()
 {
-    int res = (2).add(3);
-    res = res.add3(res, 1);
-    "%i\n".print(res);
-    MyStruct& s = heap MyStruct;
-    s.init(res, res.add(4));
-    print("%i, %i \n", s->i, s->j);
+    for(int i = 0; i < 5; i += 1)
+        arr[i] = 5-i;
+
+    for(int i = 0; i < 5; i += 1)
+        print("%i, ", arr[i]);
 }

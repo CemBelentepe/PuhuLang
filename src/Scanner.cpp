@@ -106,6 +106,8 @@ Token Scanner::scanToken()
     case ';':
         return makeToken(TokenType::SEMI_COLON);
     case ':':
+        if(match(':'))
+            return makeToken(TokenType::DOUBLE_COLON);
         return makeToken(TokenType::COLON);
     case '*':
         if (match('='))
