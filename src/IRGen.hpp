@@ -17,8 +17,9 @@ private:
     size_t currentLabel;
 
 public:
+    bool cont;
     IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0)
+        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0), cont(true)
     {
         for (auto& val : globals)
             currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
@@ -464,6 +465,7 @@ public:
         else
         {
             std::cout << "[ERROR] Invalid address of at '" << expr->token.getString() << "', line " << expr->token.line << ".\n";
+            cont = false;
         }
     }
 

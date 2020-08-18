@@ -10,11 +10,12 @@ class TypeChecker : public AstVisitor
 {
 public:
     bool hadError;
+    bool cont;
     std::unordered_map<std::string, Value*>& globals;
     Enviroment* currentEnviroment;
 
     TypeChecker(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : hadError(false), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
+        : hadError(false), cont(true), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
     {
         for (auto& val : globals)
             currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
@@ -25,6 +26,7 @@ public:
 
     void error(const std::string& message, Token token)
     {
+        this->cont = false;
         this->hadError = true;
         std::cout << "[Line " << token.line << ", " << token.getString() << "] " << message << std::endl;
     }

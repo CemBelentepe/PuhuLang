@@ -17,6 +17,7 @@ public:
 	void parseUserDefinedTypes(std::vector<Token> tokens);
 	std::unordered_map<std::string, Value*> globals;
 	int depth;
+	bool cont;
 
 private:
 	std::vector<Token> tokens;
@@ -50,7 +51,7 @@ private:
 	bool matchCast();
 	std::shared_ptr<Type> getCast();
 
-	inline Expr* typeError(const char* message) const;
+	inline Expr* typeError(const char* message);
 	inline void error(const char* message);
 	inline void errorAtToken(const char* message);
 	void panic();

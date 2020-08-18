@@ -6,6 +6,7 @@ int add(int i, int j)
 void main()
 {
     int res = (2).add(3);
+    int x = 9;
     res = res.add3(res, 1);
     "%i\n".print(res);
     MyStruct& s = heap MyStruct;

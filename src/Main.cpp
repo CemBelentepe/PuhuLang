@@ -1,7 +1,7 @@
 #define DEBUG
 
 #ifdef DEBUG
-#define DEBUG_TOKENS
+// #define DEBUG_TOKENS
 #define DEBUG_BARE_AST
 #define DEBUG_AST
 #define DEBUG_IR
@@ -23,6 +23,27 @@
 #ifdef DEBUG
 #include "Debug.h"
 #endif
+
+enum class TargetPlatform
+{
+    Interpret,
+    VMOutput,
+    M0Stack,
+    M0Register
+};
+
+struct BuildMode
+{
+    std::vector<std::string> files;
+    std::string targetPath;
+    TargetPlatform target;
+    
+    bool debug_tokens;
+    bool debug_ast_bare;
+    bool debug_ast;
+    bool debug_ir;
+    bool debug_code;
+};
 
 void run(char** paths, int n)
 {
@@ -59,12 +80,16 @@ void run(char** paths, int n)
     {
         root.push_back(parser.parseUnit(tokenList[i]));
     }
+    if(!parser.cont) return;
+
 
 #ifdef DEBUG_BARE_AST
     debugAST(root);
 #endif
 
     TypeChecker typeChecker(root, parser.globals);
+
+    if(!typeChecker.cont) return;
 
 #ifdef DEBUG_AST
     debugAST(root);
@@ -76,6 +101,8 @@ void run(char** paths, int n)
     for (auto& stmt : root)
         delete stmt;
     root.clear();
+
+    if(!irGen.cont) return;
 
 #ifdef DEBUG_IR
     for (auto& irc : irChunks)

@@ -4,9 +4,8 @@
 #include "Value.hpp"
 
 Parser::Parser()
-    : currentToken(0), depth(0)
+    : currentToken(0), depth(0), cont(true)
 {
-
     std::vector<std::shared_ptr<Type>> s = {std::make_shared<TypePrimitive>(TypeTag::STRING)};
     std::shared_ptr<TypeFunction> v2s = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::VOID), s, true);
     std::shared_ptr<TypeFunction> sr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::STRING), std::vector<std::shared_ptr<Type>>(), false);
@@ -55,19 +54,19 @@ std::shared_ptr<Type> Parser::parseTypeName()
     TypeTag tag = getDataType();
 
     if (tag == TypeTag::ERROR)
-        error("Invalid type name.");
+        errorAtToken("Invalid type name.");
 
     if (tag <= TypeTag::ARRAY)
         type = std::make_shared<TypePrimitive>(tag);
     else if (tag == TypeTag::STRUCT)
         type = userTypes[consumed().getString()];
     else
-        error("Initial type of any type must a primitive or a class type.");
+        errorAtToken("Initial type of any type must a primitive or a class type.");
 
     while ((tag = getDataType()) != TypeTag::ERROR)
     {
         if (tag < TypeTag::ARRAY)
-            error("Invalid type decleration.");
+            errorAtToken("Invalid type decleration.");
         else if (tag == TypeTag::ARRAY)
         {
             type = std::make_shared<TypeArray>(consumed().getInteger(), type);
@@ -216,21 +215,24 @@ std::shared_ptr<Type> Parser::getCast()
     return to;
 }
 
-inline Expr* Parser::typeError(const char* message) const
+inline Expr* Parser::typeError(const char* message)
 {
+    this->cont = false;
     std::cout << "At " << tokens[currentToken - 1] << message << std::endl;
     return nullptr;
 }
 
 inline void Parser::error(const char* message)
 {
+    this->cont = false;
     std::cout << message << std::endl;
     this->panic();
 }
 
 inline void Parser::errorAtToken(const char* message)
 {
-    std::cout << "[line" << tokens[currentToken].line << "] Error" << message << std::endl;
+    this->cont = false;
+    std::cout << "[line " << tokens[currentToken].line << "] Error " << message << std::endl;
     this->panic();
 }
 
@@ -241,7 +243,7 @@ void Parser::panic()
     {
         if (type == TokenType::SEMI_COLON)
         {
-            advance();
+            // advance();
             return;
         }
 
@@ -264,15 +266,15 @@ void Parser::panic()
             return;
 
         case TokenType::IDENTIFIER:
-            // TODO: add user defined types
-            // if (isTypeName(tokens[currentToken]))
+            if (isTypeName(tokens[currentToken]))
             return;
 
         default:
             break;
         }
 
-        type = advance().type;
+        advance();
+        type = peek().type;
     }
 }
 
@@ -600,7 +602,7 @@ Expr* Parser::assignment()
             return expr;
         }
 
-        error("Invalid assignment target.");
+        errorAtToken("Invalid assignment target.");
     }
 
     return expr;
