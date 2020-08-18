@@ -352,17 +352,20 @@ public:
 
     void visit(InstConst* inst)
     {
-        std::cout << "CONST\t" << *(irChunk->getConstant(inst->id)) << "@[" << inst->id << "]";
+        std::cout << "\t";
+        std::cout << "CONST\t\t\t" << *(irChunk->getConstant(inst->id)) << "@[" << inst->id << "]";
     }
     void visit(InstCast* inst)
     {
-        std::cout << "CAST\t";
+        std::cout << "\t";
+        std::cout << "CAST\t\t";
         printTag(inst->from);
         std::cout << "\t";
         printTag(inst->to);
     }
     void visit(InstAdd* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case TypeTag::INTEGER:
@@ -378,6 +381,7 @@ public:
     }
     void visit(InstSub* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case TypeTag::INTEGER:
@@ -393,6 +397,7 @@ public:
     }
     void visit(InstMul* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case TypeTag::INTEGER:
@@ -408,6 +413,7 @@ public:
     }
     void visit(InstDiv* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case TypeTag::INTEGER:
@@ -423,6 +429,7 @@ public:
     }
     void visit(InstNeg* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case TypeTag::INTEGER:
@@ -438,10 +445,12 @@ public:
     }
     void visit(InstMod* inst)
     {
+        std::cout << "\t";
         std::cout << "MOD";
     }
     void visit(InstBit* inst)
     {
+        std::cout << "\t";
         switch (inst->op_type)
         {
         case TokenType::TILDE:
@@ -471,10 +480,12 @@ public:
     }
     void visit(InstNot* inst)
     {
+        std::cout << "\t";
         std::cout << "LOGIC_NOT";
     }
     void visit(InstInc* inst)
     {
+        std::cout << "\t";
         std::string inc = inst->inc == 1 ? "INC" : "DEC";
         switch (inst->type)
         {
@@ -492,6 +503,7 @@ public:
     }
     void visit(InstLess* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "ILESS";
         else
@@ -499,6 +511,7 @@ public:
     }
     void visit(InstLte* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "ILESS_EQUAL";
         else
@@ -506,6 +519,7 @@ public:
     }
     void visit(InstGreat* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "IGREAT";
         else
@@ -513,6 +527,7 @@ public:
     }
     void visit(InstGte* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "IGREAT_EQUAL";
         else
@@ -520,6 +535,7 @@ public:
     }
     void visit(InstEq* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "IIS_EQUAL";
         else
@@ -527,6 +543,7 @@ public:
     }
     void visit(InstNeq* inst)
     {
+        std::cout << "\t";
         if (inst->type == TypeTag::INTEGER)
             std::cout << "INOT_EQUAL";
         else
@@ -534,63 +551,77 @@ public:
     }
     void visit(InstGetGlobal* inst)
     {
-        std::cout << "GET_GLOBAL\t" << inst->name;
+        std::cout << "\t";
+        std::cout << "GET_GLOBAL\t\t" << inst->name;
     }
     void visit(InstSetGlobal* inst)
     {
-        std::cout << "SET_GLOBAL\t" << inst->name;
+        std::cout << "\t";
+        std::cout << "SET_GLOBAL\t\t" << inst->name;
     }
     void visit(InstGetLocal* inst)
     {
-        std::cout << "GET_LOCAL\t" << inst->name;
+        std::cout << "\t";
+        std::cout << "GET_LOCAL\t\t" << inst->name;
     }
     void visit(InstSetLocal* inst)
     {
-        std::cout << "SET_LOCAL\t" << inst->name;
+        std::cout << "\t";
+        std::cout << "SET_LOCAL\t\t" << inst->name;
     }
     void visit(InstAlloc* inst)
     {
-        std::cout << "ALLOC\t" << inst->type;
+        std::cout << "\t";
+        std::cout << "ALLOC\t\t" << inst->type;
     }
     void visit(InstFree* inst)
     {
+        std::cout << "\t\t";
         std::cout << "FREE";
     }
     void visit(InstGetDeref* inst)
     {
-        std::cout << "GET_DEREF\t" << inst->type;
+        std::cout << "\t";
+        std::cout << "GET_DEREF\t\t" << inst->type;
     }
     void visit(InstSetDeref* inst)
     {
-        std::cout << "SET_DEREF\t" << inst->type;
+        std::cout << "\t";
+        std::cout << "SET_DEREF\t\t" << inst->type;
     }
     void visit(InstGetDerefOff* inst)
     {
-        std::cout << "GET_DEREF_OFF\t" << inst->type;
+        std::cout << "\t";
+        std::cout << "GET_DEREF_OFF\t\t" << inst->type;
     }
     void visit(InstSetDerefOff* inst)
     {
-        std::cout << "SET_DEREF_OFF\t" << inst->type;
+        std::cout << "\t";
+        std::cout << "SET_DEREF_OFF\t\t" << inst->type;
     }
     void visit(InstAddrLocal* inst)
     {
+        std::cout << "\t";
         if (inst->offset)
-            std::cout << "ADDR_LOCAL_OFF\t" << inst->name;
+            std::cout << "ADDR_LOCAL_OFF\t\t" << inst->name;
         else
-            std::cout << "ADDR_LOCAL\t" << inst->name;
+            std::cout << "ADDR_LOCAL\t\t" << inst->name;
     }
     void visit(InstAddrGlobal* inst)
     {
+        std::cout << "\t";
         if (inst->offset)
-            std::cout << "ADDR_GLOBAL_OFF\t" << inst->name;
+            std::cout << "ADDR_GLOBAL_OFF\t\t" << inst->name;
         else
-            std::cout << "ADDR_GLOBAL\t" << inst->name;
+            std::cout << "ADDR_GLOBAL\t\t" << inst->name;
     }
     void visit(InstCall* inst)
     {
+        std::cout << "\t";
         if (inst->callType == TypeTag::NATIVE)
-            std::cout << "NATIVE_";
-        std::cout << "CALL\t";
+            std::cout << "NATIVE_CALL\t\t";
+        else
+            std::cout << "CALL\t\t\t";
         for (auto& arg : inst->args)
         {
             arg->print();
@@ -599,7 +630,8 @@ public:
     }
     void visit(InstPop* inst)
     {
-        std::cout << "POP\t";
+        std::cout << "\t";
+        std::cout << "POP\t\t\t";
         for (auto& arg : inst->types)
         {
             arg->print();
@@ -608,7 +640,8 @@ public:
     }
     void visit(InstPush* inst)
     {
-        std::cout << "PUSH\t";
+        std::cout << "\t";
+        std::cout << "PUSH\t\t\t";
         for (auto& arg : inst->types)
         {
             arg->print();
@@ -617,24 +650,26 @@ public:
     }
     void visit(InstReturn* inst)
     {
-        std::cout << "RETURN\t";
+        std::cout << "\t";
+        std::cout << "RETURN\t\t\t";
         inst->type->print();
     }
     void visit(InstJump* inst)
     {
+        std::cout << "\t";
         switch (inst->type)
         {
         case 0:
-            std::cout << "JUMP";
+            std::cout << "JUMP\t";
             break;
         case 1:
-            std::cout << "JUMP_NT";
+            std::cout << "JUMP_NT\t";
             break;
         case 2:
             std::cout << "JUMP_NT_POP";
             break;
         }
-        std::cout << "\tL." << inst->label->id;
+        std::cout << "\t\tL." << inst->label->id;
     }
     void visit(InstLabel* inst)
     {

@@ -8,7 +8,7 @@
             "name": "g++ - Debug project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/puhuc_debug.out",
+            "program": "${workspaceFolder}/bin/puhuc_debug",
             "args": [
                 "${workspaceFolder}/etc/app.puh",
                 "${workspaceFolder}/etc/app2.puh"
@@ -30,7 +30,7 @@
             "name": "g++ - Build and debug project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/puhuc_debug.out",
+            "program": "${workspaceFolder}/bin/puhuc_debug",
             "args": [
                 "${workspaceFolder}/etc/app.puh",
                 "${workspaceFolder}/etc/app2.puh"

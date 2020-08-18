@@ -10,7 +10,7 @@
                 "-O3",
                 "${workspaceFolder}/src/*.cpp",
                 "-o",
-                "${workspaceFolder}/bin/puhuc.out"
+                "${workspaceFolder}/bin/puhuc"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -32,7 +32,7 @@
                 "-std=c++17",
                 "${workspaceFolder}/src/*.cpp",
                 "-o",
-                "${workspaceFolder}/bin/puhuc_debug.out"
+                "${workspaceFolder}/bin/puhuc_debug"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

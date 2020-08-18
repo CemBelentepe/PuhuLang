@@ -90,14 +90,26 @@ public:
         if (expr->callee->instance == ExprType::Variable)
         {
             ExprVariable* exprVar = (ExprVariable*)(expr->callee);
-            Variable var = currentEnviroment->get(exprVar->name);
+            // Variable var = currentEnviroment->get(exprVar->name);
 
             expr->index->accept(this);
 
-            if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
-            else
+            if (currentEnviroment->has(exprVar->name))
+            {
+                Variable var = currentEnviroment->get(exprVar->name);
                 chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
+            }
+            else
+            {
+                GlobalVar var = currentNamespace->get(exprVar->name);
+                chunk->addCode(new InstGetGlobal(var.fullName, expr->type, true));
+            }
+
+
+            // if (var.depth == 0)
+            //     chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
+            // else
+            //     chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
         else if (expr->callee->instance == ExprType::Get)
         {
@@ -152,14 +164,26 @@ public:
         if (expr->callee->instance == ExprType::Variable)
         {
             ExprVariable* exprVar = (ExprVariable*)(expr->callee);
-            Variable var = currentEnviroment->get(exprVar->name);
+            // Variable var = currentEnviroment->get(exprVar->name);
 
             expr->index->accept(this);
 
-            if (var.depth == 0)
-                chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
-            else
+
+            if (currentEnviroment->has(exprVar->name))
+            {
+                Variable var = currentEnviroment->get(exprVar->name);
                 chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
+            }
+            else
+            {
+                GlobalVar var = currentNamespace->get(exprVar->name);
+                chunk->addCode(new InstSetGlobal(var.fullName, expr->type, true));
+            }
+
+            // if (var.depth == 0)
+            //     chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
+            // else
+            //     chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
         else if (expr->callee->instance == ExprType::Get)
         {

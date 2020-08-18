@@ -19,7 +19,6 @@ void debugAST(std::vector<Stmt*>& root)
 void debugInstructions(IRChunk* irChunk)
 {
     InstDebugger debugger(irChunk);
-    std::cout << "Instructions:\n";
     debugger.debugAll();
     std::cout << std::endl;
 }

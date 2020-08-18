@@ -6,4 +6,5 @@ void main()
         arr[i] = 5-i;
     for(int i = 0; i < 5; i+=1)
         print("%i, ", arr[i]);
+    print("\n");
 }
