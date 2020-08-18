@@ -1,6 +1,13 @@
+int[5] arr;
+
 int add(int i, int j)
 {
     return i + j;
+}
+
+int add3(int i, int j, int k)
+{
+    return i + j + k;
 }
 
 void main()
