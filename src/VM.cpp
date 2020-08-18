@@ -1,4 +1,4 @@
-#define DEBUG_CODE_TRACE
+// #define DEBUG_CODE_TRACE
 
 #include "VM.h"
 

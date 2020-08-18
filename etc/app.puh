@@ -1,22 +1,9 @@
 int[5] arr;
 
-int add(int i, int j)
-{
-    return i + j;
-}
-
-int add3(int i, int j, int k)
-{
-    return i + j + k;
-}
-
 void main()
 {
-    int res = (2).add(3);
-    int x = 9;
-    res = res.add3(res, 1);
-    "%i\n".print(res);
-    MyStruct& s = heap MyStruct;
-    s.init(res, res.add(4));
-    print("%i, %i \n", s->i, s->j);
+    for(int i = 0; i < 5; i+=1)
+        arr[i] = 5-i;
+    for(int i = 0; i < 5; i+=1)
+        print("%i, ", arr[i]);
 }
