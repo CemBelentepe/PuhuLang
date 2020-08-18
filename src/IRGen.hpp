@@ -11,17 +11,17 @@ class IRGen : public AstVisitor
 private:
     IRChunk* chunk;
     std::vector<Stmt*>& root;
-    std::unordered_map<std::string, EnvNamespace*>& allNamespaces;
+    std::unordered_map<std::string, Value*>& globals;
     std::vector<IRChunk*> chunks;
     Enviroment* currentEnviroment;
-    EnvNamespace* currentNamespace;
     size_t currentLabel;
 
 public:
-    IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, EnvNamespace*>& allNamespaces)
-        : chunk(new IRChunk("_start")), root(root), allNamespaces(allNamespaces), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0)
+    IRGen(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
+        : chunk(new IRChunk("_start")), root(root), globals(globals), currentEnviroment(new Enviroment(nullptr, 0)), currentLabel(0)
     {
-        currentNamespace = allNamespaces[""];
+        for (auto& val : globals)
+            currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
     }
 
     std::vector<std::shared_ptr<Type>> makePrimTypeList(std::vector<TypeTag> tags)
@@ -38,7 +38,7 @@ public:
         for (auto& stmt : root)
             stmt->accept(this);
 
-        chunk->addCode(new InstGetGlobal("::main", allNamespaces[""]->vars["main"].type));
+        chunk->addCode(new InstGetGlobal("main", globals["main"]->type));
         chunk->addCode(new InstCall(makePrimTypeList({TypeTag::VOID}), TypeTag::FUNCTION));
 
         return chunks;
@@ -94,7 +94,7 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(exprVar->name.getString(), expr->type, true));
+                chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
             else
                 chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
@@ -156,7 +156,7 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstSetGlobal(exprVar->name.getString(), expr->type, true));
+                chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
             else
                 chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
@@ -200,7 +200,7 @@ public:
         if (expr->assignment->instance == ExprType::Heap)
         {
             if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
+                chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" +expr->name.getString(), expr->type));
             else
                 chunk->addCode(new InstGetLocal(expr->name.getString(), var, expr->type));
             chunk->addCode(new InstFree());
@@ -208,7 +208,7 @@ public:
 
         expr->assignment->accept(this);
         if (var.depth == 0)
-            chunk->addCode(new InstSetGlobal(expr->name.getString(), expr->type));
+            chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" +expr->name.getString(), expr->type));
         else
             chunk->addCode(new InstSetLocal(expr->name.getString(), var, expr->type));
     }
@@ -321,22 +321,11 @@ public:
     }
     void visit(ExprVariable* expr)
     {
-        if (currentEnviroment->has(expr->name))
-        {
-            Variable var = currentEnviroment->get(expr->name);
-            chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name), expr->type));
-        }
+        Variable var = currentEnviroment->get(expr->name);
+        if (var.depth == 0)
+            chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
         else
-        {
-            GlobalVar var = currentNamespace->get(expr->name);
-            chunk->addCode(new InstGetGlobal(var.fullName, var.type));
-        }
-
-        // Variable var = currentEnviroment->get(expr->name);
-        // if (var.depth == 0)
-        //     chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
-        // else
-        //     chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name), expr->type));
+            chunk->addCode(new InstGetLocal(expr->name.getString(), currentEnviroment->get(expr->name), expr->type));
     }
     void visit(ExprHeap* expr)
     {
@@ -497,7 +486,7 @@ public:
         IRChunk* enclosing = chunk;
         chunk = new IRChunk(stmt->name.getString());
 
-        FuncValue* func = (FuncValue*)currentNamespace->get(stmt->name).val;
+        FuncValue* func = (FuncValue*)globals[stmt->name.getString()];
         func->irChunk = chunk;
         func->data.valChunk = func->irChunk->chunk;
 
@@ -528,7 +517,7 @@ public:
             currentEnviroment->define(stmt->name, stmt->varType, stmt->initializer);
         if (currentEnviroment->depth == 0)
         {
-            chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" + stmt->name.getString(), stmt->varType));
+            chunk->addCode(new InstSetGlobal(stmt->name.getString(), stmt->varType));
             chunk->addCode(new InstPop({stmt->varType}));
         }
         else
@@ -632,20 +621,9 @@ public:
             m.second->accept(this);
         }
     }
-    void visit(StmtNamespace* stmt)
-    {
-        currentNamespace = allNamespaces[currentNamespace->getName() + "::" + stmt->name];
-
-        for (auto& s : stmt->stmts)
-        {
-            s->accept(this);
-        }
-
-        currentNamespace = currentNamespace->closing;
-    }
     void visit(StmtCompUnit* stmt)
     {
-        for (auto& s : stmt->stmts)
+        for(auto& s : stmt->stmts)
         {
             s->accept(this);
         }
