@@ -24,6 +24,8 @@
 #include "Debug.h"
 #endif
 
+size_t EnvNamespace::currentPos = 0;
+
 void run(char** paths, int n)
 {
     Parser parser;
@@ -64,13 +66,13 @@ void run(char** paths, int n)
     debugAST(root);
 #endif
 
-    TypeChecker typeChecker(root, parser.globals);
+    TypeChecker typeChecker(root, parser.allNamespaces);
 
 #ifdef DEBUG_AST
     debugAST(root);
 #endif
 
-    IRGen irGen(root, parser.globals);
+    IRGen irGen(root, parser.allNamespaces);
     std::vector<IRChunk*> irChunks = irGen.generateIR();
 
     for (auto& stmt : root)
@@ -86,7 +88,7 @@ void run(char** paths, int n)
     }
 #endif
 
-    CodeGen codegen(parser.globals);
+    CodeGen codegen(parser.allNamespaces);
     for (auto& irc : irChunks)
         codegen.generateCode(irc);
 

@@ -1,12 +1,12 @@
 #include "Parser.h"
 #include "AST.h"
+#include "Enviroment.hpp"
 #include "Natives.hpp"
 #include "Value.hpp"
 
 Parser::Parser()
-    : currentToken(0), depth(0)
+    : currentToken(0), depth(0), currentNamespace(new EnvNamespace("", nullptr))
 {
-
     std::vector<std::shared_ptr<Type>> s = {std::make_shared<TypePrimitive>(TypeTag::STRING)};
     std::shared_ptr<TypeFunction> v2s = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::VOID), s, true);
     std::shared_ptr<TypeFunction> sr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::STRING), std::vector<std::shared_ptr<Type>>(), false);
@@ -14,12 +14,14 @@ Parser::Parser()
     std::shared_ptr<TypeFunction> ir = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::INTEGER), std::vector<std::shared_ptr<Type>>(), false);
     std::shared_ptr<TypeFunction> fr = std::make_shared<TypeFunction>(TypeTag::NATIVE, std::make_shared<TypePrimitive>(TypeTag::FLOAT), std::vector<std::shared_ptr<Type>>(), false);
 
-    globals.insert({"print", new NativeFunc(native_print, v2s)});
-    globals.insert({"input", new NativeFunc(native_input, sr)});
-    globals.insert({"clock", new NativeFunc(native_clock, dr)});
-    globals.insert({"inputInt", new NativeFunc(native_inputInt, ir)});
-    globals.insert({"rand", new NativeFunc(native_rand, fr)});
+    currentNamespace->define("print", v2s, new NativeFunc(native_print, v2s));
+    currentNamespace->define("input", sr, new NativeFunc(native_input, sr));
+    currentNamespace->define("clock", dr, new NativeFunc(native_clock, dr));
+    currentNamespace->define("inputInt", ir, new NativeFunc(native_inputInt, ir));
+    currentNamespace->define("rand", fr, new NativeFunc(native_rand, fr));
     srand(time(NULL));
+
+    allNamespaces.insert({"", currentNamespace});
 }
 
 StmtCompUnit* Parser::parseUnit(std::vector<Token> tokens)
@@ -37,15 +39,49 @@ StmtCompUnit* Parser::parseUnit(std::vector<Token> tokens)
     return new StmtCompUnit(root);
 }
 
-void Parser::parseUserDefinedTypes(std::vector<Token> t)
+void Parser::parseNamespaceInside(EnvNamespace* ns, std::vector<Token>& t, int& i)
 {
-    for (int i = 0; i < t.size(); i++)
+    while (i < t.size())
     {
         if (t[i].type == TokenType::STRUCT && t[i + 1].type == TokenType::IDENTIFIER)
         {
-            i++;
-            userTypes.insert({t[i].getString(), std::make_shared<TypeStruct>(t[i])});
+            i++; // at name
+            userTypes.insert({ns->getName() + "::" + t[i].getString(), std::make_shared<TypeStruct>(t[i])});
+            i++; // at open brace
+            while (t[i].type != TokenType::CLOSE_BRACE)
+                i++;
         }
+        else if (t[i].type == TokenType::NAMESPACE && t[i + 1].type == TokenType::IDENTIFIER)
+        {
+            i++; // at name
+            EnvNamespace* closing = ns;
+            std::string nsName = closing->getName() + "::" + t[i].getString();
+            if (allNamespaces.find(nsName) == allNamespaces.end())
+            {
+                ns = new EnvNamespace(t[i].getString(), ns);
+                allNamespaces.insert({nsName, ns});
+            }
+            else
+                ns = allNamespaces[nsName];
+
+            i++; // at open brace
+
+            parseNamespaceInside(ns, t, i);
+
+            ns = closing;
+        }
+        i++;
+    }
+}
+
+void Parser::parseUserDefinedTypes(std::vector<Token> t)
+{
+    EnvNamespace* ns = currentNamespace;
+    int i = 0;
+
+    while (i < t.size())
+    {
+        parseNamespaceInside(ns, t, i);
     }
 }
 
@@ -60,7 +96,7 @@ std::shared_ptr<Type> Parser::parseTypeName()
     if (tag <= TypeTag::ARRAY)
         type = std::make_shared<TypePrimitive>(tag);
     else if (tag == TypeTag::STRUCT)
-        type = userTypes[consumed().getString()];
+        type = lastType;
     else
         error("Initial type of any type must a primitive or a class type.");
 
@@ -95,8 +131,15 @@ bool Parser::isTypeName(Token& token)
     case TokenType::BOOL:
     case TokenType::VOID:
         return true;
+    case TokenType::DOUBLE_COLON:
+        return peekNext().type == TokenType::IDENTIFIER;
     case TokenType::IDENTIFIER:
-        return userTypes.find(token.getString()) != userTypes.end();
+    {
+        if(peekNext().type == TokenType::DOUBLE_COLON)
+            return true;
+        else
+            return userTypes.find(currentNamespace->getName() + "::" + token.getString()) != userTypes.end();
+    }
     default:
         return false;
     }
@@ -144,9 +187,10 @@ TypeTag Parser::getDataType()
         else
             return TypeTag::ERROR;
     case TokenType::IDENTIFIER:
-        if (userTypes.find(token.getString()) != userTypes.end())
+        if (userTypes.find(currentNamespace->getName() + "::" + token.getString()) != userTypes.end())
         {
             advance();
+            lastType = userTypes[currentNamespace->getName() + "::" + token.getString()];
             return TypeTag::STRUCT;
         }
         else
@@ -285,7 +329,7 @@ Stmt* Parser::decleration()
     }
     else if (token == TokenType::NAMESPACE)
     {
-        // TODO add namespaces
+        return namespaceDecleration();
     }
     else
     {
@@ -315,7 +359,7 @@ Stmt* Parser::structDecleration()
 {
     Token classTok = advance();
     Token name = advance();
-    std::shared_ptr<TypeStruct> type = userTypes[name.getString()];
+    std::shared_ptr<TypeStruct> type = userTypes[currentNamespace->getName() + "::" + name.getString()];
     consume(TokenType::OPEN_BRACE, "Expect '{' after a class decleration.");
 
     StmtStruct* stmtClass = new StmtStruct(type, name);
@@ -332,6 +376,28 @@ Stmt* Parser::structDecleration()
     consume(TokenType::CLOSE_BRACE, "Expect '}' at the end of a class decleration.");
 
     return stmtClass;
+}
+
+Stmt* Parser::namespaceDecleration()
+{
+    advance();
+    Token nameToken = advance();
+    std::string name = nameToken.getString();
+
+    std::vector<Stmt*> stmts;
+
+    consume(TokenType::OPEN_BRACE, "Expect '{' after a namespace decleration.");
+
+    currentNamespace = allNamespaces[currentNamespace->getName() + "::" + name];
+
+    while(!match(TokenType::CLOSE_BRACE))
+    {
+        stmts.push_back(decleration());
+    }
+
+    currentNamespace = currentNamespace->closing;
+
+    return new StmtNamespace(name, stmts);
 }
 
 Stmt* Parser::variableDecleration(std::shared_ptr<Type> type)
@@ -354,7 +420,7 @@ Stmt* Parser::variableDecleration(std::shared_ptr<Type> type)
 
     if (depth == 0)
     {
-        globals.insert({varName.getString(), new Value(type)});
+        currentNamespace->define(varName.getString(), type, new Value(type));
     }
 
     return new StmtVarDecleration(type, varName, init);
@@ -394,7 +460,7 @@ Stmt* Parser::functionDecleration(std::shared_ptr<Type> type)
     std::shared_ptr<TypeFunction> funcType = std::make_shared<TypeFunction>(TypeTag::FUNCTION, type, param_types, false);
 
     this->depth--;
-    globals.insert(std::make_pair(funcName.getString(), new FuncValue(funcType)));
+    currentNamespace->define(funcName.getString(), funcType, new FuncValue(funcType));
 
     return new StmtFunc(funcName, body, funcType, params);
 }
@@ -803,7 +869,7 @@ Expr* Parser::call()
         {
             std::vector<Expr*> args;
             Expr* callee = expr;
-            if(expr->instance == ExprType::Get)
+            if (expr->instance == ExprType::Get)
             {
                 ExprGet* get = (ExprGet*)expr;
                 args.push_back(get->callee);

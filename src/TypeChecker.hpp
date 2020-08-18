@@ -10,14 +10,14 @@ class TypeChecker : public AstVisitor
 {
 public:
     bool hadError;
-    std::unordered_map<std::string, Value*>& globals;
+    std::unordered_map<std::string, EnvNamespace*>& allNamespaces;
+    EnvNamespace* currentNamespace;
     Enviroment* currentEnviroment;
 
-    TypeChecker(std::vector<Stmt*>& root, std::unordered_map<std::string, Value*>& globals)
-        : hadError(false), globals(globals), currentEnviroment(new Enviroment(nullptr, 0))
+    TypeChecker(std::vector<Stmt*>& root, std::unordered_map<std::string, EnvNamespace*>& allNamespaces)
+        : hadError(false), allNamespaces(allNamespaces), currentEnviroment(new Enviroment(nullptr, 0))
     {
-        for (auto& val : globals)
-            currentEnviroment->define(val.first, val.second->type, true); // TODO: fix that thing
+        currentNamespace = allNamespaces[""];
 
         for (auto& stmt : root)
             stmt->accept(this);
@@ -255,11 +255,16 @@ public:
 
     void visit(ExprVariable* expr)
     {
-        Variable var = currentEnviroment->get(expr->name);
-        if (var.depth == 0)
-            expr->type = globals[expr->name.getString()]->type;
-        else
+        if(currentEnviroment->has(expr->name))
+        {
+            Variable var = currentEnviroment->get(expr->name);
             expr->type = var.type;
+        }
+        else 
+        {
+            GlobalVar var = currentNamespace->get(expr->name);
+            expr->type = var.type;
+        }
     }
 
     void visit(ExprHeap* expr)
@@ -443,6 +448,13 @@ public:
         {
             m.second->accept(this);
         }
+    }
+    void visit(StmtNamespace* stmt)
+    {
+        currentNamespace = allNamespaces[currentNamespace->getName() + "::" + stmt->name];
+        for(auto& s : stmt->stmts)
+            s->accept(this);
+        currentNamespace = currentNamespace->closing;
     }
     void visit(StmtCompUnit* stmt)
     {

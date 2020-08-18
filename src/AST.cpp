@@ -135,6 +135,11 @@ void StmtStruct::accept(AstVisitor* visitor)
     visitor->visit(this);
 }
 
+void StmtNamespace::accept(AstVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
 void StmtCompUnit::accept(AstVisitor* visitor)
 {
     visitor->visit(this);

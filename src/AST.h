@@ -579,6 +579,24 @@ public:
     void accept(AstVisitor* visitor);
 };
 
+class StmtNamespace : public Stmt
+{
+public:
+    std::string name;
+    std::vector<Stmt*> stmts;
+
+    StmtNamespace(std::string name, std::vector<Stmt*> stmts)    
+        :name(name), stmts(stmts) {}
+
+    ~StmtNamespace()
+    {
+        for (auto& s : stmts)
+            delete s;
+    }
+    
+    void accept(AstVisitor* visitor);
+};
+
 class StmtCompUnit : public Stmt
 {
 public:

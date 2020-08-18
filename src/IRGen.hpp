@@ -94,7 +94,7 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(exprVar->name.getString(), expr->type, true));
+                chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
             else
                 chunk->addCode(new InstGetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
@@ -156,7 +156,7 @@ public:
             expr->index->accept(this);
 
             if (var.depth == 0)
-                chunk->addCode(new InstSetGlobal(exprVar->name.getString(), expr->type, true));
+                chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" + exprVar->name.getString(), expr->type, true));
             else
                 chunk->addCode(new InstSetLocal(exprVar->name.getString(), currentEnviroment->get(exprVar->name), expr->type, true));
         }
@@ -200,7 +200,7 @@ public:
         if (expr->assignment->instance == ExprType::Heap)
         {
             if (var.depth == 0)
-                chunk->addCode(new InstGetGlobal(expr->name.getString(), expr->type));
+                chunk->addCode(new InstGetGlobal(currentNamespace->getName() + "::" +expr->name.getString(), expr->type));
             else
                 chunk->addCode(new InstGetLocal(expr->name.getString(), var, expr->type));
             chunk->addCode(new InstFree());
@@ -208,7 +208,7 @@ public:
 
         expr->assignment->accept(this);
         if (var.depth == 0)
-            chunk->addCode(new InstSetGlobal(expr->name.getString(), expr->type));
+            chunk->addCode(new InstSetGlobal(currentNamespace->getName() + "::" +expr->name.getString(), expr->type));
         else
             chunk->addCode(new InstSetLocal(expr->name.getString(), var, expr->type));
     }
