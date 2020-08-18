@@ -28,7 +28,7 @@ class CodeGen : public InstVisitor
 private:
     Chunk* chunk;
     std::vector<valInfo> constPositions;
-    std::vector<std::pair<std::string, valInfo>> globalInfo;
+    std::unordered_map<std::string, valInfo> globalInfo;
     std::vector<Data> m_globals;
     int pos;
     bool hadError;
@@ -44,7 +44,7 @@ public:
             {
                 for (int i = 0; i < var.second.type->getSize(); i++)
                     m_globals[var.second.position + i] = var.second.val[i].data;
-                globalInfo.push_back({var.second.fullName, valInfo(var.second.position, var.second.type->getSize())});
+                globalInfo.insert({var.second.fullName, valInfo(var.second.position, var.second.type->getSize())});
                 delete var.second.val;
             }
         }
@@ -293,14 +293,7 @@ public:
     }
     void visit(InstGetGlobal* inst)
     {
-        valInfo var;
-        for(auto v : globalInfo)
-            if(v.first == inst->name)
-            {
-                var = v.second;
-                break;
-            }
-
+        auto& var = globalInfo[inst->name];
         size_t size = inst->type->getSize();
 
         if (inst->offset)
@@ -328,14 +321,7 @@ public:
     }
     void visit(InstSetGlobal* inst)
     {
-        valInfo var;
-        for(auto v : globalInfo)
-            if(v.first == inst->name)
-            {
-                var = v.second;
-                break;
-            }
-
+        auto& var = globalInfo[inst->name];
         size_t size = inst->type->getSize();
 
         if (inst->offset)
@@ -461,14 +447,7 @@ public:
     }
     void visit(InstAddrGlobal* inst)
     {
-        valInfo var;
-        for(auto v : globalInfo)
-            if(v.first == inst->name)
-            {
-                var = v.second;
-                break;
-            }
-
+        auto& var = globalInfo[inst->name];
         size_t size = inst->type->getSize();
 
         if (inst->offset)
