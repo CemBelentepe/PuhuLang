@@ -1,61 +1,45 @@
-#include "Scanner.h"
-#include <cstdio>
-#include <cstring>
-#include <iomanip>
+#include "Scanner.hpp"
+#include <iostream>
 #include <sstream>
 #include <string_view>
 
 Scanner::Scanner(std::string& source)
-    : source(source), startPosition(0), currentPosition(0), line(1)
+    : source(source), startPosition(0), currentPosition(0), line(1), col(1), error(false)
 {
+    Token::lines.push_back(std::string_view(source));
 }
 
 std::vector<Token> Scanner::scanTokens()
 {
     std::vector<Token> tokens;
-
+    std::vector<TokenError> errors;
+    
     do
     {
-        tokens.push_back(scanToken());
+        try
+        {
+            tokens.push_back(scanToken());
+        }
+        catch (const TokenError& err)
+        {
+            error = true;
+            tokens.push_back(err.token);
+            errors.push_back(err);
+        }
     } while (tokens.back().type != TokenType::EOF_TOKEN);
+
+    for(const auto& err : errors)
+    {
+        std::cout << err.msg;
+        err.token.showInLine();
+    }
 
     return tokens;
 }
 
-char Scanner::advance()
+bool Scanner::fail() 
 {
-    return source[this->currentPosition++];
-}
-
-bool Scanner::match(char c)
-{
-    if (this->isAtEnd() || source[this->currentPosition] != c)
-        return false;
-
-    this->currentPosition++;
-    return true;
-}
-
-char Scanner::peekPrev()
-{
-    return source[this->currentPosition - 1];
-}
-
-char Scanner::peek()
-{
-    return source[this->currentPosition];
-}
-
-char Scanner::peekNext()
-{
-    if (this->isAtEnd())
-        return '\0';
-    return source[this->currentPosition + 1];
-}
-
-bool Scanner::isAtEnd()
-{
-    return this->currentPosition == source.length();
+    return error;
 }
 
 Token Scanner::scanToken()
@@ -85,19 +69,23 @@ Token Scanner::scanToken()
         if (match('='))
             return makeToken(TokenType::LESS_EQUAL);
         if (match('<'))
+        {
             if (match('='))
                 return makeToken(TokenType::BITSHIFT_LEFT_EQUAL);
             else
                 return makeToken(TokenType::BITSHIFT_LEFT);
+        }
         return makeToken(TokenType::LESS);
     case '>':
         if (match('='))
             return makeToken(TokenType::GREAT_EQUAL);
         if (match('>'))
+        {
             if (match('='))
                 return makeToken(TokenType::BITSHIFT_RIGHT_EQUAL);
             else
                 return makeToken(TokenType::BITSHIFT_RIGHT);
+        }
         return makeToken(TokenType::GREAT);
     case '.':
         return makeToken(TokenType::DOT);
@@ -106,7 +94,7 @@ Token Scanner::scanToken()
     case ';':
         return makeToken(TokenType::SEMI_COLON);
     case ':':
-        if(match(':'))
+        if (match(':'))
             return makeToken(TokenType::DOUBLE_COLON);
         return makeToken(TokenType::COLON);
     case '*':
@@ -170,64 +158,16 @@ Token Scanner::scanToken()
             return identifierLiteral(c);
         else if (this->isDigit(c))
             return numberLiteral();
-        return errorToken("Unexpected character");
+        throw errorToken("Unexpected character");
     }
 }
 
 Token Scanner::makeToken(TokenType type)
 {
-    return Token(type, line, &source[startPosition], currentPosition - startPosition);
-}
-
-std::string Scanner::formatString(const char* str, size_t size)
-{
-    std::stringstream ss;
-    size_t i = 0;
-    while (i < size)
-    {
-        if (str[i] == '\\')
-        {
-            switch (str[++i])
-            {
-            case 'n':
-                ss << '\n';
-                break;
-            case 't':
-                ss << '\t';
-                break;
-            case '\\':
-                ss << '\\';
-                break;
-            case 'r':
-                ss << '\r';
-                break;
-            case 'b':
-                ss << '\b';
-                break;
-            case 'a':
-                ss << '\a';
-                break;
-            case 'v':
-                ss << '\v';
-                break;
-            case '0':
-                ss << '\0';
-                break;
-            case '\'':
-                ss << '\'';
-                break;
-            default:
-                break;
-            }
-            i++;
-        }
-        else
-        {
-            ss << str[i++];
-        }
-    }
-
-    return ss.str();
+    size_t len = currentPosition - startPosition;
+    std::string_view lexeme(source);
+    lexeme = lexeme.substr(startPosition, len);
+    return Token(type, line, col - len, lexeme);
 }
 
 Token Scanner::stringLiteral()
@@ -238,27 +178,25 @@ Token Scanner::stringLiteral()
     }
 
     if (isAtEnd())
-        return errorToken("Unterminated string.");
+        throw errorToken("Unterminated string.");
 
     advance();
-    std::string formattedString = formatString(&source[startPosition + 1], currentPosition - startPosition - 2);
-    char* str = new char[formattedString.size() + 1];
-    formattedString.copy(str, formattedString.size());
-    return Token(TokenType::STRING_LITERAL, line, str, formattedString.size());
+    return makeToken(TokenType::STRING_LITERAL);
 }
 
 Token Scanner::charLiteral()
 {
-    if (peekNext() == '\'')
+    while (peek() != '\'' && !this->isAtEnd())
     {
         advance();
-        advance();
-        return Token(TokenType::CHAR_LITERAL, line, &source[startPosition + 1], currentPosition - startPosition - 2);
     }
-    else
-    {
-        return errorToken("Unterminated character.");
-    }
+
+    if (isAtEnd())
+        throw errorToken("Unterminated char.");
+
+    advance();
+
+    return makeToken(TokenType::CHAR_LITERAL);
 }
 
 Token Scanner::identifierLiteral(char start)
@@ -340,16 +278,6 @@ Token Scanner::numberLiteral()
     return makeToken(TokenType::INTEGER_LITERAL);
 }
 
-Token Scanner::errorToken(char* msg)
-{
-    return Token(TokenType::ERROR, line, msg, strlen(msg));
-}
-
-Token Scanner::errorToken(const char* msg)
-{
-    return Token(TokenType::ERROR, line, (char*)msg, strlen(msg));
-}
-
 void Scanner::skipWhitespace()
 {
     while (true)
@@ -363,8 +291,11 @@ void Scanner::skipWhitespace()
             advance();
             break;
         case '\n':
+            Token::lines.back() = Token::lines.back().substr(0, this->col-1);
             this->line++;
+            this->col = 0;
             advance();
+            Token::lines.push_back(std::string_view(source).substr(currentPosition));
             break;
 
         case '/':
@@ -385,53 +316,59 @@ void Scanner::skipWhitespace()
                 this->currentPosition += 2;
                 skipWhitespace();
             }
-
+            return;
         default:
             return;
         }
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const Token& token)
+char Scanner::advance()
 {
-    os << "Token length: " << token.length << ", line: " << std::setw(2) << (int)token.line << ", type: " << std::setw(2) 
-        << (int)token.type << ", lexeme: " << std::string_view(token.start, token.length);
-    return os;
+    this->col++;
+    return source[this->currentPosition++];
 }
 
-int Token::getInteger()
+bool Scanner::match(char c)
 {
-    char* lexeme = new char[length + 1];
-    memcpy(lexeme, start, sizeof(char) * length);
-    lexeme[length] = 0;
-    return std::atoi(lexeme);
+    if (this->isAtEnd() || source[this->currentPosition] != c)
+        return false;
+
+    this->col++;
+    this->currentPosition++;
+    return true;
 }
 
-double Token::getDouble()
+char Scanner::peek()
 {
-    char* lexeme = new char[length + 1];
-    memcpy(lexeme, start, sizeof(char) * length);
-    lexeme[length] = 0;
-    return std::stod(lexeme);
+    return source[this->currentPosition];
 }
 
-float Token::getFloat()
+char Scanner::peekNext()
 {
-    char* lexeme = new char[length];
-    memcpy(lexeme, start, sizeof(char) * (length - 1));
-    lexeme[length - 1] = 0;
-    return std::atof(lexeme);
+    if (this->isAtEnd())
+        return '\0';
+    return source[this->currentPosition + 1];
 }
 
-std::string Token::getString()
+bool Scanner::isAtEnd()
 {
-    char* lexeme = new char[length + 1];
-    memcpy(lexeme, start, sizeof(char) * length);
-    lexeme[length] = 0;
-    return std::string(lexeme);
+    return this->currentPosition == source.length();
 }
 
-char Token::getChar()
+bool Scanner::isAlpha(char c)
 {
-    return *start;
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+bool Scanner::isDigit(char c)
+{
+    return c >= '0' && c <= '9';
+}
+
+Scanner::TokenError Scanner::errorToken(const std::string& msg)
+{
+    std::stringstream ss;
+    ss << "[ERROR] " << msg << " [line: " << this->line << ", col: " << this->col << "]\n";
+    return TokenError(ss.str(), makeToken(TokenType::ERROR));
 }

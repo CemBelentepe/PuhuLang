@@ -1,49 +1,52 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "shell",
-            "label": "C/C++: clang++ build optimized",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-std=c++17",
-                "-O3",
-                "${workspaceFolder}/src/*.cpp",
-                "-o",
-                "${workspaceFolder}/bin/puhuc"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "type": "shell",
-            "label": "C/C++: g++ build debug",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-g",
-                "-std=c++17",
-                "${workspaceFolder}/src/*.cpp",
-                "-o",
-                "${workspaceFolder}/bin/puhuc_debug"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: clang++ build project",
+			"command": "/usr/bin/clang++",
+			"args": [
+				"-g",
+				"-std=c++17",
+				"-O2",
+				"${workspaceFolder}/src/*.cpp",
+				"-o",
+				"${workspaceFolder}/bin/puhuc"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/clang++"
+		},
+		{
+			"type": "cppbuild",
+			"label": "C/C++: clang++ debug build project",
+			"command": "/usr/bin/clang++",
+			"args": [
+				"-g",
+				"-std=c++17",
+				"${workspaceFolder}/src/*.cpp",
+				"-o",
+				"${workspaceFolder}/bin/puhuc_debug"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/clang++"
+		}
+	]
 }

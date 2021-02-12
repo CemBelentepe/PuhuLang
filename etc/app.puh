@@ -1,10 +1,1 @@
-int[5] arr;
-
-void main()
-{
-    for(int i = 0; i < 5; i+=1)
-        arr[i] = 5-i;
-    for(int i = 0; i < 5; i+=1)
-        print("%i, ", arr[i]);
-    print("\n");
-}
+5 + 72 / 2 - cast<T>(8) * (2 + 7)
