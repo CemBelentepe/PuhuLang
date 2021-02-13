@@ -9,6 +9,8 @@ class Data
 public:
     std::variant<bool, char, int, float, double, std::string, Data*> data;
 
+    Data() = default;
+
     template <typename T>
     explicit Data(T data)
         : data(data)
@@ -21,6 +23,8 @@ class Value
 public:
     std::shared_ptr<Type> type;
     Data data;
+
+    Value() = default;
 
     explicit Value(bool data)
         : data(Data(data)), type(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL))

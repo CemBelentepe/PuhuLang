@@ -9,6 +9,8 @@
 #include "Parser.hpp"
 #include "Scanner.hpp"
 #include "Token.hpp"
+#include "TypeChecker.hpp"
+#include "Interpreter.hpp"
 
 void run(const char* filepath);
 
@@ -65,4 +67,17 @@ void run(const char* filepath)
     }
     AstDebugger debugger(root);
     debugger.debug();
+
+    TypeChecker typeChecker(root);
+    typeChecker.check();
+    if(typeChecker.fail())
+    {
+        std::cout << "Terminated due to type error.\n";
+        return;
+    }
+    debugger.showTypes(true);
+    debugger.debug();
+
+    Interpreter interpreter(root);
+    interpreter.run();
 }

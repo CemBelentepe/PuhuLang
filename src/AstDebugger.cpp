@@ -1,7 +1,7 @@
 #include "AstDebugger.hpp"
 
 AstDebugger::AstDebugger(std::unique_ptr<Expr>& root, std::ostream& os)
-    : root(root), os(os)
+    : root(root), os(os), isShow(false)
 {
 }
 
@@ -11,6 +11,11 @@ void AstDebugger::debug()
     os << std::endl;
 }
 
+void AstDebugger::showTypes(bool isShow) 
+{
+    this->isShow = isShow;
+}
+
 void AstDebugger::visit(ExprBinary* expr)
 {
     os << "(" << expr->op.lexeme << ", ";
@@ -18,6 +23,8 @@ void AstDebugger::visit(ExprBinary* expr)
     os << ", ";
     expr->rhs->accept(this);
     os << ")";
+    if(isShow)
+        os << ": " << expr->type->toString();
 }
 
 void AstDebugger::visit(ExprUnary* expr)
@@ -25,9 +32,13 @@ void AstDebugger::visit(ExprUnary* expr)
     os << "(" << expr->op.lexeme << ", ";
     expr->rhs->accept(this);
     os << ")";
+    if(isShow)
+        os << ": " << expr->type->toString();
 }
 
 void AstDebugger::visit(ExprLiteral* expr)
 {
     os << expr->value;
+    if(isShow)
+        os << ": " << expr->type->toString();
 }
