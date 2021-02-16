@@ -3,14 +3,15 @@
 
 #include <unordered_map>
 
-class TypeChecker : public ExprVisitor<std::shared_ptr<Type>>
+class TypeChecker : public ExprVisitor<std::shared_ptr<Type>>, public StmtVisitor<void>
 {
 private:
     using PrimPtr = std::shared_ptr<TypePrimitive>;
     using TypePtr = std::shared_ptr<Type>;
+    
 public:
     TypeChecker() = delete;
-    explicit TypeChecker(std::unique_ptr<Expr>& root);
+    explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root);
     ~TypeChecker() = default;
 
     void check();
@@ -21,8 +22,10 @@ public:
     void visit(ExprUnary* expr) override;
     void visit(ExprLiteral* expr) override;
 
+    void visit(StmtExpr* stmt) override;
+
 private:
-    std::unique_ptr<Expr>& root;
+    std::vector<std::unique_ptr<Stmt>>& root;
     bool hadError;
 
 private:

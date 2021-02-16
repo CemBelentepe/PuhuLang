@@ -94,7 +94,7 @@ public:
         : Expr(Instance::Literal, value.type), value(value), token(token)
     {
     }
-    
+
 private:
     void do_accept(ExprVisitorBase* visitor) override;
 };

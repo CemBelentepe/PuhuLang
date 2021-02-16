@@ -59,7 +59,7 @@ void run(const char* filepath)
     }
 #endif
     Parser parser(tokens);
-    std::unique_ptr<Expr> root = parser.parse();
+    std::vector<std::unique_ptr<Stmt>> root = parser.parse();
     if (parser.fail())
     {
         std::cout << "Terminated due to parse error.\n";

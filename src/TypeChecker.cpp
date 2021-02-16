@@ -5,7 +5,7 @@
 std::unordered_map<TokenType, std::vector<TypeChecker::UnaryTransform>> TypeChecker::primitiveUnaryTransoforms;
 std::unordered_map<TokenType, std::vector<TypeChecker::BinaryTransform>> TypeChecker::primitiveBinaryTransoforms;
 
-TypeChecker::TypeChecker(std::unique_ptr<Expr>& root)
+TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root)
     : root(root), hadError(false)
 {
     init();
@@ -13,14 +13,17 @@ TypeChecker::TypeChecker(std::unique_ptr<Expr>& root)
 
 void TypeChecker::check()
 {
-    try
+    for (auto& stmt : root)
     {
-        root->accept(this);
-    }
-    catch (TypeError& e)
-    {
-        e.log();
-        hadError = true;
+        try
+        {
+            stmt->accept(this);
+        }
+        catch (TypeError& e)
+        {
+            e.log();
+            hadError = true;
+        }
     }
 }
 
@@ -77,6 +80,11 @@ void TypeChecker::visit(ExprUnary* expr)
 void TypeChecker::visit(ExprLiteral* expr)
 {
     result = expr->type;
+}
+
+void TypeChecker::visit(StmtExpr* stmt)
+{
+    stmt->expr->accept(this);
 }
 
 void TypeChecker::init()

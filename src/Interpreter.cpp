@@ -3,7 +3,7 @@
 std::unordered_map<TokenType, Interpreter::UnaryFunction> Interpreter::unaryFunctions;
 std::unordered_map<TokenType, Interpreter::BinaryFunction> Interpreter::binaryFunctions;
 
-Interpreter::Interpreter(std::unique_ptr<Expr>& root)
+Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root)
     : root(root), hadError(false)
 {
     init();
@@ -11,8 +11,8 @@ Interpreter::Interpreter(std::unique_ptr<Expr>& root)
 
 void Interpreter::run()
 {
-    Value eval = root->accept(this);
-    std::cout << eval << std::endl;
+    for(auto& stmt : root)
+        stmt->accept(this);
 }
 
 bool Interpreter::fail()
@@ -55,6 +55,12 @@ void Interpreter::visit(ExprUnary* expr)
 void Interpreter::visit(ExprLiteral* expr)
 {
     result = expr->value;
+}
+
+void Interpreter::visit(StmtExpr* stmt) 
+{
+    Value res = stmt->expr->accept(this);
+    std::cout << res << std::endl;
 }
 
 void Interpreter::init()

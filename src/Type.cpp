@@ -1,4 +1,5 @@
 #include "Type.hpp"
+#include <sstream>
 
 std::shared_ptr<Type> Type::getNullType() 
 {
@@ -32,4 +33,20 @@ std::string TypePrimitive::toString()
 std::string TypeString::toString() 
 {
     return "string";
+}
+
+std::string TypeFunction::toString() 
+{
+    std::stringstream ss;
+    ss << instrinsicType->toString() << "(";
+    if(param_types.size() > 0)
+    {
+        ss << param_types[0]->toString();
+        for(auto it = ++param_types.begin(); it != param_types.end(); ++it)
+        {
+            ss << (*it)->toString() << ", ";
+        }
+    }
+
+    return ss.str();
 }

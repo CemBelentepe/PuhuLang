@@ -1,6 +1,8 @@
 #pragma once
-#include "Expr.hpp"
+
 #include "Token.hpp"
+#include "Expr.hpp"
+#include "Stmt.hpp"
 
 #include <memory>
 #include <unordered_map>
@@ -14,7 +16,7 @@ public:
     explicit Parser(std::vector<Token>& tokens);
     ~Parser() = default;
 
-    std::unique_ptr<Expr> parse();
+    std::vector<std::unique_ptr<Stmt>> parse();
     bool fail();
 
 private:
@@ -27,6 +29,11 @@ private:
     bool match(std::vector<TokenType> types);
     void consume(TokenType type, const std::string& msg);
     int getPrecidence(const Token& op);
+
+    std::shared_ptr<Type> parseTypeName();
+
+    std::unique_ptr<Stmt> statement();
+    std::unique_ptr<Stmt> exprStatement();
 
     std::unique_ptr<Expr> parseExpr();
     // std::unique_ptr<Expr> assignment();

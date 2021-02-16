@@ -4,15 +4,11 @@
 
 #include <unordered_map>
 
-class Interpreter : public ExprVisitor<Value>
+class Interpreter : public ExprVisitor<Value>, public StmtVisitor<void>
 {
-private:
-    std::unique_ptr<Expr>& root;
-    bool hadError;
-
 public:
     Interpreter() = delete;
-    explicit Interpreter(std::unique_ptr<Expr>& root);
+    explicit Interpreter(std::vector<std::unique_ptr<Stmt>>& root);
     ~Interpreter() = default;
 
     void run();
@@ -22,6 +18,12 @@ public:
     void visit(ExprBinary* expr) override;
     void visit(ExprUnary* expr) override;
     void visit(ExprLiteral* expr) override;
+
+    void visit(StmtExpr* stmt) override;
+
+private:
+    std::vector<std::unique_ptr<Stmt>>& root;
+    bool hadError;
 
 private:
     static void init();

@@ -11,20 +11,24 @@ Parser::Parser(std::vector<Token>& tokens)
     init();
 }
 
-std::unique_ptr<Expr> Parser::parse()
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
-    std::unique_ptr<Expr> root = nullptr;
-    try
+    std::vector<std::unique_ptr<Stmt>> root;
+    while (!match(TokenType::EOF_TOKEN))
     {
-        root = parseExpr();
+        try
+        {
+
+            root.push_back(statement());
+        }
+        catch (const TokenError& e)
+        {
+            hadError = true;
+            std::cout << e << '\n';
+        }
     }
-    catch(const TokenError& e)
-    {
-        hadError = true;
-        std::cout << e << '\n';
-    }
-    
-    return root;
+
+    return std::move(root);
 }
 
 bool Parser::fail()
@@ -123,15 +127,89 @@ int Parser::getPrecidence(const Token& op)
     return it->second;
 }
 
+std::shared_ptr<Type> Parser::parseTypeName()
+{
+    using pt = TypePrimitive::PrimitiveTag;
+    Token base = advance();
+    std::shared_ptr<Type> type = nullptr;
+    switch (base.type)
+    {
+    case TokenType::VOID:
+        type = std::make_unique<TypePrimitive>(pt::VOID);
+        break;
+    case TokenType::BOOL:
+        type = std::make_unique<TypePrimitive>(pt::BOOL);
+        break;
+    case TokenType::CHAR:
+        type = std::make_unique<TypePrimitive>(pt::CHAR);
+        break;
+    case TokenType::INT:
+        type = std::make_unique<TypePrimitive>(pt::INT);
+        break;
+    case TokenType::FLOAT:
+        type = std::make_unique<TypePrimitive>(pt::FLOAT);
+        break;
+    case TokenType::DOUBLE:
+        type = std::make_unique<TypePrimitive>(pt::DOUBLE);
+        break;
+    case TokenType::IDENTIFIER:
+        // TODO add user defined type pls :)
+        throw TokenError("User Defined types are not added yet sadly :(", base);
+        break;
+    default:
+        throw TokenError("Invalid token for type name", base);
+        break;
+    }
+
+    if (match(TokenType::OPEN_PAREN))
+    {
+        auto func_type = std::make_shared<TypeFunction>(std::move(type));
+        do
+        {
+            func_type->param_types.push_back(parseTypeName());
+        } while (match(TokenType::COMMA));
+        consume(TokenType::CLOSE_PAREN, "Expect ')' after parameter types");
+
+        type = std::move(func_type);
+    }
+    else if (match(TokenType::BIT_AND))
+    {
+        // TODO owner ptr
+    }
+    else if (match(TokenType::STAR))
+    {
+        // TODO referance ptr
+    }
+    else if (match(TokenType::OPEN_BRACKET))
+    {
+        // TODO Array Types
+    }
+
+    return std::move(type);
+}
+
+std::unique_ptr<Stmt> Parser::statement()
+{
+    return exprStatement();
+}
+
+std::unique_ptr<Stmt> Parser::exprStatement()
+{
+    std::unique_ptr<Expr> expr = parseExpr();
+    consume(TokenType::SEMI_COLON, "Expect ';' at the end of an expression statement.");
+    Token semicolon = consumed();
+    return std::make_unique<StmtExpr>(std::move(expr), semicolon);
+}
+
 std::unique_ptr<Expr> Parser::parseExpr()
 {
     return logic_or();
 }
 
-std::unique_ptr<Expr> Parser::logic_or() 
+std::unique_ptr<Expr> Parser::logic_or()
 {
     std::unique_ptr<Expr> lhs = logic_and();
-    while(match(TokenType::OR))
+    while (match(TokenType::OR))
     {
         Token op = consumed();
         std::unique_ptr<Expr> rhs = logic_and();
@@ -140,10 +218,10 @@ std::unique_ptr<Expr> Parser::logic_or()
     return std::move(lhs);
 }
 
-std::unique_ptr<Expr> Parser::logic_and() 
+std::unique_ptr<Expr> Parser::logic_and()
 {
     std::unique_ptr<Expr> lhs = binary(prefix(), 0);
-    while(match(TokenType::AND))
+    while (match(TokenType::AND))
     {
         Token op = consumed();
         std::unique_ptr<Expr> rhs = binary(prefix(), 0);
@@ -197,8 +275,7 @@ std::unique_ptr<Expr> Parser::primary()
 {
     Token token = advance();
 
-    auto make_literal = [&](const auto& val)
-    {
+    auto make_literal = [&](const auto& val) {
         return std::make_unique<ExprLiteral>(Value(val), token);
     };
 

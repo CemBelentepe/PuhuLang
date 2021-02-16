@@ -44,10 +44,7 @@ float Token::getFloat() const
 
 std::string Token::getString() const
 {
-    std::stringstream ss;
-    ss << lexeme.substr(1, lexeme.size() - 2);
-    std::string val;
-    ss >> val;
+    std::string val(lexeme.substr(1, lexeme.size() - 2));
     return val;
 }
 

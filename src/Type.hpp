@@ -2,27 +2,38 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 class Type
 {
+protected:
+    using TypePtr = std::shared_ptr<Type>;
+
 public:
     enum class Tag
     {
-        PRIMITIVE, POINTER, FUNTION, STRING, ARRAY, USER_DEF, ERROR = -1
-    }; 
+        PRIMITIVE,
+        STRING,
+        POINTER,
+        FUNCTION,
+        ARRAY,
+        USER_DEF,
+        ERROR = -1
+    };
     Tag tag;
-    std::shared_ptr<Type> instrinsicType;
+    TypePtr instrinsicType;
 
     Type() = delete;
-    explicit Type(Tag tag, std::shared_ptr<Type> instrinsicType)
+    explicit Type(Tag tag, TypePtr instrinsicType)
         : tag(tag), instrinsicType(instrinsicType)
-    {}
+    {
+    }
 
     virtual ~Type() = default;
 
     virtual std::string toString() = 0;
 
-    static std::shared_ptr<Type> getNullType(); // TODO make it so that it holds all the created types
+    static TypePtr getNullType(); // TODO make it so that it holds all the created types
 };
 
 class TypeError : public Type
@@ -30,7 +41,8 @@ class TypeError : public Type
 public:
     explicit TypeError()
         : Type(Tag::ERROR, nullptr)
-    {}
+    {
+    }
 
     std::string toString() override;
 };
@@ -38,12 +50,21 @@ public:
 class TypePrimitive : public Type
 {
 public:
-    enum class PrimitiveTag { VOID, BOOL, CHAR, INT, FLOAT, DOUBLE };
+    enum class PrimitiveTag
+    {
+        VOID,
+        BOOL,
+        CHAR,
+        INT,
+        FLOAT,
+        DOUBLE
+    };
     PrimitiveTag special_tag;
 
     explicit TypePrimitive(PrimitiveTag special_tag)
         : Type(Tag::PRIMITIVE, nullptr), special_tag(special_tag)
-    {}
+    {
+    }
 
     std::string toString() override;
 };
@@ -53,7 +74,21 @@ class TypeString : public Type
 public:
     explicit TypeString()
         : Type(Tag::STRING, nullptr)
-    {}
+    {
+    }
+
+    std::string toString() override;
+};
+
+class TypeFunction : public Type
+{
+public:
+    std::vector<TypePtr> param_types;
+
+    explicit TypeFunction(TypePtr ret_type, const std::vector<TypePtr>& param_types = {})
+        : Type(Type::Tag::FUNCTION, ret_type), param_types(param_types)
+    {
+    }
 
     std::string toString() override;
 };
