@@ -125,7 +125,31 @@ int Parser::getPrecidence(const Token& op)
 
 std::unique_ptr<Expr> Parser::parseExpr()
 {
-    return binary(prefix(), 0);
+    return logic_or();
+}
+
+std::unique_ptr<Expr> Parser::logic_or() 
+{
+    std::unique_ptr<Expr> lhs = logic_and();
+    while(match(TokenType::OR))
+    {
+        Token op = consumed();
+        std::unique_ptr<Expr> rhs = logic_and();
+        lhs = std::make_unique<ExprLogic>(std::move(lhs), std::move(rhs), op);
+    }
+    return std::move(lhs);
+}
+
+std::unique_ptr<Expr> Parser::logic_and() 
+{
+    std::unique_ptr<Expr> lhs = binary(prefix(), 0);
+    while(match(TokenType::AND))
+    {
+        Token op = consumed();
+        std::unique_ptr<Expr> rhs = binary(prefix(), 0);
+        lhs = std::make_unique<ExprLogic>(std::move(lhs), std::move(rhs), op);
+    }
+    return std::move(lhs);
 }
 
 std::unique_ptr<Expr> Parser::binary(std::unique_ptr<Expr> lhs, int precidence)

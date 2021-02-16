@@ -28,6 +28,11 @@ Value Expr::accept(ExprVisitor<Value>* visitor)
     return visitor->result;
 }
 
+void ExprLogic::do_accept(ExprVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
 void ExprBinary::do_accept(ExprVisitorBase* visitor) 
 {
     visitor->visit(this);

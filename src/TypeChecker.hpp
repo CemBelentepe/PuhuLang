@@ -7,6 +7,7 @@ class TypeChecker : public ExprVisitor<std::shared_ptr<Type>>
 {
 private:
     using PrimPtr = std::shared_ptr<TypePrimitive>;
+    using TypePtr = std::shared_ptr<Type>;
 public:
     TypeChecker() = delete;
     explicit TypeChecker(std::unique_ptr<Expr>& root);
@@ -15,6 +16,7 @@ public:
     void check();
     bool fail();
 
+    void visit(ExprLogic* expr) override;
     void visit(ExprBinary* expr) override;
     void visit(ExprUnary* expr) override;
     void visit(ExprLiteral* expr) override;
@@ -70,8 +72,8 @@ private:
     class UnaryTransformError : public TypeError
     {
     public:
-        PrimPtr type;
-        explicit UnaryTransformError(Token token, PrimPtr type)
+        TypePtr type;
+        explicit UnaryTransformError(Token token, TypePtr type)
             : TypeError("", token), type(type) {}
 
         virtual void log(std::ostream& os = std::cout) override
@@ -83,9 +85,9 @@ private:
     class BinaryTransformError : public TypeError
     {
     public:
-        PrimPtr type_lhs;
-        PrimPtr type_rhs;
-        explicit BinaryTransformError(Token token, PrimPtr type_lhs, PrimPtr type_rhs)
+        TypePtr type_lhs;
+        TypePtr type_rhs;
+        explicit BinaryTransformError(Token token, TypePtr type_lhs, TypePtr type_rhs)
             : TypeError("", token), type_lhs(type_lhs), type_rhs(type_rhs) {}
 
         virtual void log(std::ostream& os = std::cout) override

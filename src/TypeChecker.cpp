@@ -29,15 +29,34 @@ bool TypeChecker::fail()
     return hadError;
 }
 
+void TypeChecker::visit(ExprLogic* expr)
+{
+    auto type_lhs = expr->lhs->accept(this);
+    auto type_rhs = expr->rhs->accept(this);
+
+    if (type_lhs->tag != Type::Tag::PRIMITIVE || std::dynamic_pointer_cast<TypePrimitive>(type_lhs)->special_tag != TypePrimitive::PrimitiveTag::BOOL)
+    {
+        throw BinaryTransformError(expr->op, type_lhs, type_rhs);
+    }
+    if (type_rhs->tag != Type::Tag::PRIMITIVE || std::dynamic_pointer_cast<TypePrimitive>(type_rhs)->special_tag != TypePrimitive::PrimitiveTag::BOOL)
+    {
+        throw BinaryTransformError(expr->op, type_lhs, type_rhs);
+    }
+
+    result = expr->type;
+}
+
 void TypeChecker::visit(ExprBinary* expr)
 {
     auto type_lhs = expr->lhs->accept(this);
     auto type_rhs = expr->rhs->accept(this);
 
-    if (type_rhs->tag == Type::Tag::PRIMITIVE)
+    if (type_lhs->tag == Type::Tag::PRIMITIVE)
         expr->type = resolvePrimitiveBinary(expr->op, std::dynamic_pointer_cast<TypePrimitive>(type_lhs), std::dynamic_pointer_cast<TypePrimitive>(type_rhs));
-    // else if (type_rhs->tag == Type::Tag::USER_DEF)
+    // else if (type_lhs->tag == Type::Tag::USER_DEF)
     //     expr->type = resolveUserDefBinary(expr->op, type_lhs, type_rhs);
+    else
+        throw BinaryTransformError(expr->op, type_lhs, type_rhs);
 
     result = expr->type;
 }
@@ -49,6 +68,8 @@ void TypeChecker::visit(ExprUnary* expr)
         expr->type = resolvePrimitiveUnary(expr->op, std::dynamic_pointer_cast<TypePrimitive>(type_rhs));
     // else if (type_rhs->tag == Type::Tag::USER_DEF)
     //     expr->type = resolveUserDefUnary(expr->op, type_rhs);
+    else
+        throw UnaryTransformError(expr->op, type_rhs);
 
     result = expr->type;
 }

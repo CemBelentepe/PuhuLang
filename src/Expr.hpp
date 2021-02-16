@@ -14,6 +14,7 @@ class Expr
 public:
     enum class Instance
     {
+        Logic,
         Binary,
         Unary,
         Literal
@@ -32,6 +33,7 @@ public:
     template <typename T>
     T accept(ExprVisitor<T>* visitor);
 
+private:
     virtual void do_accept(ExprVisitorBase* visitor) = 0;
 };
 
@@ -47,6 +49,23 @@ public:
     {
     }
 
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
+class ExprLogic : public Expr
+{
+public:
+    std::unique_ptr<Expr> lhs;
+    std::unique_ptr<Expr> rhs;
+    Token op;
+
+    explicit ExprLogic(std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs, Token op)
+        : Expr(Instance::Logic, std::make_unique<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL)), lhs(std::move(lhs)), rhs(std::move(rhs)), op(op)
+    {
+    }
+
+private:
     void do_accept(ExprVisitorBase* visitor) override;
 };
 
@@ -61,6 +80,7 @@ public:
     {
     }
 
+private:
     void do_accept(ExprVisitorBase* visitor) override;
 };
 
@@ -75,5 +95,6 @@ public:
     {
     }
     
+private:
     void do_accept(ExprVisitorBase* visitor) override;
 };

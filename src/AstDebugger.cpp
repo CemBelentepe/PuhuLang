@@ -16,6 +16,17 @@ void AstDebugger::showTypes(bool isShow)
     this->isShow = isShow;
 }
 
+void AstDebugger::visit(ExprLogic* expr) 
+{
+    os << "(" << expr->op.lexeme << ", ";
+    expr->lhs->accept(this);
+    os << ", ";
+    expr->rhs->accept(this);
+    os << ")";
+    if(isShow)
+        os << ": " << expr->type->toString();
+}
+
 void AstDebugger::visit(ExprBinary* expr)
 {
     os << "(" << expr->op.lexeme << ", ";

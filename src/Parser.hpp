@@ -29,9 +29,14 @@ private:
     int getPrecidence(const Token& op);
 
     std::unique_ptr<Expr> parseExpr();
+    // std::unique_ptr<Expr> assignment();
+    std::unique_ptr<Expr> logic_or();
+    std::unique_ptr<Expr> logic_and();
     std::unique_ptr<Expr> binary(std::unique_ptr<Expr> lhs, int precidence);
     std::unique_ptr<Expr> prefix();
     std::unique_ptr<Expr> unary();
+    // std::unique_ptr<Expr> postfix();
+    // std::unique_ptr<Expr> call();
     std::unique_ptr<Expr> primary();
 
 private:

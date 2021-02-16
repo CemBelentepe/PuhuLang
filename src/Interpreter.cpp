@@ -20,6 +20,25 @@ bool Interpreter::fail()
     return hadError;
 }
 
+void Interpreter::visit(ExprLogic* expr)
+{
+    Value lhs = expr->lhs->accept(this);
+    if (expr->op.type == TokenType::OR)
+    {
+        if (std::get<bool>(lhs.data.data))
+            result = Value(true);
+        else
+            result = expr->rhs->accept(this);
+    }
+    else if (expr->op.type == TokenType::AND)
+    {
+        if (std::get<bool>(lhs.data.data))
+            result = expr->rhs->accept(this);
+        else
+            result = Value(false);
+    }
+}
+
 void Interpreter::visit(ExprBinary* expr)
 {
     Value lhs = expr->lhs->accept(this);
@@ -77,7 +96,7 @@ void Interpreter::init()
             return Value();                                                 \
         }                                                                   \
     };
-#define BINARY_ARITH(tokenType, op)                                          \
+#define BINARY_ARITH(tokenType, op)                                         \
     binaryFunctions[TokenType::tokenType] = [](Value lhs, Value rhs) {      \
         TypePrimitive* type = dynamic_cast<TypePrimitive*>(lhs.type.get()); \
         switch (type->special_tag)                                          \

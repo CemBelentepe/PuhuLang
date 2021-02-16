@@ -15,6 +15,7 @@ public:
     void debug();
     void showTypes(bool isShow);
     
+    void visit(ExprLogic* expr) override;
     void visit(ExprBinary* expr) override;
     void visit(ExprUnary* expr) override;
     void visit(ExprLiteral* expr) override;
