@@ -18,7 +18,9 @@ public:
         Binary,
         Unary,
         Call,
-        Literal
+        Literal,
+        VariableGet,
+        VariableSet
     };
     const Instance instance;
     std::shared_ptr<Type> type;

@@ -17,6 +17,7 @@ public:
     bool fail();
 
     void visit(StmtExpr* stmt) override;
+    void visit(StmtBody* stmt) override;
     void visit(DeclVar* decl) override;
     void visit(DeclFunc* decl) override;
 

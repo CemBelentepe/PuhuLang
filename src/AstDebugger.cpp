@@ -100,8 +100,16 @@ void AstDebugger::visit(DeclFunc* stmt)
             os << ", ";
         os << std::dynamic_pointer_cast<TypeFunction>(stmt->type)->param_types[i];
     }
-    os << ") -> " << stmt->type->instrinsicType->toString() << " BEGIN\n";
-    for (auto& s : stmt->body)
+    os << ") -> " << stmt->type->instrinsicType->toString() << " ";
+    stmt->body->accept(this);
+}
+
+void AstDebugger::visit(StmtBody* stmt) 
+{
+    os << "BEGIN\n";
+
+    for(auto& s : stmt->body)
         s->accept(this);
-    os << "END " << stmt->name.lexeme << std::endl;
+
+    os << "END" << std::endl;
 }

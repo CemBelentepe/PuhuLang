@@ -33,8 +33,22 @@ public:
     std::unique_ptr<Expr> expr;
     Token semicolon;
 
-    StmtExpr(std::unique_ptr<Expr> expr, Token semicolon)
+    explicit StmtExpr(std::unique_ptr<Expr> expr, Token semicolon)
         : expr(std::move(expr)), semicolon(semicolon)
+    {
+    }
+
+private:
+    void do_accept(StmtVisitorBase* visitor) override;
+};
+
+class StmtBody : public Stmt
+{
+public:
+    std::vector<std::unique_ptr<Stmt>> body;
+
+    explicit StmtBody(std::vector<std::unique_ptr<Stmt>> body)
+        : body(std::move(body))
     {
     }
 
@@ -50,7 +64,7 @@ public:
     std::shared_ptr<Type> type;
     std::unique_ptr<Expr> initter;
 
-    DeclVar(Token name, Token equal, std::shared_ptr<Type> type, std::unique_ptr<Expr> initter)
+    explicit DeclVar(Token name, Token equal, std::shared_ptr<Type> type, std::unique_ptr<Expr> initter)
         : name(name), equal(equal), type(type), initter(std::move(initter))
     {
     }
@@ -64,10 +78,10 @@ class DeclFunc : public Stmt
 public:
     Token name;
     std::shared_ptr<Type> type;
-    std::vector<std::unique_ptr<Stmt>> body;
+    std::unique_ptr<StmtBody> body;
     std::vector<Token> param_names;
 
-    DeclFunc(Token name, std::shared_ptr<Type> type, const std::vector<Token>& param_names, std::vector<std::unique_ptr<Stmt>> body)
+    explicit DeclFunc(Token name, std::shared_ptr<Type> type, const std::vector<Token>& param_names, std::unique_ptr<StmtBody> body)
         : name(name), type(type), param_names(param_names), body(std::move(body))
     {
     }

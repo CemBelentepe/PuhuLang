@@ -19,6 +19,11 @@ void StmtExpr::do_accept(StmtVisitorBase* visitor)
     visitor->visit(this);
 }
 
+void StmtBody::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
 void DeclVar::do_accept(StmtVisitorBase* visitor) 
 {
     visitor->visit(this);

@@ -16,15 +16,13 @@ Value PuhuFunction::call(Interpreter* interpreter, std::vector<Value> args)
 
     try
     {
-        for (auto& s : func->body)
-        {
-            s->accept(interpreter);
-        }
+        func->body->accept(interpreter);
     }
     catch (const Value& retVal)
     {
         return retVal;
     }
+
     return Value();
 }
 
@@ -38,7 +36,7 @@ std::string PuhuFunction::name()
     return std::string(func->name.lexeme);
 }
 
-std::shared_ptr<Type> PuhuFunction::getType() 
+std::shared_ptr<Type> PuhuFunction::getType()
 {
     return func->type;
 }

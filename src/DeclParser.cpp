@@ -44,3 +44,8 @@ void DeclParser::visit(DeclFunc* decl)
 {
     currentNamespace->addVariable(Variable(decl->name, decl->type, true));
 }
+
+void DeclParser::visit(StmtBody* stmt) 
+{
+    
+}

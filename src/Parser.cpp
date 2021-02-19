@@ -126,6 +126,22 @@ int Parser::getPrecidence(const Token& op)
     return it->second;
 }
 
+bool Parser::tryParseTypeName(std::shared_ptr<Type>& out_type) 
+{
+    size_t start = currentToken; // anchor position
+    try
+    {
+        out_type = parseTypeName();
+        return true;
+    }
+    catch(const TokenError& err)
+    {
+        currentToken = start; // restore position
+        out_type = nullptr;
+        return false;
+    }
+}
+
 std::shared_ptr<Type> Parser::parseTypeName()
 {
     using pt = TypePrimitive::PrimitiveTag;
@@ -150,6 +166,9 @@ std::shared_ptr<Type> Parser::parseTypeName()
         break;
     case TokenType::DOUBLE:
         type = std::make_unique<TypePrimitive>(pt::DOUBLE);
+        break;
+    case TokenType::STRING:
+        type = std::make_unique<TypeString>();
         break;
     case TokenType::IDENTIFIER:
         // TODO add user defined type pls :)
@@ -251,27 +270,48 @@ std::unique_ptr<Stmt> Parser::funcDecl(std::shared_ptr<Type> type, Token name)
     type = std::make_shared<TypeFunction>(type, param_types);
     consume(TokenType::OPEN_BRACE, "Expect '{' before the function body block.");
 
-    std::vector<std::unique_ptr<Stmt>> body;
-    while (!match(TokenType::CLOSE_BRACE))
-    {
-        body.push_back(statement());
-    }
-    
+    std::unique_ptr<StmtBody> body = bodyStatement();
+
     return std::make_unique<DeclFunc>(name, std::move(type), std::move(param_names), std::move(body));
 }
 
 std::unique_ptr<Stmt> Parser::statement()
 {
-    // Can return var decl so adjust that :)
-    return exprStatement();
+    Token next = peek();
+    switch (next.type)
+    {
+    case TokenType::OPEN_BRACE:
+        advance();
+        return bodyStatement();
+    default:
+        return exprStatement();
+    }
 }
 
-std::unique_ptr<Stmt> Parser::exprStatement()
+std::unique_ptr<StmtExpr> Parser::exprStatement()
 {
     std::unique_ptr<Expr> expr = parseExpr();
     consume(TokenType::SEMI_COLON, "Expect ';' at the end of an expression statement.");
     Token semicolon = consumed();
     return std::make_unique<StmtExpr>(std::move(expr), semicolon);
+}
+
+std::unique_ptr<StmtBody> Parser::bodyStatement()
+{
+    std::vector<std::unique_ptr<Stmt>> body;
+    while (!match(TokenType::CLOSE_BRACE))
+    {
+        std::shared_ptr<Type> type;
+        if (tryParseTypeName(type))
+        {
+            body.push_back(varDecl(type, advance()));
+        }
+        else
+        {
+            body.push_back(statement());
+        }
+    }
+    return std::make_unique<StmtBody>(std::move(body));
 }
 
 std::unique_ptr<Expr> Parser::parseExpr()
@@ -344,19 +384,19 @@ std::unique_ptr<Expr> Parser::unary()
     return call();
 }
 
-std::unique_ptr<Expr> Parser::call() 
+std::unique_ptr<Expr> Parser::call()
 {
     std::unique_ptr<Expr> expr = primary();
     while (match(TokenType::OPEN_PAREN))
     {
         Token token = consumed();
         std::vector<std::unique_ptr<Expr>> args;
-        if(!match(TokenType::CLOSE_PAREN))
+        if (!match(TokenType::CLOSE_PAREN))
         {
             do
             {
                 args.push_back(parseExpr());
-            }while(match(TokenType::COMMA));
+            } while (match(TokenType::COMMA));
             consume(TokenType::CLOSE_PAREN, "Expect ')' after call arguments.");
         }
         expr = std::make_unique<ExprCall>(std::move(expr), std::move(args), token);

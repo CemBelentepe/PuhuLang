@@ -108,8 +108,9 @@ void TypeChecker::visit(ExprUnary* expr)
 void TypeChecker::visit(ExprCall* expr)
 {
     std::vector<std::shared_ptr<Type>> arg_types;
-    for(auto& arg : expr->args)
-        arg_types.push_back(arg->accept(this));
+    std::for_each(expr->args.begin(), expr->args.end(), [&](auto& arg) {
+        arg_types.emplace_back(arg->accept(this));
+    });
 
     auto type_callee = expr->callee->accept(this);
     if (type_callee->tag == Type::Tag::FUNCTION)
@@ -181,7 +182,16 @@ void TypeChecker::visit(DeclFunc* decl)
         currentEnviroment->addVariable(Variable(decl->param_names[i], param_types[i], true));
     }
 
-    for (auto& s : decl->body)
+    decl->body->accept(this);
+
+    currentEnviroment = currentEnviroment->returnToParent();
+}
+
+void TypeChecker::visit(StmtBody* stmt) 
+{
+    currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
+
+    for (auto& s : stmt->body)
     {
         s->accept(this);
     }

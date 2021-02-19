@@ -30,6 +30,7 @@ private:
     Token& consume(TokenType type, const std::string& msg);
     int getPrecidence(const Token& op);
 
+    bool tryParseTypeName(std::shared_ptr<Type>& out_type);
     std::shared_ptr<Type> parseTypeName();
 
     std::unique_ptr<Stmt> declaration();
@@ -39,7 +40,8 @@ private:
     // std::unique_ptr<Stmt> namespaceDecl();
 
     std::unique_ptr<Stmt> statement();
-    std::unique_ptr<Stmt> exprStatement();
+    std::unique_ptr<StmtExpr> exprStatement();
+    std::unique_ptr<StmtBody> bodyStatement();
 
     std::unique_ptr<Expr> parseExpr();
     // std::unique_ptr<Expr> assignment();

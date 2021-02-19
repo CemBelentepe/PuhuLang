@@ -94,12 +94,16 @@ void Interpreter::visit(ExprUnary* expr)
 void Interpreter::visit(ExprCall* expr)
 {
     std::vector<Value> args;
-    for (auto& arg : expr->args)
+    std::for_each(expr->args.begin(), expr->args.end(), [&](auto& arg) {
         args.emplace_back(arg->accept(this));
+    });
 
     Value callee = expr->callee->accept(this);
     auto callable = std::get<std::shared_ptr<Callable>>(callee.data.data);
+
+    currentEnviroment = std::make_unique<Enviroment<Interpreter::RunTimeVariable>>(std::move(currentEnviroment));
     result = callable->call(this, args);
+    currentEnviroment = currentEnviroment->returnToParent();
 }
 
 void Interpreter::visit(ExprLiteral* expr)
@@ -121,9 +125,7 @@ void Interpreter::visit(DeclVar* decl)
 
         if (currentEnviroment)
         {
-            RunTimeVariable& var = currentEnviroment->getVariable(decl->name);
-            var.val = val;
-            var.initialized = true;
+            currentEnviroment->addVariable(Interpreter::RunTimeVariable(decl->name, val.type, true, val));
         }
         else
         {
@@ -137,6 +139,18 @@ void Interpreter::visit(DeclVar* decl)
 void Interpreter::visit(DeclFunc* decl)
 {
     currentNamespace->getVariable(decl->name).val = Value(std::make_shared<PuhuFunction>(decl));
+}
+
+void Interpreter::visit(StmtBody* stmt)
+{
+    currentEnviroment = std::make_unique<Enviroment<RunTimeVariable>>(std::move(currentEnviroment));
+
+    for (auto& s : stmt->body)
+    {
+        s->accept(this);
+    }
+
+    currentEnviroment = currentEnviroment->returnToParent();
 }
 
 std::unique_ptr<Enviroment<Interpreter::RunTimeVariable>>& Interpreter::getCurrentEnviroment()
