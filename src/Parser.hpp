@@ -27,10 +27,16 @@ private:
     Token& consumed();
     bool match(TokenType type);
     bool match(std::vector<TokenType> types);
-    void consume(TokenType type, const std::string& msg);
+    Token& consume(TokenType type, const std::string& msg);
     int getPrecidence(const Token& op);
 
     std::shared_ptr<Type> parseTypeName();
+
+    std::unique_ptr<Stmt> declaration();
+    std::unique_ptr<Stmt> varDecl(std::shared_ptr<Type> type, Token name);
+    std::unique_ptr<Stmt> funcDecl(std::shared_ptr<Type> type, Token name);
+    // std::unique_ptr<Stmt> classDeclaration();
+    // std::unique_ptr<Stmt> namespaceDecl();
 
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<Stmt> exprStatement();
@@ -43,7 +49,7 @@ private:
     std::unique_ptr<Expr> prefix();
     std::unique_ptr<Expr> unary();
     // std::unique_ptr<Expr> postfix();
-    // std::unique_ptr<Expr> call();
+    std::unique_ptr<Expr> call();
     std::unique_ptr<Expr> primary();
 
 private:

@@ -31,6 +31,7 @@ public:
 
     virtual ~Type() = default;
 
+    virtual bool isSame(const std::shared_ptr<Type>& other) const = 0;
     virtual std::string toString() = 0;
 
     static TypePtr getNullType(); // TODO make it so that it holds all the created types
@@ -44,6 +45,7 @@ public:
     {
     }
 
+    bool isSame(const std::shared_ptr<Type>& other) const override;
     std::string toString() override;
 };
 
@@ -66,6 +68,7 @@ public:
     {
     }
 
+    bool isSame(const std::shared_ptr<Type>& other) const override;
     std::string toString() override;
 };
 
@@ -77,6 +80,7 @@ public:
     {
     }
 
+    bool isSame(const std::shared_ptr<Type>& other) const override;
     std::string toString() override;
 };
 
@@ -90,5 +94,6 @@ public:
     {
     }
 
+    bool isSame(const std::shared_ptr<Type>& other) const override;
     std::string toString() override;
 };

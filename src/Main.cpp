@@ -6,9 +6,10 @@
 
 #include "AstDebugger.hpp"
 #include "Common.hpp"
-#include "Parser.hpp"
-#include "Scanner.hpp"
 #include "Token.hpp"
+#include "Scanner.hpp"
+#include "Parser.hpp"
+#include "DeclParser.hpp"
 #include "TypeChecker.hpp"
 #include "Interpreter.hpp"
 
@@ -68,7 +69,15 @@ void run(const char* filepath)
     AstDebugger debugger(root);
     debugger.debug();
 
-    TypeChecker typeChecker(root);
+    DeclParser declParser(root);
+    std::unique_ptr<Namespace<Variable>> global = declParser.parse();
+    if(parser.fail())
+    {
+        std::cout << "Terminated due to decleration error.\n";
+        return;
+    }
+
+    TypeChecker typeChecker(root, global);
     typeChecker.check();
     if(typeChecker.fail())
     {
@@ -78,6 +87,6 @@ void run(const char* filepath)
     debugger.showTypes(true);
     debugger.debug();
 
-    Interpreter interpreter(root);
+    Interpreter interpreter(root, std::move(global));
     interpreter.run();
 }

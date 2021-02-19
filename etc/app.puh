@@ -1,2 +1,6 @@
-"Hello, world";
-32+25;
+void main()
+{
+    "Hello, world";
+    "Hello there!";
+    3+2/2;
+}

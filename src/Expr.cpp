@@ -43,6 +43,11 @@ void ExprUnary::do_accept(ExprVisitorBase* visitor)
     visitor->visit(this);
 }
 
+void ExprCall::do_accept(ExprVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
 void ExprLiteral::do_accept(ExprVisitorBase* visitor) 
 {
     visitor->visit(this);

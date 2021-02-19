@@ -18,13 +18,12 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
     {
         try
         {
-
-            root.push_back(statement());
+            root.push_back(declaration());
         }
         catch (const TokenError& e)
         {
             hadError = true;
-            std::cout << e << '\n';
+            std::cout << e << std::endl;
         }
     }
 
@@ -105,11 +104,11 @@ bool Parser::match(std::vector<TokenType> types)
     return std::any_of(types.begin(), types.end(), [this](TokenType& type) { return match(type); });
 }
 
-void Parser::consume(TokenType type, const std::string& msg)
+Token& Parser::consume(TokenType type, const std::string& msg)
 {
     if (tokens[currentToken].type == type)
     {
-        advance();
+        return advance();
     }
     else
     {
@@ -164,11 +163,14 @@ std::shared_ptr<Type> Parser::parseTypeName()
     if (match(TokenType::OPEN_PAREN))
     {
         auto func_type = std::make_shared<TypeFunction>(std::move(type));
-        do
+        if (!match(TokenType::CLOSE_PAREN))
         {
-            func_type->param_types.push_back(parseTypeName());
-        } while (match(TokenType::COMMA));
-        consume(TokenType::CLOSE_PAREN, "Expect ')' after parameter types");
+            do
+            {
+                func_type->param_types.push_back(parseTypeName());
+            } while (match(TokenType::COMMA));
+            consume(TokenType::CLOSE_PAREN, "Expect ')' after parameter types");
+        }
 
         type = std::move(func_type);
     }
@@ -188,8 +190,79 @@ std::shared_ptr<Type> Parser::parseTypeName()
     return std::move(type);
 }
 
+std::unique_ptr<Stmt> Parser::declaration()
+{
+    if (match(TokenType::CLASS))
+    {
+        // TODO implement classes
+        throw TokenError("Classes are not implemented.", consumed());
+    }
+    else if (match(TokenType::NAMESPACE))
+    {
+        // TODO implement namespaceses
+        throw TokenError("Namespaced are not implemented.", consumed());
+    }
+    else
+    {
+        std::shared_ptr<Type> type = parseTypeName();
+        Token name = advance();
+        Token next = peek();
+        switch (next.type)
+        {
+        case TokenType::OPEN_PAREN:
+            return funcDecl(std::move(type), name);
+        case TokenType::SEMI_COLON:
+        case TokenType::EQUAL:
+            return varDecl(std::move(type), name);
+        default:
+            throw TokenError("Invalid token after variable or function identifier.", next);
+        }
+    }
+}
+
+std::unique_ptr<Stmt> Parser::varDecl(std::shared_ptr<Type> type, Token name)
+{
+    std::unique_ptr<Expr> initter = nullptr;
+    Token equal;
+    if (match(TokenType::EQUAL))
+    {
+        equal = consumed();
+        initter = parseExpr();
+    }
+    consume(TokenType::SEMI_COLON, "Expect ';' after a variable decleration.");
+    return std::make_unique<DeclVar>(name, equal, std::move(type), std::move(initter));
+}
+
+std::unique_ptr<Stmt> Parser::funcDecl(std::shared_ptr<Type> type, Token name)
+{
+    advance(); // '('
+    std::vector<std::shared_ptr<Type>> param_types;
+    std::vector<Token> param_names;
+    if (!match(TokenType::CLOSE_PAREN))
+    {
+        do
+        {
+            param_types.push_back(parseTypeName());
+            param_names.push_back(consume(TokenType::IDENTIFIER, "Expect an identifier for a type name."));
+        } while (match(TokenType::COMMA));
+        consume(TokenType::CLOSE_PAREN, "Expect ')' after function parameters.");
+    }
+
+    type = std::make_shared<TypeFunction>(type, param_types);
+    consume(TokenType::OPEN_BRACE, "Expect '{' before the function body block.");
+
+    std::vector<std::unique_ptr<Stmt>> body;
+    while (!match(TokenType::CLOSE_BRACE))
+    {
+        body.push_back(statement());
+    }
+    
+    return std::make_unique<DeclFunc>(name, std::move(type), std::move(param_names), std::move(body));
+}
+
 std::unique_ptr<Stmt> Parser::statement()
 {
+    // Can return var decl so adjust that :)
     return exprStatement();
 }
 
@@ -268,7 +341,27 @@ std::unique_ptr<Expr> Parser::unary()
         return std::make_unique<ExprUnary>(std::move(rhs), op);
     }
 
-    return primary();
+    return call();
+}
+
+std::unique_ptr<Expr> Parser::call() 
+{
+    std::unique_ptr<Expr> expr = primary();
+    while (match(TokenType::OPEN_PAREN))
+    {
+        Token token = consumed();
+        std::vector<std::unique_ptr<Expr>> args;
+        if(!match(TokenType::CLOSE_PAREN))
+        {
+            do
+            {
+                args.push_back(parseExpr());
+            }while(match(TokenType::COMMA));
+            consume(TokenType::CLOSE_PAREN, "Expect ')' after call arguments.");
+        }
+        expr = std::make_unique<ExprCall>(std::move(expr), std::move(args), token);
+    }
+    return std::move(expr);
 }
 
 std::unique_ptr<Expr> Parser::primary()

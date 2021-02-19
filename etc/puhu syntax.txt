@@ -15,9 +15,9 @@ blockStmt -> "{" (Stmt | varDec)* "}"
 ifStmt -> "if" "(" expression ")" Stmt
 whileStmt -> "while" "(" expression ")" Stmt
 forStmt -> "for" "(" (varDec|expression)? ";" expression? ";" expression? ")" Stmt
-returnStmt -> "return" expressionStmt
+returnStmt -> "return" expressionStmt ";"
 
-typeName -> ("void" | "bool" | "char" | "int" | "float" | "double" | "string" | IDENTIFIER 
+typeName -> ("void" | "bool" | "char" | "int" | "float" | "double" | "string" | IDENTIFIER)
 			| (typeName "[" "]") | (typeName "*")) "const"?
 parameters -> IDENTIFIER ("," IDENTIFIER)*
 member -> ("public" | "private" | "protected")? (varDec | funcDec)		

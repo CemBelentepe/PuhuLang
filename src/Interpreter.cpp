@@ -1,18 +1,57 @@
 #include "Interpreter.hpp"
+#include "Callable.hpp"
+
+#include <algorithm>
 
 std::unordered_map<TokenType, Interpreter::UnaryFunction> Interpreter::unaryFunctions;
 std::unordered_map<TokenType, Interpreter::BinaryFunction> Interpreter::binaryFunctions;
 
-Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root)
-    : root(root), hadError(false)
+Interpreter::RunTimeVariable::RunTimeVariable(const Variable& var, const Value& val)
+    : name(var.name), type(var.type), initialized(var.initialized), val(val)
+{
+}
+
+Interpreter::RunTimeVariable::RunTimeVariable(const RunTimeVariable& var)
+    : name(var.name), type(var.type), initialized(var.initialized), val(var.val)
+{
+}
+
+Interpreter::RunTimeVariable::RunTimeVariable(const Variable& var)
+    : name(var.name), type(var.type), initialized(var.initialized), val(Value())
+{
+}
+
+Interpreter::RunTimeVariable::RunTimeVariable(const Token& name, const std::shared_ptr<Type>& type, bool initialized, const Value& val)
+    : name(name), type(type), initialized(initialized), val(val)
+{
+}
+
+Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, const std::unique_ptr<Namespace<Variable>>& global)
+    : root(root), hadError(false), global(std::make_unique<Namespace<RunTimeVariable>>(global, nullptr)), currentEnviroment(nullptr)
 {
     init();
+    currentNamespace = this->global.get();
 }
 
 void Interpreter::run()
 {
-    for(auto& stmt : root)
+    for (auto& stmt : root)
         stmt->accept(this);
+
+    currentNamespace = global.get();
+    RunTimeVariable entry;
+    try
+    {
+        entry = currentNamespace->getVariable("main");
+    }
+    catch (const std::string& err)
+    {
+        std::cout << err << '\n';
+        hadError = true;
+        return;
+    }
+
+    std::get<std::shared_ptr<Callable>>(entry.val.data.data)->call(this, {});
 }
 
 bool Interpreter::fail()
@@ -52,15 +91,57 @@ void Interpreter::visit(ExprUnary* expr)
     result = unaryFunctions[expr->op.type](rhs);
 }
 
+void Interpreter::visit(ExprCall* expr)
+{
+    std::vector<Value> args;
+    for (auto& arg : expr->args)
+        args.emplace_back(arg->accept(this));
+
+    Value callee = expr->callee->accept(this);
+    auto callable = std::get<std::shared_ptr<Callable>>(callee.data.data);
+    result = callable->call(this, args);
+}
+
 void Interpreter::visit(ExprLiteral* expr)
 {
     result = expr->value;
 }
 
-void Interpreter::visit(StmtExpr* stmt) 
+void Interpreter::visit(StmtExpr* stmt)
 {
     Value res = stmt->expr->accept(this);
     std::cout << res << std::endl;
+}
+
+void Interpreter::visit(DeclVar* decl)
+{
+    if (decl->initter)
+    {
+        Value val = decl->initter->accept(this);
+
+        if (currentEnviroment)
+        {
+            RunTimeVariable& var = currentEnviroment->getVariable(decl->name);
+            var.val = val;
+            var.initialized = true;
+        }
+        else
+        {
+            RunTimeVariable& var = currentNamespace->getVariable(decl->name);
+            var.val = val;
+            var.initialized = true;
+        }
+    }
+}
+
+void Interpreter::visit(DeclFunc* decl)
+{
+    currentNamespace->getVariable(decl->name).val = Value(std::make_shared<PuhuFunction>(decl));
+}
+
+std::unique_ptr<Enviroment<Interpreter::RunTimeVariable>>& Interpreter::getCurrentEnviroment()
+{
+    return currentEnviroment;
 }
 
 void Interpreter::init()

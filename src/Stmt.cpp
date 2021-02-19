@@ -18,3 +18,13 @@ void StmtExpr::do_accept(StmtVisitorBase* visitor)
 {
     visitor->visit(this);
 }
+
+void DeclVar::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
+void DeclFunc::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}

@@ -17,6 +17,7 @@ public:
         Logic,
         Binary,
         Unary,
+        Call,
         Literal
     };
     const Instance instance;
@@ -77,6 +78,22 @@ public:
 
     explicit ExprUnary(std::unique_ptr<Expr> rhs, Token op)
         : Expr(Instance::Unary, Type::getNullType()), rhs(std::move(rhs)), op(op)
+    {
+    }
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
+class ExprCall : public Expr
+{
+public:
+    std::unique_ptr<Expr> callee;
+    std::vector<std::unique_ptr<Expr>> args;
+    Token paren;
+
+    explicit ExprCall(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr>> args, Token paren)
+        : Expr(Instance::Call, Type::getNullType()), callee(std::move(callee)), args(std::move(args)), paren(paren)
     {
     }
 

@@ -25,7 +25,7 @@ enum class TokenType
 
 	// Keywords
 	USING, NAMESPACE, 
-	STRUCT, VAR,
+	CLASS, VAR,
 	IF, ELSE,
 	INT, FLOAT, DOUBLE, CHAR, STRING, BOOL, VOID,
 	WHILE, FOR,

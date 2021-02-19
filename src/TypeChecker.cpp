@@ -1,12 +1,14 @@
 #include "TypeChecker.hpp"
+
 #include <algorithm>
 #include <memory>
+#include <sstream>
 
 std::unordered_map<TokenType, std::vector<TypeChecker::UnaryTransform>> TypeChecker::primitiveUnaryTransoforms;
 std::unordered_map<TokenType, std::vector<TypeChecker::BinaryTransform>> TypeChecker::primitiveBinaryTransoforms;
 
-TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root)
-    : root(root), hadError(false)
+TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unique_ptr<Namespace<Variable>>& global)
+    : root(root), hadError(false), global(global), currentNamespace(global.get()), currentEnviroment(nullptr)
 {
     init();
 }
@@ -24,7 +26,33 @@ void TypeChecker::check()
             e.log();
             hadError = true;
         }
+        catch (const Parser::TokenError& e)
+        {
+            std::cout << e << std::endl;
+            hadError = true;
+        }
     }
+
+    currentNamespace = global.get();
+    Variable entry;
+    try
+    {
+        entry = currentNamespace->getVariable("main");
+    }
+    catch (const std::string& err)
+    {
+        std::cout << err << std::endl;
+        hadError = true;
+        return;
+    }
+
+    if(!entry.type->isSame(std::make_shared<TypeFunction>(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID))))
+    {
+        std::cout << "Expected type 'void()' for the entry function main but recieved '" << entry.type->toString() << "'." << std::endl;
+        hadError = true;
+        return;
+    }
+
 }
 
 bool TypeChecker::fail()
@@ -77,6 +105,39 @@ void TypeChecker::visit(ExprUnary* expr)
     result = expr->type;
 }
 
+void TypeChecker::visit(ExprCall* expr)
+{
+    std::vector<std::shared_ptr<Type>> arg_types;
+    for(auto& arg : expr->args)
+        arg_types.push_back(arg->accept(this));
+
+    auto type_callee = expr->callee->accept(this);
+    if (type_callee->tag == Type::Tag::FUNCTION)
+    {
+        auto param_types = std::dynamic_pointer_cast<TypeFunction>(type_callee)->param_types;
+        if (param_types.size() != arg_types.size())
+        {
+            std::stringstream ss;
+            ss << "Expected " << param_types.size() << " number of arguments but recieved " << arg_types.size() << " arguments.";
+            throw TypeError(ss.str(), expr->paren);
+        }
+        for (size_t i = 0; i < param_types.size(); i++)
+        {
+            if (!param_types[i]->isSame(arg_types[i]))
+            {
+                std::stringstream ss;
+                ss << "Expected type of '" << param_types[i]->toString() << "' for the element " << i << " but recieved '" << arg_types[i]->toString() << "'.";
+                throw TypeError(ss.str(), expr->paren);
+            }
+        }
+        this->result = type_callee->instrinsicType;
+    }
+    else
+    {
+        throw TypeError("Expression of the callee does not evaluate to a callable.", expr->paren);
+    }
+}
+
 void TypeChecker::visit(ExprLiteral* expr)
 {
     result = expr->type;
@@ -85,6 +146,47 @@ void TypeChecker::visit(ExprLiteral* expr)
 void TypeChecker::visit(StmtExpr* stmt)
 {
     stmt->expr->accept(this);
+}
+
+void TypeChecker::visit(DeclVar* decl)
+{
+    if (currentEnviroment)
+    {
+        currentEnviroment->addVariable(Variable(decl->name, decl->type, decl->initter != nullptr)); // define local
+    }
+    // else
+    // {
+    //     currentNamespace->addVariable(Variable(decl->name, decl->type, decl->initter != nullptr)); // define global
+    // }
+
+    if (decl->initter)
+    {
+        decl->initter->accept(this);
+
+        if (!decl->initter->type->isSame(decl->type))
+        {
+            throw AssignmentError(decl->equal, decl->type, decl->initter->type);
+        }
+    }
+}
+
+void TypeChecker::visit(DeclFunc* decl)
+{
+    // currentNamespace->addVariable(Variable(decl->name, decl->type, true));
+    currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
+
+    const std::vector<std::shared_ptr<Type>>& param_types = std::dynamic_pointer_cast<TypeFunction>(decl->type)->param_types;
+    for (size_t i = 0; i < decl->param_names.size(); i++)
+    {
+        currentEnviroment->addVariable(Variable(decl->param_names[i], param_types[i], true));
+    }
+
+    for (auto& s : decl->body)
+    {
+        s->accept(this);
+    }
+
+    currentEnviroment = currentEnviroment->returnToParent();
 }
 
 void TypeChecker::init()

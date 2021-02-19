@@ -10,14 +10,17 @@ public:
 
     void debug();
     void showTypes(bool isShow);
-    
+
     void visit(ExprLogic* expr) override;
     void visit(ExprBinary* expr) override;
     void visit(ExprUnary* expr) override;
+    void visit(ExprCall* expr) override;
     void visit(ExprLiteral* expr) override;
 
     void visit(StmtExpr* stmt) override;
-    
+    void visit(DeclVar* stmt) override;
+    void visit(DeclFunc* stmt) override;
+
 private:
     std::vector<std::unique_ptr<Stmt>>& root;
     std::ostream& os;

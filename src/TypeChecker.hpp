@@ -1,5 +1,9 @@
 #pragma once
+
 #include "AstVisitor.hpp"
+#include "Namespace.hpp"
+#include "Enviroment.hpp"
+#include "Variable.hpp"
 
 #include <unordered_map>
 
@@ -11,7 +15,7 @@ private:
     
 public:
     TypeChecker() = delete;
-    explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root);
+    explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unique_ptr<Namespace<Variable>>& global);
     ~TypeChecker() = default;
 
     void check();
@@ -20,12 +24,18 @@ public:
     void visit(ExprLogic* expr) override;
     void visit(ExprBinary* expr) override;
     void visit(ExprUnary* expr) override;
+    void visit(ExprCall* expr) override;
     void visit(ExprLiteral* expr) override;
 
     void visit(StmtExpr* stmt) override;
+    void visit(DeclVar* decl) override;
+    void visit(DeclFunc* decl) override;
 
 private:
     std::vector<std::unique_ptr<Stmt>>& root;
+    std::unique_ptr<Namespace<Variable>>& global;
+    Namespace<Variable>* currentNamespace;
+    std::unique_ptr<Enviroment<Variable>> currentEnviroment;
     bool hadError;
 
 private:
@@ -96,6 +106,20 @@ private:
         virtual void log(std::ostream& os = std::cout) override
         {
             os << "[ERROR] Operands of '" << token.lexeme << "' cannot be the types of '" << type_lhs->toString() << "' and '" << type_rhs->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
+            os << token.toStringInLine(Logger::RED);
+        }
+    };
+    class AssignmentError : public TypeError
+    {
+    public:
+        TypePtr type_lhs;
+        TypePtr type_rhs;
+        explicit AssignmentError(Token token, TypePtr type_lhs, TypePtr type_rhs)
+            : TypeError("", token), type_lhs(type_lhs), type_rhs(type_rhs) {}
+
+        virtual void log(std::ostream& os = std::cout) override
+        {
+            os << "[ERROR] Cannot assign a type of '" << type_rhs->toString() << "' to a type of '" << type_lhs->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
             os << token.toStringInLine(Logger::RED);
         }
     };
