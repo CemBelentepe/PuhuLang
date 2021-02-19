@@ -111,6 +111,48 @@ void Interpreter::visit(ExprLiteral* expr)
     result = expr->value;
 }
 
+void Interpreter::visit(ExprVariableGet* expr)
+{
+    if (currentEnviroment)
+    {
+        try
+        {
+            result = currentEnviroment->getVariable(expr->name).val;
+        }
+        catch (const Parser::TokenError& err)
+        {
+            result = currentNamespace->getVariable(expr->name).val;
+        }
+    }
+    else
+    {
+        result = currentNamespace->getVariable(expr->name).val;
+    }
+}
+
+void Interpreter::visit(ExprVariableSet* expr)
+{
+    Value val = expr->asgn->accept(this);
+
+    if (currentEnviroment)
+    {
+        try
+        {
+            currentEnviroment->getVariable(expr->name).val = val;
+        }
+        catch (const Parser::TokenError& err)
+        {
+            currentNamespace->getVariable(expr->name).val = val;
+        }
+    }
+    else
+    {
+        currentNamespace->getVariable(expr->name).val = val;
+    }
+
+    result = val;
+}
+
 void Interpreter::visit(StmtExpr* stmt)
 {
     Value res = stmt->expr->accept(this);

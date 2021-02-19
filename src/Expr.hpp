@@ -117,3 +117,34 @@ public:
 private:
     void do_accept(ExprVisitorBase* visitor) override;
 };
+
+class ExprVariableGet : public Expr
+{
+public:
+    Token name;
+
+    explicit ExprVariableGet(Token name)
+        : Expr(Instance::VariableGet, Type::getNullType()), name(name)
+    {
+    }
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
+
+class ExprVariableSet : public Expr
+{
+public:
+    Token name;
+    Token equal;
+    std::unique_ptr<Expr> asgn;
+
+    explicit ExprVariableSet(Token name, Token equal, std::unique_ptr<Expr> asgn)
+        : Expr(Instance::VariableSet, Type::getNullType()), name(name), equal(equal), asgn(std::move(asgn))
+    {
+    }
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};

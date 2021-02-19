@@ -1,7 +1,12 @@
+int n = 0;
+
+void func()
+{
+    n = n+1;
+    main();
+}
+
 void main()
 {
-    int x = 7;
-    "Hello, world";
-    "Hello there!";
-    3+2/2;
+    func();
 }

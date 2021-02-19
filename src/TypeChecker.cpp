@@ -46,13 +46,12 @@ void TypeChecker::check()
         return;
     }
 
-    if(!entry.type->isSame(std::make_shared<TypeFunction>(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID))))
+    if (!entry.type->isSame(std::make_shared<TypeFunction>(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID))))
     {
         std::cout << "Expected type 'void()' for the entry function main but recieved '" << entry.type->toString() << "'." << std::endl;
         hadError = true;
         return;
     }
-
 }
 
 bool TypeChecker::fail()
@@ -144,6 +143,54 @@ void TypeChecker::visit(ExprLiteral* expr)
     result = expr->type;
 }
 
+void TypeChecker::visit(ExprVariableGet* expr)
+{
+    if (currentEnviroment)
+    {
+        try
+        {
+            expr->type = currentEnviroment->getVariable(expr->name).type;
+        }
+        catch (const Parser::TokenError& err)
+        {
+            expr->type = currentNamespace->getVariable(expr->name).type;
+        }
+    }
+    else
+    {
+        expr->type = currentNamespace->getVariable(expr->name).type;
+    }
+    result = expr->type;
+}
+
+void TypeChecker::visit(ExprVariableSet* expr)
+{
+    std::shared_ptr<Type> type_asgn = expr->asgn->accept(this);
+
+    Variable var;
+    if (currentEnviroment)
+    {
+        try
+        {
+            var = currentEnviroment->getVariable(expr->name);
+        }
+        catch (const Parser::TokenError& err)
+        {
+            var = currentNamespace->getVariable(expr->name);
+        }
+    }
+    else
+    {
+        var = currentNamespace->getVariable(expr->name);
+    }
+
+    if (!var.type->isSame(type_asgn))
+        throw AssignmentError(expr->equal, var.type, type_asgn);
+
+    expr->type = var.type;
+    result = expr->type;
+}
+
 void TypeChecker::visit(StmtExpr* stmt)
 {
     stmt->expr->accept(this);
@@ -187,7 +234,7 @@ void TypeChecker::visit(DeclFunc* decl)
     currentEnviroment = currentEnviroment->returnToParent();
 }
 
-void TypeChecker::visit(StmtBody* stmt) 
+void TypeChecker::visit(StmtBody* stmt)
 {
     currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
 

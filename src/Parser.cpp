@@ -126,7 +126,7 @@ int Parser::getPrecidence(const Token& op)
     return it->second;
 }
 
-bool Parser::tryParseTypeName(std::shared_ptr<Type>& out_type) 
+bool Parser::tryParseTypeName(std::shared_ptr<Type>& out_type)
 {
     size_t start = currentToken; // anchor position
     try
@@ -134,7 +134,7 @@ bool Parser::tryParseTypeName(std::shared_ptr<Type>& out_type)
         out_type = parseTypeName();
         return true;
     }
-    catch(const TokenError& err)
+    catch (const TokenError& err)
     {
         currentToken = start; // restore position
         out_type = nullptr;
@@ -316,7 +316,29 @@ std::unique_ptr<StmtBody> Parser::bodyStatement()
 
 std::unique_ptr<Expr> Parser::parseExpr()
 {
-    return logic_or();
+    return assignment();
+}
+
+std::unique_ptr<Expr> Parser::assignment()
+{
+    std::unique_ptr<Expr> expr = logic_or();
+    if (match(TokenType::EQUAL))
+    {
+        Token eq = consumed();
+        std::unique_ptr<Expr> asgn = parseExpr();
+
+        if (expr->instance == Expr::Instance::VariableGet)
+        {
+            Token name = dynamic_cast<ExprVariableGet*>(expr.get())->name;
+            expr = std::make_unique<ExprVariableSet>(name, eq, std::move(asgn));
+        }
+        else
+        {
+            throw TokenError("Invalid assignment target.", eq);
+        }
+    }
+
+    return std::move(expr);
 }
 
 std::unique_ptr<Expr> Parser::logic_or()
@@ -434,8 +456,8 @@ std::unique_ptr<Expr> Parser::primary()
         consume(TokenType::CLOSE_PAREN, "Expect ')' after grouping expression.");
         return std::move(inside);
     }
-    // case TokenType::IDENTIFIER:
-    //     return std::make_unique<ExprVariableGet>(token);
+    case TokenType::IDENTIFIER:
+        return std::make_unique<ExprVariableGet>(token);
     default:
         throw TokenError("Invalid identifier.", token);
     }

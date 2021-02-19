@@ -44,7 +44,7 @@ private:
     std::unique_ptr<StmtBody> bodyStatement();
 
     std::unique_ptr<Expr> parseExpr();
-    // std::unique_ptr<Expr> assignment();
+    std::unique_ptr<Expr> assignment();
     std::unique_ptr<Expr> logic_or();
     std::unique_ptr<Expr> logic_and();
     std::unique_ptr<Expr> binary(std::unique_ptr<Expr> lhs, int precidence);

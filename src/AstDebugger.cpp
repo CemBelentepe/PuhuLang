@@ -72,6 +72,21 @@ void AstDebugger::visit(ExprCall* expr)
         os << ": " << expr->type->toString();
 }
 
+void AstDebugger::visit(ExprVariableGet* expr) 
+{
+    os << "GET " << expr->name.lexeme;
+    if (canShowType)
+        os << ": " << expr->type->toString();
+}
+
+void AstDebugger::visit(ExprVariableSet* expr) 
+{
+    os << "SET " << expr->name.lexeme << " = ";
+    expr->asgn->accept(this);
+    if (canShowType)
+        os << ": " << expr->type->toString();
+}
+
 void AstDebugger::visit(StmtExpr* stmt)
 {
     stmt->expr->accept(this);

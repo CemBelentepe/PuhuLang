@@ -25,8 +25,7 @@ public:
     std::shared_ptr<Type> type;
     Data data;
 
-    Value() = default;
-
+    explicit Value();
     explicit Value(bool data);
     explicit Value(char data);
     explicit Value(int data);
