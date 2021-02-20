@@ -21,6 +21,7 @@ public:
 
     void visit(StmtExpr* stmt) override;
     void visit(StmtBody* stmt) override;
+    void visit(StmtReturn* stmt) override;
     void visit(DeclVar* stmt) override;
     void visit(DeclFunc* stmt) override;
 

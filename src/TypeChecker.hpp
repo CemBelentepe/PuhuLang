@@ -31,6 +31,7 @@ public:
 
     void visit(StmtExpr* stmt) override;
     void visit(StmtBody* stmt) override;
+    void visit(StmtReturn* stmt) override;
     void visit(DeclVar* decl) override;
     void visit(DeclFunc* decl) override;
 
@@ -39,6 +40,7 @@ private:
     std::unique_ptr<Namespace<Variable>>& global;
     Namespace<Variable>* currentNamespace;
     std::unique_ptr<Enviroment<Variable>> currentEnviroment;
+    std::shared_ptr<Type> currentReturn;
     bool hadError;
 
 private:
@@ -123,6 +125,20 @@ private:
         virtual void log(std::ostream& os = std::cout) override
         {
             os << "[ERROR] Cannot assign a type of '" << type_rhs->toString() << "' to a type of '" << type_lhs->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
+            os << token.toStringInLine(Logger::RED);
+        }
+    };
+    class ReturnError : public TypeError
+    {
+    public:
+        TypePtr type_expected;
+        TypePtr type_returning;
+        explicit ReturnError(Token token, TypePtr type_expected, TypePtr type_returning)
+            : TypeError("", token), type_expected(type_expected), type_returning(type_returning) {}
+
+        virtual void log(std::ostream& os = std::cout) override
+        {
+            os << "[ERROR] Cannot return a type of '" << type_returning->toString() << "' from a function returning '" << type_expected->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
             os << token.toStringInLine(Logger::RED);
         }
     };

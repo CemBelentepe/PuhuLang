@@ -59,8 +59,9 @@ void AstDebugger::visit(ExprLiteral* expr)
 
 void AstDebugger::visit(ExprCall* expr)
 {
-    expr->callee->accept(this);
     os << "(";
+    expr->callee->accept(this);
+    os << ")(";
     for (size_t i = 0; i < expr->args.size(); i++)
     {
         if (i != 0)
@@ -72,14 +73,14 @@ void AstDebugger::visit(ExprCall* expr)
         os << ": " << expr->type->toString();
 }
 
-void AstDebugger::visit(ExprVariableGet* expr) 
+void AstDebugger::visit(ExprVariableGet* expr)
 {
     os << "GET " << expr->name.lexeme;
     if (canShowType)
         os << ": " << expr->type->toString();
 }
 
-void AstDebugger::visit(ExprVariableSet* expr) 
+void AstDebugger::visit(ExprVariableSet* expr)
 {
     os << "SET " << expr->name.lexeme << " = ";
     expr->asgn->accept(this);
@@ -90,6 +91,24 @@ void AstDebugger::visit(ExprVariableSet* expr)
 void AstDebugger::visit(StmtExpr* stmt)
 {
     stmt->expr->accept(this);
+    os << std::endl;
+}
+
+void AstDebugger::visit(StmtBody* stmt)
+{
+    os << "BEGIN\n";
+
+    for (auto& s : stmt->body)
+        s->accept(this);
+
+    os << "END" << std::endl;
+}
+
+void AstDebugger::visit(StmtReturn* stmt)
+{
+    os << "RETURN ";
+    if(stmt->retExpr)
+        stmt->retExpr->accept(this);
     os << std::endl;
 }
 
@@ -113,18 +132,8 @@ void AstDebugger::visit(DeclFunc* stmt)
     {
         if (i != 0)
             os << ", ";
-        os << std::dynamic_pointer_cast<TypeFunction>(stmt->type)->param_types[i];
+        os << std::dynamic_pointer_cast<TypeFunction>(stmt->type)->param_types[i]->toString();
     }
     os << ") -> " << stmt->type->instrinsicType->toString() << " ";
     stmt->body->accept(this);
-}
-
-void AstDebugger::visit(StmtBody* stmt) 
-{
-    os << "BEGIN\n";
-
-    for(auto& s : stmt->body)
-        s->accept(this);
-
-    os << "END" << std::endl;
 }

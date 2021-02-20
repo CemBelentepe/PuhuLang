@@ -10,10 +10,6 @@ class StmtVisitorBase;
 template <typename T>
 class StmtVisitor;
 
-class DeclVisitorBase;
-template <typename T>
-class DeclVisitor;
-
 class Stmt
 {
 public:
@@ -49,6 +45,21 @@ public:
 
     explicit StmtBody(std::vector<std::unique_ptr<Stmt>> body)
         : body(std::move(body))
+    {
+    }
+
+private:
+    void do_accept(StmtVisitorBase* visitor) override;
+};
+
+class StmtReturn : public Stmt
+{
+public:
+    Token retToken;
+    std::unique_ptr<Expr> retExpr;
+
+    explicit StmtReturn(Token retToken, std::unique_ptr<Expr> retExpr)
+        : retToken(retToken), retExpr(std::move(retExpr))
     {
     }
 

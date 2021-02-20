@@ -8,7 +8,7 @@ std::unordered_map<TokenType, std::vector<TypeChecker::UnaryTransform>> TypeChec
 std::unordered_map<TokenType, std::vector<TypeChecker::BinaryTransform>> TypeChecker::primitiveBinaryTransoforms;
 
 TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unique_ptr<Namespace<Variable>>& global)
-    : root(root), hadError(false), global(global), currentNamespace(global.get()), currentEnviroment(nullptr)
+    : root(root), hadError(false), global(global), currentNamespace(global.get()), currentEnviroment(nullptr), currentReturn(nullptr)
 {
     init();
 }
@@ -130,7 +130,8 @@ void TypeChecker::visit(ExprCall* expr)
                 throw TypeError(ss.str(), expr->paren);
             }
         }
-        this->result = type_callee->instrinsicType;
+        expr->type = type_callee->instrinsicType;
+        result = type_callee->instrinsicType;
     }
     else
     {
@@ -196,16 +197,43 @@ void TypeChecker::visit(StmtExpr* stmt)
     stmt->expr->accept(this);
 }
 
+void TypeChecker::visit(StmtBody* stmt)
+{
+    currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
+
+    for (auto& s : stmt->body)
+    {
+        s->accept(this);
+    }
+
+    currentEnviroment = currentEnviroment->returnToParent();
+}
+
+void TypeChecker::visit(StmtReturn* stmt)
+{
+    std::shared_ptr<Type> retType;
+    if (stmt->retExpr)
+        retType = stmt->retExpr->accept(this);
+    else
+        retType = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID);
+        
+    if (!retType->isSame(currentReturn))
+    {
+        throw ReturnError(stmt->retToken, currentReturn, retType);
+    }
+}
+
 void TypeChecker::visit(DeclVar* decl)
 {
     if (currentEnviroment)
     {
         currentEnviroment->addVariable(Variable(decl->name, decl->type, decl->initter != nullptr)); // define local
     }
-    // else
-    // {
-    //     currentNamespace->addVariable(Variable(decl->name, decl->type, decl->initter != nullptr)); // define global
-    // }
+
+    if (decl->type->isSame(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID)))
+    {
+        throw Parser::TokenError("A variable cannot be a type of 'void'.", decl->equal);
+    }
 
     if (decl->initter)
     {
@@ -220,8 +248,10 @@ void TypeChecker::visit(DeclVar* decl)
 
 void TypeChecker::visit(DeclFunc* decl)
 {
-    // currentNamespace->addVariable(Variable(decl->name, decl->type, true));
     currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
+
+    auto savedReturn = currentReturn;
+    currentReturn = decl->type->instrinsicType;
 
     const std::vector<std::shared_ptr<Type>>& param_types = std::dynamic_pointer_cast<TypeFunction>(decl->type)->param_types;
     for (size_t i = 0; i < decl->param_names.size(); i++)
@@ -231,18 +261,7 @@ void TypeChecker::visit(DeclFunc* decl)
 
     decl->body->accept(this);
 
-    currentEnviroment = currentEnviroment->returnToParent();
-}
-
-void TypeChecker::visit(StmtBody* stmt)
-{
-    currentEnviroment = std::make_unique<Enviroment<Variable>>(std::move(currentEnviroment));
-
-    for (auto& s : stmt->body)
-    {
-        s->accept(this);
-    }
-
+    currentReturn = savedReturn;
     currentEnviroment = currentEnviroment->returnToParent();
 }
 

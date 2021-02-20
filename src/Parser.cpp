@@ -249,6 +249,8 @@ std::unique_ptr<Stmt> Parser::varDecl(std::shared_ptr<Type> type, Token name)
         initter = parseExpr();
     }
     consume(TokenType::SEMI_COLON, "Expect ';' after a variable decleration.");
+    if(!initter)
+        equal = consumed();
     return std::make_unique<DeclVar>(name, equal, std::move(type), std::move(initter));
 }
 
@@ -283,6 +285,8 @@ std::unique_ptr<Stmt> Parser::statement()
     case TokenType::OPEN_BRACE:
         advance();
         return bodyStatement();
+    case TokenType::RETURN:
+        return returnStatement();
     default:
         return exprStatement();
     }
@@ -312,6 +316,18 @@ std::unique_ptr<StmtBody> Parser::bodyStatement()
         }
     }
     return std::make_unique<StmtBody>(std::move(body));
+}
+
+std::unique_ptr<StmtReturn> Parser::returnStatement() 
+{
+    Token retToken = advance();
+    std::unique_ptr<Expr> retExpr = nullptr;
+    if(!match(TokenType::SEMI_COLON))
+    {
+        retExpr = parseExpr();
+        consume(TokenType::SEMI_COLON, "Expect ';' after the expression of a return statement.");
+    }
+    return std::make_unique<StmtReturn>(retToken, std::move(retExpr));
 }
 
 std::unique_ptr<Expr> Parser::parseExpr()

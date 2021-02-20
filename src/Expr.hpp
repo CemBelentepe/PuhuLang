@@ -132,7 +132,6 @@ private:
     void do_accept(ExprVisitorBase* visitor) override;
 };
 
-
 class ExprVariableSet : public Expr
 {
 public:

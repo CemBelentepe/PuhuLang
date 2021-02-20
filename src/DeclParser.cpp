@@ -10,13 +10,13 @@ DeclParser::DeclParser(std::vector<std::unique_ptr<Stmt>>& root)
 
 std::unique_ptr<Namespace<Variable>> DeclParser::parse()
 {
-    for(auto& decl : root)
+    for (auto& decl : root)
     {
         try
         {
             decl->accept(this);
         }
-        catch(const Parser::TokenError& err)
+        catch (const Parser::TokenError& err)
         {
             std::cout << err << std::endl;
             hadError = true;
@@ -26,13 +26,9 @@ std::unique_ptr<Namespace<Variable>> DeclParser::parse()
     return std::move(global);
 }
 
-bool DeclParser::fail() 
+bool DeclParser::fail()
 {
     return hadError;
-}
-
-void DeclParser::visit(StmtExpr* stmt)
-{
 }
 
 void DeclParser::visit(DeclVar* decl)
@@ -45,7 +41,14 @@ void DeclParser::visit(DeclFunc* decl)
     currentNamespace->addVariable(Variable(decl->name, decl->type, true));
 }
 
-void DeclParser::visit(StmtBody* stmt) 
+void DeclParser::visit(StmtBody* stmt)
 {
-    
+}
+
+void DeclParser::visit(StmtExpr* stmt)
+{
+}
+
+void DeclParser::visit(StmtReturn* stmt)
+{
 }

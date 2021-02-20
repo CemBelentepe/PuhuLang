@@ -42,6 +42,7 @@ private:
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<StmtExpr> exprStatement();
     std::unique_ptr<StmtBody> bodyStatement();
+    std::unique_ptr<StmtReturn> returnStatement();
 
     std::unique_ptr<Expr> parseExpr();
     std::unique_ptr<Expr> assignment();

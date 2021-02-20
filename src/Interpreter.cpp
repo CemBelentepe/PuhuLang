@@ -159,6 +159,28 @@ void Interpreter::visit(StmtExpr* stmt)
     std::cout << res << std::endl;
 }
 
+void Interpreter::visit(StmtBody* stmt)
+{
+    currentEnviroment = std::make_unique<Enviroment<RunTimeVariable>>(std::move(currentEnviroment));
+
+    for (auto& s : stmt->body)
+    {
+        s->accept(this);
+    }
+
+    currentEnviroment = currentEnviroment->returnToParent();
+}
+
+void Interpreter::visit(StmtReturn* stmt) 
+{
+    Value retVal;
+    if(stmt->retExpr)
+    {
+        retVal = stmt->retExpr->accept(this);
+    }
+    throw retVal;
+}
+
 void Interpreter::visit(DeclVar* decl)
 {
     if (decl->initter)
@@ -181,18 +203,6 @@ void Interpreter::visit(DeclVar* decl)
 void Interpreter::visit(DeclFunc* decl)
 {
     currentNamespace->getVariable(decl->name).val = Value(std::make_shared<PuhuFunction>(decl));
-}
-
-void Interpreter::visit(StmtBody* stmt)
-{
-    currentEnviroment = std::make_unique<Enviroment<RunTimeVariable>>(std::move(currentEnviroment));
-
-    for (auto& s : stmt->body)
-    {
-        s->accept(this);
-    }
-
-    currentEnviroment = currentEnviroment->returnToParent();
 }
 
 std::unique_ptr<Enviroment<Interpreter::RunTimeVariable>>& Interpreter::getCurrentEnviroment()
