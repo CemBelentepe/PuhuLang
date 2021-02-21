@@ -249,7 +249,7 @@ std::unique_ptr<Stmt> Parser::varDecl(std::shared_ptr<Type> type, Token name)
         initter = parseExpr();
     }
     consume(TokenType::SEMI_COLON, "Expect ';' after a variable decleration.");
-    if(!initter)
+    if (!initter)
         equal = consumed();
     return std::make_unique<DeclVar>(name, equal, std::move(type), std::move(initter));
 }
@@ -287,6 +287,12 @@ std::unique_ptr<Stmt> Parser::statement()
         return bodyStatement();
     case TokenType::RETURN:
         return returnStatement();
+    case TokenType::IF:
+        advance();
+        return ifStatement();
+    case TokenType::WHILE:
+        advance();
+        return whileStatement();
     default:
         return exprStatement();
     }
@@ -305,29 +311,58 @@ std::unique_ptr<StmtBody> Parser::bodyStatement()
     std::vector<std::unique_ptr<Stmt>> body;
     while (!match(TokenType::CLOSE_BRACE))
     {
-        std::shared_ptr<Type> type;
-        if (tryParseTypeName(type))
+        try
         {
-            body.push_back(varDecl(type, advance()));
+            std::shared_ptr<Type> type;
+            if (tryParseTypeName(type))
+            {
+                body.push_back(varDecl(type, advance()));
+            }
+            else
+            {
+                body.push_back(statement());
+            }
         }
-        else
+        catch (const TokenError& e)
         {
-            body.push_back(statement());
+            hadError = true;
+            std::cout << e << std::endl;
         }
     }
     return std::make_unique<StmtBody>(std::move(body));
 }
 
-std::unique_ptr<StmtReturn> Parser::returnStatement() 
+std::unique_ptr<StmtReturn> Parser::returnStatement()
 {
     Token retToken = advance();
     std::unique_ptr<Expr> retExpr = nullptr;
-    if(!match(TokenType::SEMI_COLON))
+    if (!match(TokenType::SEMI_COLON))
     {
         retExpr = parseExpr();
         consume(TokenType::SEMI_COLON, "Expect ';' after the expression of a return statement.");
     }
     return std::make_unique<StmtReturn>(retToken, std::move(retExpr));
+}
+
+std::unique_ptr<StmtIf> Parser::ifStatement()
+{
+    Token paren = consume(TokenType::OPEN_PAREN, "Expect '(' after the token 'if'.");
+    std::unique_ptr<Expr> cond = parseExpr();
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after the condition of an if statement.");
+    std::unique_ptr<Stmt> then = statement();
+    std::unique_ptr<Stmt> els = nullptr;
+    if (match(TokenType::ELSE))
+        els = statement();
+    return std::make_unique<StmtIf>(paren, std::move(cond), std::move(then), std::move(els));
+}
+
+std::unique_ptr<StmtWhile> Parser::whileStatement()
+{
+    Token paren = consume(TokenType::OPEN_PAREN, "Expect '(' after the token 'while'.");
+    std::unique_ptr<Expr> cond = parseExpr();
+    consume(TokenType::CLOSE_PAREN, "Expect ')' after the condition of an while statement.");
+    std::unique_ptr<Stmt> body = statement();
+    return std::make_unique<StmtWhile>(paren, std::move(cond), std::move(body));
 }
 
 std::unique_ptr<Expr> Parser::parseExpr()

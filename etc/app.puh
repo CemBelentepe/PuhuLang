@@ -1,11 +1,15 @@
-int square(int x)
+int fibonacci(int n)
 {
-    8;
-    return x*x;
+ 	if(n > 1)
+    {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+ 	else
+		return 1;
 }
 
 void main()
 {
-    int k = square(7);
-    k = square(k);
+    int i = 20;
+    fibonacci(i);
 }

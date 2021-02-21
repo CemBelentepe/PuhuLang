@@ -63,7 +63,7 @@ bool TypeFunction::isSame(const std::shared_ptr<Type>& other) const
             return false;
         for (size_t i = 0; i < param_types.size(); i++)
         {
-            if(param_types[i] != other_param_types[i])
+            if (!param_types[i]->isSame(other_param_types[i]))
                 return false;
         }
         return true;
@@ -80,7 +80,7 @@ std::string TypeFunction::toString()
         ss << param_types[0]->toString();
         for (auto it = ++param_types.begin(); it != param_types.end(); ++it)
         {
-            ss << (*it)->toString() << ", ";
+            ss << ", " << (*it)->toString();
         }
     }
     ss << ")";

@@ -67,6 +67,39 @@ private:
     void do_accept(StmtVisitorBase* visitor) override;
 };
 
+class StmtIf : public Stmt
+{
+public:
+    Token paren;
+    std::unique_ptr<Expr> cond;
+    std::unique_ptr<Stmt> then;
+    std::unique_ptr<Stmt> els;
+
+    explicit StmtIf(Token paren, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> then, std::unique_ptr<Stmt> els)
+        : paren(paren), cond(std::move(cond)), then(std::move(then)), els(std::move(els))
+    {
+    }
+
+private:
+    void do_accept(StmtVisitorBase* visitor) override;
+};
+
+class StmtWhile : public Stmt
+{
+public:
+    Token paren;
+    std::unique_ptr<Expr> cond;
+    std::unique_ptr<Stmt> body;
+
+    explicit StmtWhile(Token paren, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body)
+        : paren(paren), cond(std::move(cond)), body(std::move(body))
+    {
+    }
+
+private:
+    void do_accept(StmtVisitorBase* visitor) override;
+};
+
 class DeclVar : public Stmt
 {
 public:

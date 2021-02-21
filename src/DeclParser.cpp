@@ -52,3 +52,13 @@ void DeclParser::visit(StmtExpr* stmt)
 void DeclParser::visit(StmtReturn* stmt)
 {
 }
+
+void DeclParser::visit(StmtIf* stmt) 
+{
+    
+}
+
+void DeclParser::visit(StmtWhile* stmt) 
+{
+    
+}

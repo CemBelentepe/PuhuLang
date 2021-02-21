@@ -32,6 +32,8 @@ public:
     void visit(StmtExpr* stmt) override;
     void visit(StmtBody* stmt) override;
     void visit(StmtReturn* stmt) override;
+    void visit(StmtIf* stmt) override;
+    void visit(StmtWhile* stmt) override;
     void visit(DeclVar* decl) override;
     void visit(DeclFunc* decl) override;
 
@@ -139,6 +141,20 @@ private:
         virtual void log(std::ostream& os = std::cout) override
         {
             os << "[ERROR] Cannot return a type of '" << type_returning->toString() << "' from a function returning '" << type_expected->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
+            os << token.toStringInLine(Logger::RED);
+        }
+    };
+    class NotExpectedError : public TypeError
+    {
+    public:
+        TypePtr type_expected;
+        TypePtr type_recieved;
+        explicit NotExpectedError(Token token, TypePtr type_expected, TypePtr type_recieved)
+            : TypeError("", token), type_expected(type_expected), type_recieved(type_recieved) {}
+
+        virtual void log(std::ostream& os = std::cout) override
+        {
+            os << "[ERROR] Expected the type of '" << type_expected->toString() << "' but recieved '" << type_recieved->toString() << "' [line: " << token.line << ", col: " << token.col << "]\n";
             os << token.toStringInLine(Logger::RED);
         }
     };

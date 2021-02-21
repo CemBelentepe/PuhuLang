@@ -51,7 +51,15 @@ void Interpreter::run()
         return;
     }
 
-    std::get<std::shared_ptr<Callable>>(entry.val.data.data)->call(this, {});
+    try
+    {
+        std::get<std::shared_ptr<Callable>>(entry.val.data.data)->call(this, {});
+    }
+    catch(const Parser::TokenError& err)
+    {
+        std::cout << err << std::endl;
+        hadError = true;
+    }
 }
 
 bool Interpreter::fail()
@@ -101,9 +109,10 @@ void Interpreter::visit(ExprCall* expr)
     Value callee = expr->callee->accept(this);
     auto callable = std::get<std::shared_ptr<Callable>>(callee.data.data);
 
-    currentEnviroment = std::make_unique<Enviroment<Interpreter::RunTimeVariable>>(std::move(currentEnviroment));
+    auto prevEnv = std::move(currentEnviroment);
+    currentEnviroment = std::make_unique<Enviroment<Interpreter::RunTimeVariable>>(nullptr);
     result = callable->call(this, args);
-    currentEnviroment = currentEnviroment->returnToParent();
+    currentEnviroment = std::move(prevEnv);
 }
 
 void Interpreter::visit(ExprLiteral* expr)
@@ -171,15 +180,39 @@ void Interpreter::visit(StmtBody* stmt)
     currentEnviroment = currentEnviroment->returnToParent();
 }
 
-void Interpreter::visit(StmtReturn* stmt) 
+void Interpreter::visit(StmtReturn* stmt)
 {
     Value retVal;
-    if(stmt->retExpr)
+    if (stmt->retExpr)
     {
         retVal = stmt->retExpr->accept(this);
     }
     throw retVal;
 }
+
+void Interpreter::visit(StmtIf* stmt)
+{
+    Value cond = stmt->cond->accept(this);
+    if (std::get<bool>(cond.data.data))
+    {
+        stmt->then->accept(this);
+    }
+    else if (stmt->els)
+    {
+        stmt->els->accept(this);
+    }
+}
+
+void Interpreter::visit(StmtWhile* stmt)
+{
+    Value cond = stmt->cond->accept(this);
+    while (std::get<bool>(cond.data.data))
+    {
+        stmt->body->accept(this);
+        cond = stmt->cond->accept(this);
+    }
+}
+
 
 void Interpreter::visit(DeclVar* decl)
 {

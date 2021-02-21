@@ -43,6 +43,8 @@ private:
     std::unique_ptr<StmtExpr> exprStatement();
     std::unique_ptr<StmtBody> bodyStatement();
     std::unique_ptr<StmtReturn> returnStatement();
+    std::unique_ptr<StmtIf> ifStatement();
+    std::unique_ptr<StmtWhile> whileStatement();
 
     std::unique_ptr<Expr> parseExpr();
     std::unique_ptr<Expr> assignment();

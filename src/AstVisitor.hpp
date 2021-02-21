@@ -24,6 +24,8 @@ public:
     virtual void visit(StmtExpr* stmt) = 0;
     virtual void visit(StmtBody* stmt) = 0;
     virtual void visit(StmtReturn* stmt) = 0;
+    virtual void visit(StmtIf* stmt) = 0;
+    virtual void visit(StmtWhile* stmt) = 0;
 
     virtual void visit(DeclVar* decl) = 0;
     virtual void visit(DeclFunc* decl) = 0;

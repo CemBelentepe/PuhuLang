@@ -203,7 +203,20 @@ void TypeChecker::visit(StmtBody* stmt)
 
     for (auto& s : stmt->body)
     {
-        s->accept(this);
+        try
+        {
+            s->accept(this);
+        }
+        catch (TypeError& e)
+        {
+            e.log();
+            hadError = true;
+        }
+        catch (const Parser::TokenError& e)
+        {
+            std::cout << e << std::endl;
+            hadError = true;
+        }
     }
 
     currentEnviroment = currentEnviroment->returnToParent();
@@ -221,6 +234,30 @@ void TypeChecker::visit(StmtReturn* stmt)
     {
         throw ReturnError(stmt->retToken, currentReturn, retType);
     }
+}
+
+void TypeChecker::visit(StmtIf* stmt) 
+{
+    std::shared_ptr<Type> type = stmt->cond->accept(this);
+    auto type_bool = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL);
+    if(!type->isSame(type_bool))
+    {
+        throw NotExpectedError(stmt->paren, type_bool, type);
+    }
+    stmt->then->accept(this);
+    if(stmt->els)
+        stmt->els->accept(this);
+}
+
+void TypeChecker::visit(StmtWhile* stmt) 
+{
+    std::shared_ptr<Type> type = stmt->cond->accept(this);
+    auto type_bool = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL);
+    if(!type->isSame(type_bool))
+    {
+        throw NotExpectedError(stmt->paren, type_bool, type);
+    }
+    stmt->body->accept(this);
 }
 
 void TypeChecker::visit(DeclVar* decl)

@@ -29,6 +29,16 @@ void StmtReturn::do_accept(StmtVisitorBase* visitor)
     visitor->visit(this);
 }
 
+void StmtIf::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
+void StmtWhile::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
 void DeclVar::do_accept(StmtVisitorBase* visitor) 
 {
     visitor->visit(this);

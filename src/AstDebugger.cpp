@@ -107,8 +107,31 @@ void AstDebugger::visit(StmtBody* stmt)
 void AstDebugger::visit(StmtReturn* stmt)
 {
     os << "RETURN ";
-    if(stmt->retExpr)
+    if (stmt->retExpr)
         stmt->retExpr->accept(this);
+    os << std::endl;
+}
+
+void AstDebugger::visit(StmtIf* stmt)
+{
+    os << "IF ";
+    stmt->cond->accept(this);
+    os << "\n";
+    stmt->then->accept(this);
+    if (stmt->els)
+    {
+        os << "ELSE ";
+        stmt->els->accept(this);
+    }
+    os << std::endl;
+}
+
+void AstDebugger::visit(StmtWhile* stmt)
+{
+    os << "WHILE ";
+    stmt->cond->accept(this);
+    os << "\n";
+    stmt->body->accept(this);
     os << std::endl;
 }
 
