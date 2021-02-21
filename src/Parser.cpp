@@ -218,8 +218,7 @@ std::unique_ptr<Stmt> Parser::declaration()
     }
     else if (match(TokenType::NAMESPACE))
     {
-        // TODO implement namespaceses
-        throw TokenError("Namespaced are not implemented.", consumed());
+        return namespaceDecl();
     }
     else
     {
@@ -275,6 +274,26 @@ std::unique_ptr<Stmt> Parser::funcDecl(std::shared_ptr<Type> type, Token name)
     std::unique_ptr<StmtBody> body = bodyStatement();
 
     return std::make_unique<DeclFunc>(name, std::move(type), std::move(param_names), std::move(body));
+}
+
+std::unique_ptr<Stmt> Parser::namespaceDecl()
+{
+    Token name = consume(TokenType::IDENTIFIER, "Expect and identifier as a namespace name.");
+    consume(TokenType::OPEN_BRACE, "Expect '{' after namespace name.");
+    std::vector<std::unique_ptr<Stmt>> body;
+    while (!match(TokenType::CLOSE_BRACE))
+    {
+        try
+        {
+            body.push_back(declaration());
+        }
+        catch (const TokenError& err)
+        {
+            std::cout << err << std::endl;
+            hadError = true;
+        }
+    }
+    return std::make_unique<DeclNamespace>(name, std::move(body));
 }
 
 std::unique_ptr<Stmt> Parser::statement()
@@ -380,8 +399,8 @@ std::unique_ptr<Expr> Parser::assignment()
 
         if (expr->instance == Expr::Instance::VariableGet)
         {
-            Token name = dynamic_cast<ExprVariableGet*>(expr.get())->name;
-            expr = std::make_unique<ExprVariableSet>(name, eq, std::move(asgn));
+            ExprVariableGet* get = dynamic_cast<ExprVariableGet*>(expr.get());
+            expr = std::make_unique<ExprVariableSet>(get->address, get->name, eq, std::move(asgn));
         }
         else
         {
@@ -507,8 +526,28 @@ std::unique_ptr<Expr> Parser::primary()
         consume(TokenType::CLOSE_PAREN, "Expect ')' after grouping expression.");
         return std::move(inside);
     }
+    case TokenType::DOUBLE_COLON:
+    {
+        std::vector<std::string> address = {""};
+        Token name = advance();
+        while (match(TokenType::DOUBLE_COLON))
+        {
+            address.push_back(std::string(name.lexeme));
+            name = advance();
+        }
+        return std::make_unique<ExprVariableGet>(address, name);
+    }
     case TokenType::IDENTIFIER:
-        return std::make_unique<ExprVariableGet>(token);
+    {
+        Token name = token;
+        std::vector<std::string> address;
+        while (match(TokenType::DOUBLE_COLON))
+        {
+            address.push_back(std::string(name.lexeme));
+            name = advance();
+        }
+        return std::make_unique<ExprVariableGet>(address, name);
+    }
     default:
         throw TokenError("Invalid identifier.", token);
     }

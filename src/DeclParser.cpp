@@ -38,7 +38,16 @@ void DeclParser::visit(DeclVar* decl)
 
 void DeclParser::visit(DeclFunc* decl)
 {
+    decl->address = currentNamespace->getAddress();
     currentNamespace->addVariable(Variable(decl->name, decl->type, true));
+}
+
+void DeclParser::visit(DeclNamespace* decl) 
+{
+    currentNamespace = currentNamespace->makeNamespace(decl->name);
+    for(auto& stmt : decl->body)
+        stmt->accept(this);
+    currentNamespace = currentNamespace->parent;
 }
 
 void DeclParser::visit(StmtBody* stmt)

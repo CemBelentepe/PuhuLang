@@ -146,20 +146,27 @@ void TypeChecker::visit(ExprLiteral* expr)
 
 void TypeChecker::visit(ExprVariableGet* expr)
 {
-    if (currentEnviroment)
+    if (expr->address.size() > 0)
     {
-        try
-        {
-            expr->type = currentEnviroment->getVariable(expr->name).type;
-        }
-        catch (const Parser::TokenError& err)
-        {
-            expr->type = currentNamespace->getVariable(expr->name).type;
-        }
+        expr->type = currentNamespace->getVariable(expr->address, expr->name).type;
     }
     else
     {
-        expr->type = currentNamespace->getVariable(expr->name).type;
+        if (currentEnviroment)
+        {
+            try
+            {
+                expr->type = currentEnviroment->getVariable(expr->name).type;
+            }
+            catch (const Parser::TokenError& err)
+            {
+                expr->type = currentNamespace->getVariable(expr->name).type;
+            }
+        }
+        else
+        {
+            expr->type = currentNamespace->getVariable(expr->name).type;
+        }
     }
     result = expr->type;
 }
@@ -169,20 +176,27 @@ void TypeChecker::visit(ExprVariableSet* expr)
     std::shared_ptr<Type> type_asgn = expr->asgn->accept(this);
 
     Variable var;
-    if (currentEnviroment)
+    if (expr->address.size() > 0)
     {
-        try
-        {
-            var = currentEnviroment->getVariable(expr->name);
-        }
-        catch (const Parser::TokenError& err)
-        {
-            var = currentNamespace->getVariable(expr->name);
-        }
+        var = currentNamespace->getVariable(expr->address, expr->name);
     }
     else
     {
-        var = currentNamespace->getVariable(expr->name);
+        if (currentEnviroment)
+        {
+            try
+            {
+                var = currentEnviroment->getVariable(expr->name);
+            }
+            catch (const Parser::TokenError& err)
+            {
+                var = currentNamespace->getVariable(expr->name);
+            }
+        }
+        else
+        {
+            var = currentNamespace->getVariable(expr->name);
+        }
     }
 
     if (!var.type->isSame(type_asgn))
@@ -229,31 +243,31 @@ void TypeChecker::visit(StmtReturn* stmt)
         retType = stmt->retExpr->accept(this);
     else
         retType = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID);
-        
+
     if (!retType->isSame(currentReturn))
     {
         throw ReturnError(stmt->retToken, currentReturn, retType);
     }
 }
 
-void TypeChecker::visit(StmtIf* stmt) 
+void TypeChecker::visit(StmtIf* stmt)
 {
     std::shared_ptr<Type> type = stmt->cond->accept(this);
     auto type_bool = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL);
-    if(!type->isSame(type_bool))
+    if (!type->isSame(type_bool))
     {
         throw NotExpectedError(stmt->paren, type_bool, type);
     }
     stmt->then->accept(this);
-    if(stmt->els)
+    if (stmt->els)
         stmt->els->accept(this);
 }
 
-void TypeChecker::visit(StmtWhile* stmt) 
+void TypeChecker::visit(StmtWhile* stmt)
 {
     std::shared_ptr<Type> type = stmt->cond->accept(this);
     auto type_bool = std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL);
-    if(!type->isSame(type_bool))
+    if (!type->isSame(type_bool))
     {
         throw NotExpectedError(stmt->paren, type_bool, type);
     }
@@ -300,6 +314,18 @@ void TypeChecker::visit(DeclFunc* decl)
 
     currentReturn = savedReturn;
     currentEnviroment = currentEnviroment->returnToParent();
+}
+
+void TypeChecker::visit(DeclNamespace* decl) 
+{
+    currentNamespace = currentNamespace->makeNamespace(decl->name);
+
+    for(auto& stmt : decl->body)
+    {
+        stmt->accept(this);
+    }
+
+    currentNamespace = currentNamespace->parent;
 }
 
 void TypeChecker::init()

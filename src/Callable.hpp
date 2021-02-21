@@ -15,6 +15,7 @@ public:
     virtual std::vector<std::shared_ptr<Type>> arity() = 0;
     virtual std::string name() = 0;
     virtual std::shared_ptr<Type> getType() = 0;
+    virtual std::vector<std::string> getNamespace() = 0;
 };
 
 class PuhuFunction : public Callable
@@ -28,4 +29,5 @@ public:
     std::vector<std::shared_ptr<Type>> arity() override;
     std::string name() override;
     std::shared_ptr<Type> getType() override;
+    std::vector<std::string> getNamespace() override;
 };

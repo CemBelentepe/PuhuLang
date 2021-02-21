@@ -19,10 +19,15 @@ public:
 
     Namespace<Var_T>* makeNamespace(Token name);
     Namespace<Var_T>* getParent();
+    Namespace<Var_T>* getChild(Token name);
+    std::string getName();
+    Namespace<Var_T>* getNamespace(const std::vector<std::string>& address);
+    std::vector<std::string> getAddress();
 
     Var_T& addVariable(Var_T var);
     Var_T& getVariable(Token name);
     Var_T& getVariable(std::string name);
+    Var_T& getVariable(const std::vector<std::string>& address, Token name);
 
 public:
     std::string name;
@@ -71,6 +76,60 @@ Namespace<Var_T>* Namespace<Var_T>::getParent()
 }
 
 template <typename Var_T>
+Namespace<Var_T>* Namespace<Var_T>::getChild(Token name)
+{
+    auto it = childs.find(std::string(name.lexeme));
+    if (it == childs.end())
+    {
+        throw Parser::TokenError("Namespace with name '" + std::string(name.lexeme) + "' is not defined inside the namespace '" + this->getName() + "'.", name);
+    }
+    return it->second.get();
+}
+
+template <typename Var_T>
+std::string Namespace<Var_T>::getName()
+{
+    if (parent)
+        return parent->getName() + name + "::";
+    else
+        return name + "::";
+}
+
+template <typename Var_T>
+Namespace<Var_T>* Namespace<Var_T>::getNamespace(const std::vector<std::string>& address)
+{
+    if (address.size() == 0)
+        return this;
+    auto child = childs.find(address[0]);
+    if (address.size() == 1)
+    {
+        return child->second.get();
+    }
+    else
+    {
+        std::vector<std::string> remaining;
+        for (auto it = address.begin() + 1; it != address.end(); ++it)
+            remaining.push_back(*it);
+        return child->second->getNamespace(remaining);
+    }
+}
+
+template <typename Var_T>
+std::vector<std::string> Namespace<Var_T>::getAddress()
+{
+    if (parent)
+    {
+        auto vec = parent->getAddress();
+        vec.push_back(name);
+        return std::move(vec);
+    }
+    else
+    {
+        return {};
+    }
+}
+
+template <typename Var_T>
 Var_T& Namespace<Var_T>::addVariable(Var_T var)
 {
     std::string sName(var.name.lexeme);
@@ -111,4 +170,40 @@ Var_T& Namespace<Var_T>::getVariable(std::string name)
         }
     }
     return it->second;
+}
+
+template <typename Var_T>
+Var_T& Namespace<Var_T>::getVariable(const std::vector<std::string>& address, Token name)
+{
+    if (address.size() > 0)
+    {
+        auto ns = childs.find(address[0]);
+        if (ns == childs.end())
+        {
+            if (parent)
+                return parent->getVariable(address, name);
+            else if (address[0] == this->name)
+            {
+                std::vector<std::string> remaining;
+                for (auto it = address.begin() + 1; it != address.end(); ++it)
+                    remaining.push_back(*it);
+                return this->getVariable(remaining, name);
+            }
+            else
+            {
+                std::string addr = "";
+                for (auto& n : address)
+                    addr += n + "::";
+                throw Parser::TokenError("Variable with name '" + addr + std::string(name.lexeme) + "' is not defined inside the namespace '" + this->getName() + "'.", name);
+            }
+        }
+        std::vector<std::string> remaining;
+        for (auto it = address.begin() + 1; it != address.end(); ++it)
+            remaining.push_back(*it);
+        return ns->second->getVariable(remaining, name);
+    }
+    else
+    {
+        return getVariable(name);
+    }
 }

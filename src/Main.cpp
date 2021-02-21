@@ -89,4 +89,9 @@ void run(const char* filepath)
 
     Interpreter interpreter(root, std::move(global));
     interpreter.run();
+    if(interpreter.fail())
+    {
+        std::cout << "Terminated due to run time error.\n";
+        return;
+    }
 }

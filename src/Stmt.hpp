@@ -124,9 +124,25 @@ public:
     std::shared_ptr<Type> type;
     std::unique_ptr<StmtBody> body;
     std::vector<Token> param_names;
+    std::vector<std::string> address;
 
     explicit DeclFunc(Token name, std::shared_ptr<Type> type, const std::vector<Token>& param_names, std::unique_ptr<StmtBody> body)
         : name(name), type(type), param_names(param_names), body(std::move(body))
+    {
+    }
+
+private:
+    void do_accept(StmtVisitorBase* visitor) override;
+};
+
+class DeclNamespace : public Stmt
+{
+public:
+    Token name;
+    std::vector<std::unique_ptr<Stmt>> body;
+
+    explicit DeclNamespace(Token name, std::vector<std::unique_ptr<Stmt>> body)
+        : name(name), body(std::move(body))
     {
     }
 

@@ -48,3 +48,8 @@ void DeclFunc::do_accept(StmtVisitorBase* visitor)
 {
     visitor->visit(this);
 }
+
+void DeclNamespace::do_accept(StmtVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}

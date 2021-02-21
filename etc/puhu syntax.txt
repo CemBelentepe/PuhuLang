@@ -25,7 +25,7 @@ member -> ("public" | "private" | "protected")? (varDec | funcDec)
 	
 // Expressions
 expression 	-> assignment | logic_or
-assignment 	-> "*"* (IDENTIFIER "::")* (call ".")? (IDENTIFIER "=" expressionStmt)
+assignment 	-> "*"* (IDENTIFIER "::")* (call ".")? (IDENTIFIER "=" expressionStmt) // actually -> logic_or = expressionStmt
 logic_or 	-> logic_and ("||" logic_and)*
 logic_and 	-> bit_or  ("&&" bit_or)*
 bit_or 		-> bit_xor ("|" bit_xor)*
@@ -39,8 +39,8 @@ multiplication -> prefix (("*" | "/" | "%") prefix)*
 prefix 		-> ("-" | "+" | "++" | "--")? unary
 unary 		-> ("!" | "~" | "^" | "ref" | cast) unary | postfix
 postfix		-> call ("++" | "--")?
-call		-> primary ( ("(" arguments? ")") | ( "." IDENTIFIER) | ("[" expression "]") )*
+call		-> primary ( ("(" arguments? ")")  | ("[" expression "]") | ( "." IDENTIFIER) | ( "::" IDENTIFIER) )*
 primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | IDENTIFIER
 
-cast -> "(" typeName ")"
+cast -> "cast<" typeName ">"
 parameters -> expression ("," expression)*

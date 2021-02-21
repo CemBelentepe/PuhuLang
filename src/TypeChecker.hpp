@@ -36,6 +36,7 @@ public:
     void visit(StmtWhile* stmt) override;
     void visit(DeclVar* decl) override;
     void visit(DeclFunc* decl) override;
+    void visit(DeclNamespace* decl) override;
 
 private:
     std::vector<std::unique_ptr<Stmt>>& root;

@@ -37,7 +37,7 @@ private:
     std::unique_ptr<Stmt> varDecl(std::shared_ptr<Type> type, Token name);
     std::unique_ptr<Stmt> funcDecl(std::shared_ptr<Type> type, Token name);
     // std::unique_ptr<Stmt> classDeclaration();
-    // std::unique_ptr<Stmt> namespaceDecl();
+    std::unique_ptr<Stmt> namespaceDecl();
 
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<StmtExpr> exprStatement();

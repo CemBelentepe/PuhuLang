@@ -55,7 +55,7 @@ void Interpreter::run()
     {
         std::get<std::shared_ptr<Callable>>(entry.val.data.data)->call(this, {});
     }
-    catch(const Parser::TokenError& err)
+    catch (const Parser::TokenError& err)
     {
         std::cout << err << std::endl;
         hadError = true;
@@ -111,7 +111,10 @@ void Interpreter::visit(ExprCall* expr)
 
     auto prevEnv = std::move(currentEnviroment);
     currentEnviroment = std::make_unique<Enviroment<Interpreter::RunTimeVariable>>(nullptr);
+    auto prevNs = currentNamespace;
+    currentNamespace = global->getNamespace(callable->getNamespace());
     result = callable->call(this, args);
+    currentNamespace = prevNs;
     currentEnviroment = std::move(prevEnv);
 }
 
@@ -122,43 +125,55 @@ void Interpreter::visit(ExprLiteral* expr)
 
 void Interpreter::visit(ExprVariableGet* expr)
 {
-    if (currentEnviroment)
+    if (expr->address.size() > 0)
     {
-        try
-        {
-            result = currentEnviroment->getVariable(expr->name).val;
-        }
-        catch (const Parser::TokenError& err)
-        {
-            result = currentNamespace->getVariable(expr->name).val;
-        }
+        result = currentNamespace->getVariable(expr->address, expr->name).val;
     }
     else
     {
-        result = currentNamespace->getVariable(expr->name).val;
+        if (currentEnviroment)
+        {
+            try
+            {
+                result = currentEnviroment->getVariable(expr->name).val;
+            }
+            catch (const Parser::TokenError& err)
+            {
+                result = currentNamespace->getVariable(expr->name).val;
+            }
+        }
+        else
+        {
+            result = currentNamespace->getVariable(expr->name).val;
+        }
     }
 }
 
 void Interpreter::visit(ExprVariableSet* expr)
 {
     Value val = expr->asgn->accept(this);
-
-    if (currentEnviroment)
+    if (expr->address.size() > 0)
     {
-        try
+        currentNamespace->getVariable(expr->address, expr->name).val = val;
+    }
+    else
+    {
+        if (currentEnviroment)
         {
-            currentEnviroment->getVariable(expr->name).val = val;
+            try
+            {
+                currentEnviroment->getVariable(expr->name).val = val;
+            }
+            catch (const Parser::TokenError& err)
+            {
+                currentNamespace->getVariable(expr->name).val = val;
+            }
         }
-        catch (const Parser::TokenError& err)
+        else
         {
             currentNamespace->getVariable(expr->name).val = val;
         }
     }
-    else
-    {
-        currentNamespace->getVariable(expr->name).val = val;
-    }
-
     result = val;
 }
 
@@ -213,7 +228,6 @@ void Interpreter::visit(StmtWhile* stmt)
     }
 }
 
-
 void Interpreter::visit(DeclVar* decl)
 {
     if (decl->initter)
@@ -235,7 +249,19 @@ void Interpreter::visit(DeclVar* decl)
 
 void Interpreter::visit(DeclFunc* decl)
 {
+    // TODO do before start
     currentNamespace->getVariable(decl->name).val = Value(std::make_shared<PuhuFunction>(decl));
+}
+
+void Interpreter::visit(DeclNamespace* decl) 
+{
+    // TODO do before start
+    currentNamespace = currentNamespace->getChild(decl->name);
+    for(auto& stmt : decl->body)
+    {
+        stmt->accept(this);
+    }
+    currentNamespace = currentNamespace->parent;
 }
 
 std::unique_ptr<Enviroment<Interpreter::RunTimeVariable>>& Interpreter::getCurrentEnviroment()

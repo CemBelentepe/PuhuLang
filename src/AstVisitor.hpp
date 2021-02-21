@@ -29,6 +29,7 @@ public:
 
     virtual void visit(DeclVar* decl) = 0;
     virtual void visit(DeclFunc* decl) = 0;
+    virtual void visit(DeclNamespace* decl) = 0;
 };
 
 template <typename T>

@@ -75,14 +75,24 @@ void AstDebugger::visit(ExprCall* expr)
 
 void AstDebugger::visit(ExprVariableGet* expr)
 {
-    os << "GET " << expr->name.lexeme;
+    os << "(GET ";
+    for(auto& t : expr->address)
+    {
+        os << t << "::";
+    }
+    os << expr->name.lexeme << ")";
     if (canShowType)
         os << ": " << expr->type->toString();
 }
 
 void AstDebugger::visit(ExprVariableSet* expr)
 {
-    os << "SET " << expr->name.lexeme << " = ";
+    os << "(SET ";
+    for(auto& t : expr->address)
+    {
+        os << t << "::";
+    }
+    os << expr->name.lexeme << " = ";
     expr->asgn->accept(this);
     if (canShowType)
         os << ": " << expr->type->toString();
@@ -135,28 +145,38 @@ void AstDebugger::visit(StmtWhile* stmt)
     os << std::endl;
 }
 
-void AstDebugger::visit(DeclVar* stmt)
+void AstDebugger::visit(DeclVar* decl)
 {
-    os << "VAR " << stmt->name.lexeme;
+    os << "VAR " << decl->name.lexeme;
     if (canShowType)
-        os << " : " << stmt->type->toString();
-    if (stmt->initter)
+        os << " : " << decl->type->toString();
+    if (decl->initter)
     {
         os << " = ";
-        stmt->initter->accept(this);
+        decl->initter->accept(this);
     }
     os << std::endl;
 }
 
-void AstDebugger::visit(DeclFunc* stmt)
+void AstDebugger::visit(DeclFunc* decl)
 {
-    os << "FUNC " << stmt->name.lexeme << "(";
-    for (size_t i = 0; i < stmt->param_names.size(); i++)
+    os << "FUNC " << decl->name.lexeme << "(";
+    for (size_t i = 0; i < decl->param_names.size(); i++)
     {
         if (i != 0)
             os << ", ";
-        os << std::dynamic_pointer_cast<TypeFunction>(stmt->type)->param_types[i]->toString();
+        os << std::dynamic_pointer_cast<TypeFunction>(decl->type)->param_types[i]->toString();
     }
-    os << ") -> " << stmt->type->instrinsicType->toString() << " ";
-    stmt->body->accept(this);
+    os << ") -> " << decl->type->instrinsicType->toString() << " ";
+    decl->body->accept(this);
+}
+
+void AstDebugger::visit(DeclNamespace* decl) 
+{
+    os << "NAMESPACE " << decl->name.lexeme << "BEGIN\n";
+    for(auto& stmt : decl->body)
+    {
+        stmt->accept(this);
+    }
+    os << "END" << std::endl;
 }

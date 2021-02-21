@@ -121,10 +121,11 @@ private:
 class ExprVariableGet : public Expr
 {
 public:
+    std::vector<std::string> address;
     Token name;
 
-    explicit ExprVariableGet(Token name)
-        : Expr(Instance::VariableGet, Type::getNullType()), name(name)
+    explicit ExprVariableGet(const std::vector<std::string>& address, Token name)
+        : Expr(Instance::VariableGet, Type::getNullType()), address(address), name(name)
     {
     }
 
@@ -135,12 +136,13 @@ private:
 class ExprVariableSet : public Expr
 {
 public:
+    std::vector<std::string> address;
     Token name;
     Token equal;
     std::unique_ptr<Expr> asgn;
 
-    explicit ExprVariableSet(Token name, Token equal, std::unique_ptr<Expr> asgn)
-        : Expr(Instance::VariableSet, Type::getNullType()), name(name), equal(equal), asgn(std::move(asgn))
+    explicit ExprVariableSet(const std::vector<std::string>& address, Token name, Token equal, std::unique_ptr<Expr> asgn)
+        : Expr(Instance::VariableSet, Type::getNullType()), address(address), name(name), equal(equal), asgn(std::move(asgn))
     {
     }
 

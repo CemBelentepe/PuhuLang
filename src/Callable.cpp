@@ -40,3 +40,8 @@ std::shared_ptr<Type> PuhuFunction::getType()
 {
     return func->type;
 }
+
+std::vector<std::string> PuhuFunction::getNamespace() 
+{
+    return func->address;
+}
