@@ -1,6 +1,5 @@
 void main()
 {
-    phc::print("Hello, What is your name?\n");
-    string name = phc::input();
-    phc::print("Nice to meet you " + name + "!\n");
+    int& x;
+    x = heap int;
 }

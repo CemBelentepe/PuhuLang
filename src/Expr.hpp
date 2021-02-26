@@ -19,8 +19,11 @@ public:
         Unary,
         Call,
         Literal,
+        Heap,
         VariableGet,
-        VariableSet
+        VariableSet,
+        PtrSet,
+        PtrGet
     };
     const Instance instance;
     std::shared_ptr<Type> type;
@@ -118,6 +121,20 @@ private:
     void do_accept(ExprVisitorBase* visitor) override;
 };
 
+class ExprHeap : public Expr
+{
+public:
+    Token heap;
+
+    explicit ExprHeap(Token heap, std::shared_ptr<Type> type)
+        : Expr(Instance::Heap, std::make_shared<TypePointer>(type, true))
+    {
+    }
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
 class ExprVariableGet : public Expr
 {
 public:
@@ -145,6 +162,35 @@ public:
         : Expr(Instance::VariableSet, Type::getNullType()), address(address), name(name), equal(equal), asgn(std::move(asgn))
     {
     }
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
+class ExprPtrGet : public Expr
+{
+public:
+    Token token;
+    std::unique_ptr<Expr> expr;
+
+    explicit ExprPtrGet(Token token, std::unique_ptr<Expr> expr)
+        : Expr(Instance::PtrGet, Type::getNullType()), token(token), expr(std::move(expr))
+        {}
+
+private:
+    void do_accept(ExprVisitorBase* visitor) override;
+};
+
+class ExprPtrSet : public Expr
+{
+public:
+    Token token;
+    std::unique_ptr<Expr> expr;
+    std::unique_ptr<Expr> asgn;
+
+    explicit ExprPtrSet(Token token, std::unique_ptr<Expr> expr, std::unique_ptr<Expr> asgn)
+        : Expr(Instance::PtrSet, Type::getNullType()), token(token),expr(std::move(expr)), asgn(std::move(asgn))
+        {}
 
 private:
     void do_accept(ExprVisitorBase* visitor) override;

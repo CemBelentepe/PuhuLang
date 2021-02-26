@@ -45,6 +45,30 @@ std::string TypePrimitive::toString()
     return "[invalid primitive type]";
 }
 
+bool TypePointer::isSame(const std::shared_ptr<Type>& other) const
+{
+    if (other->tag == Tag::POINTER)
+    {
+        return !instrinsicType || !other->instrinsicType || instrinsicType->isSame(other->instrinsicType);
+    }
+    return false;
+}
+
+std::string TypePointer::toString()
+{
+    if (instrinsicType)
+    {
+        if(isOwner)
+            return instrinsicType->toString() + "&";
+        else
+            return instrinsicType->toString() + "*";
+    }
+    else
+    {
+        return "nullptr";
+    }
+}
+
 bool TypeString::isSame(const std::shared_ptr<Type>& other) const
 {
     return other->tag == Type::Tag::STRING;

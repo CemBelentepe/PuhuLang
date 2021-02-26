@@ -23,7 +23,6 @@ public:
         RunTimeVariable() = default;
         RunTimeVariable(const RunTimeVariable& var);
         explicit RunTimeVariable(const Variable& var);
-        explicit RunTimeVariable(const Variable& var, const Value& val);
         explicit RunTimeVariable(const Token& name, const std::shared_ptr<Type>& type, bool initialized, const Value& val);
     };
 
@@ -41,6 +40,7 @@ public:
     void visit(ExprUnary* expr) override;
     void visit(ExprCall* expr) override;
     void visit(ExprLiteral* expr) override;
+    void visit(ExprHeap* expr) override;
     void visit(ExprVariableGet* expr) override;
     void visit(ExprVariableSet* expr) override;
 

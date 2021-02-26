@@ -73,10 +73,15 @@ void AstDebugger::visit(ExprCall* expr)
         os << ": " << expr->type->toString();
 }
 
+void AstDebugger::visit(ExprHeap* expr)
+{
+    os << "heap " << expr->type->toString();
+}
+
 void AstDebugger::visit(ExprVariableGet* expr)
 {
     os << "(GET ";
-    for(auto& t : expr->address)
+    for (auto& t : expr->address)
     {
         os << t << "::";
     }
@@ -88,12 +93,13 @@ void AstDebugger::visit(ExprVariableGet* expr)
 void AstDebugger::visit(ExprVariableSet* expr)
 {
     os << "(SET ";
-    for(auto& t : expr->address)
+    for (auto& t : expr->address)
     {
         os << t << "::";
     }
     os << expr->name.lexeme << " = ";
     expr->asgn->accept(this);
+    os << ")";
     if (canShowType)
         os << ": " << expr->type->toString();
 }
@@ -147,9 +153,7 @@ void AstDebugger::visit(StmtWhile* stmt)
 
 void AstDebugger::visit(DeclVar* decl)
 {
-    os << "VAR " << decl->name.lexeme;
-    if (canShowType)
-        os << " : " << decl->type->toString();
+    os << "VAR " << decl->name.lexeme << " : " << decl->type->toString();
     if (decl->initter)
     {
         os << " = ";
@@ -161,7 +165,7 @@ void AstDebugger::visit(DeclVar* decl)
 void AstDebugger::visit(DeclFunc* decl)
 {
     os << "FUNC ";
-    for(auto& str : decl->address)
+    for (auto& str : decl->address)
     {
         std::cout << str << "::";
     }
@@ -176,10 +180,10 @@ void AstDebugger::visit(DeclFunc* decl)
     decl->body->accept(this);
 }
 
-void AstDebugger::visit(DeclNamespace* decl) 
+void AstDebugger::visit(DeclNamespace* decl)
 {
     os << "NAMESPACE " << decl->name.lexeme << " BEGIN\n";
-    for(auto& stmt : decl->body)
+    for (auto& stmt : decl->body)
     {
         stmt->accept(this);
     }

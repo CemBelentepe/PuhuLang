@@ -53,12 +53,27 @@ void ExprLiteral::do_accept(ExprVisitorBase* visitor)
     visitor->visit(this);
 }
 
+void ExprHeap::do_accept(ExprVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
 void ExprVariableGet::do_accept(ExprVisitorBase* visitor) 
 {
     visitor->visit(this);
 }
 
 void ExprVariableSet::do_accept(ExprVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
+void ExprPtrGet::do_accept(ExprVisitorBase* visitor) 
+{
+    visitor->visit(this);
+}
+
+void ExprPtrSet::do_accept(ExprVisitorBase* visitor) 
 {
     visitor->visit(this);
 }

@@ -195,11 +195,11 @@ std::shared_ptr<Type> Parser::parseTypeName()
     }
     else if (match(TokenType::BIT_AND))
     {
-        // TODO owner ptr
+        type = std::make_shared<TypePointer>(std::move(type), true);
     }
     else if (match(TokenType::STAR))
     {
-        // TODO referance ptr
+        type = std::make_shared<TypePointer>(std::move(type), false);
     }
     else if (match(TokenType::OPEN_BRACKET))
     {
@@ -402,6 +402,11 @@ std::unique_ptr<Expr> Parser::assignment()
             ExprVariableGet* get = dynamic_cast<ExprVariableGet*>(expr.get());
             expr = std::make_unique<ExprVariableSet>(get->address, get->name, eq, std::move(asgn));
         }
+        else if(expr->instance == Expr::Instance::PtrGet)
+        {
+            ExprPtrGet* get = dynamic_cast<ExprPtrGet*>(expr.get());
+            expr = std::make_unique<ExprPtrSet>(get->token, std::move(get->expr), std::move(asgn));
+        }
         else
         {
             throw TokenError("Invalid assignment target.", eq);
@@ -466,11 +471,24 @@ std::unique_ptr<Expr> Parser::prefix()
 
 std::unique_ptr<Expr> Parser::unary()
 {
-    if (match({TokenType::BANG, TokenType::TILDE}))
+    if (match({TokenType::BANG, TokenType::TILDE, TokenType::BIT_XOR}))
     {
         Token op = consumed();
         std::unique_ptr<Expr> rhs = unary();
-        return std::make_unique<ExprUnary>(std::move(rhs), op);
+        switch (op.type)
+        {
+        case TokenType::BANG:
+        case TokenType::TILDE:
+        {
+            return std::make_unique<ExprUnary>(std::move(rhs), op);
+        }
+        case TokenType::BIT_XOR:
+        {
+            return std::make_unique<ExprPtrGet>(op, std::move(rhs));
+        }
+        default:
+            break;
+        }
     }
 
     return call();
@@ -547,6 +565,12 @@ std::unique_ptr<Expr> Parser::primary()
             name = advance();
         }
         return std::make_unique<ExprVariableGet>(address, name);
+    }
+    case TokenType::HEAP:
+    {
+        Token heap = consumed();
+        std::shared_ptr<Type> type = parseTypeName();
+        return std::make_unique<ExprHeap>(heap, type);
     }
     default:
         throw TokenError("Invalid identifier.", token);

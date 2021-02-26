@@ -21,8 +21,8 @@ typeName -> ("void" | "bool" | "char" | "int" | "float" | "double" | "string" | 
 			| (typeName "[" "]") | (typeName "*")) "const"?
 parameters -> IDENTIFIER ("," IDENTIFIER)*
 member -> ("public" | "private" | "protected")? (varDec | funcDec)		
-	
-	
+
+
 // Expressions
 expression 	-> assignment | logic_or
 assignment 	-> "*"* (IDENTIFIER "::")* (call ".")? (IDENTIFIER "=" expressionStmt) // actually -> logic_or = expressionStmt
@@ -39,8 +39,8 @@ multiplication -> prefix (("*" | "/" | "%") prefix)*
 prefix 		-> ("-" | "+" | "++" | "--")? unary
 unary 		-> ("!" | "~" | "^" | "ref" | cast) unary | postfix
 postfix		-> call ("++" | "--")?
-call		-> primary ( ("(" arguments? ")")  | ("[" expression "]") | ( "." IDENTIFIER) | ( "::" IDENTIFIER) )*
-primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | IDENTIFIER
+call		-> primary ( ("(" arguments? ")")  | ("[" expression "]") | ( "." IDENTIFIER)*
+primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | ("::"? (IDENTIFIER "::")* IDENTIFIER) | ("heap" typeName ("(" arguments? ")"))
 
 cast -> "cast<" typeName ">"
 parameters -> expression ("," expression)*

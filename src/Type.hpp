@@ -72,6 +72,19 @@ public:
     std::string toString() override;
 };
 
+class TypePointer : public Type
+{
+public:
+    bool isOwner;
+    explicit TypePointer(TypePtr intrinsic, bool isOwner)
+        : Type(Tag::POINTER, std::move(intrinsic)), isOwner(isOwner)
+    {
+    }
+    
+    bool isSame(const std::shared_ptr<Type>& other) const override;
+    std::string toString() override;
+};
+
 class TypeString : public Type
 {
 public:

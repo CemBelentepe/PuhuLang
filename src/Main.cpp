@@ -91,7 +91,7 @@ void run(const char* filepath)
         std::cout << "Terminated due to type error.\n";
         return;
     }
-#if LOG_AST_TYPELESS
+#if LOG_AST_TYPED
     debugger.showTypes(true);
     debugger.debug();
 #endif

@@ -7,18 +7,13 @@
 std::unordered_map<TokenType, Interpreter::UnaryFunction> Interpreter::unaryFunctions;
 std::unordered_map<TokenType, Interpreter::BinaryFunction> Interpreter::binaryFunctions;
 
-Interpreter::RunTimeVariable::RunTimeVariable(const Variable& var, const Value& val)
-    : name(var.name), type(var.type), initialized(var.initialized), val(val)
-{
-}
-
 Interpreter::RunTimeVariable::RunTimeVariable(const RunTimeVariable& var)
     : name(var.name), type(var.type), initialized(var.initialized), val(var.val)
 {
 }
 
 Interpreter::RunTimeVariable::RunTimeVariable(const Variable& var)
-    : name(var.name), type(var.type), initialized(var.initialized), val(Value())
+    : name(var.name), type(var.type), initialized(false), val(Value())
 {
 }
 
@@ -69,7 +64,7 @@ bool Interpreter::fail()
     return hadError;
 }
 
-void Interpreter::addNativeCallable(std::shared_ptr<NativeFunc> func) 
+void Interpreter::addNativeCallable(std::shared_ptr<NativeFunc> func)
 {
     global->getVariable(func->getNamespace(), func->tokenName()).val = Value(func);
 }
@@ -97,7 +92,7 @@ void Interpreter::visit(ExprBinary* expr)
 {
     Value lhs = expr->lhs->accept(this);
     Value rhs = expr->rhs->accept(this);
-    if(expr->type->tag == Type::Tag::PRIMITIVE)
+    if (expr->type->tag == Type::Tag::PRIMITIVE)
         result = binaryFunctions[expr->op.type](lhs, rhs);
     else if (expr->type->tag == Type::Tag::STRING)
         result = Value(std::get<std::string>(lhs.data.data) + std::get<std::string>(rhs.data.data));
@@ -131,6 +126,11 @@ void Interpreter::visit(ExprCall* expr)
 void Interpreter::visit(ExprLiteral* expr)
 {
     result = expr->value;
+}
+
+void Interpreter::visit(ExprHeap* expr)
+{
+    result = Value(new Data());
 }
 
 void Interpreter::visit(ExprVariableGet* expr)
@@ -189,7 +189,8 @@ void Interpreter::visit(ExprVariableSet* expr)
 
 void Interpreter::visit(StmtExpr* stmt)
 {
-    Value res = stmt->expr->accept(this);
+    stmt->expr->accept(this);
+    // Value res = stmt->expr->accept(this);
     // std::cout << res << std::endl;
 }
 
@@ -255,6 +256,10 @@ void Interpreter::visit(DeclVar* decl)
             var.initialized = true;
         }
     }
+    else if (currentEnviroment)
+    {
+        currentEnviroment->addVariable(Interpreter::RunTimeVariable(decl->name, decl->type, false, Value()));
+    }
 }
 
 void Interpreter::visit(DeclFunc* decl)
@@ -263,11 +268,11 @@ void Interpreter::visit(DeclFunc* decl)
     currentNamespace->getVariable(decl->name).val = Value(std::make_shared<PuhuFunction>(decl));
 }
 
-void Interpreter::visit(DeclNamespace* decl) 
+void Interpreter::visit(DeclNamespace* decl)
 {
     // TODO do before start
     currentNamespace = currentNamespace->getChild(decl->name);
-    for(auto& stmt : decl->body)
+    for (auto& stmt : decl->body)
     {
         stmt->accept(this);
     }

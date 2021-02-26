@@ -177,10 +177,10 @@ void TypeChecker::visit(ExprVariableSet* expr)
 {
     std::shared_ptr<Type> type_asgn = expr->asgn->accept(this);
 
-    Variable var;
+    Variable* var;
     if (expr->address.size() > 0)
     {
-        var = currentNamespace->getVariable(expr->address, expr->name);
+        var = &currentNamespace->getVariable(expr->address, expr->name);
     }
     else
     {
@@ -188,23 +188,24 @@ void TypeChecker::visit(ExprVariableSet* expr)
         {
             try
             {
-                var = currentEnviroment->getVariable(expr->name);
+                var = &currentEnviroment->getVariable(expr->name);
             }
             catch (const Parser::TokenError& err)
             {
-                var = currentNamespace->getVariable(expr->name);
+                var = &currentNamespace->getVariable(expr->name);
             }
         }
         else
         {
-            var = currentNamespace->getVariable(expr->name);
+            var = &currentNamespace->getVariable(expr->name);
         }
     }
 
-    if (!var.type->isSame(type_asgn))
-        throw AssignmentError(expr->equal, var.type, type_asgn);
+    if (!var->type->isSame(type_asgn))
+        throw AssignmentError(expr->equal, var->type, type_asgn);
 
-    expr->type = var.type;
+    var->initialized = true;
+    expr->type = var->type;
     result = expr->type;
 }
 
@@ -328,6 +329,11 @@ void TypeChecker::visit(DeclNamespace* decl)
     }
 
     currentNamespace = currentNamespace->parent;
+}
+
+void TypeChecker::visit(ExprHeap* expr) 
+{
+    result = expr->type;
 }
 
 void TypeChecker::init()

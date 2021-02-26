@@ -5,10 +5,11 @@
 
 class Type;
 class Callable;
+class Value;
 class Data
 {
 public:
-    std::variant<bool, char, int, float, double, std::string, Data*, std::shared_ptr<Callable>> data;
+    std::variant<bool, char, int, float, double, std::string, Value*, std::shared_ptr<Callable>> data;
 
     Data() = default;
 
@@ -31,6 +32,7 @@ public:
     explicit Value(int data);
     explicit Value(float data);
     explicit Value(double data);
+    explicit Value(Value* data);
     explicit Value(const std::string& data);
     explicit Value(std::shared_ptr<Callable> data);
 

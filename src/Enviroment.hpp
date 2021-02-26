@@ -65,7 +65,7 @@ Var_T& Enviroment<Var_T>::getVariable(Token name)
         if (parent)
             return parent->getVariable(name);
         else
-            throw Parser::TokenError("Variable is not defined defined.", name);
+            throw Parser::TokenError("Variable is not defined.", name);
     }
     return it->second;
 }

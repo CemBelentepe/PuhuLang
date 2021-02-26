@@ -26,6 +26,7 @@ public:
     void visit(ExprUnary* expr) override;
     void visit(ExprCall* expr) override;
     void visit(ExprLiteral* expr) override;
+    void visit(ExprHeap* expr) override;
     void visit(ExprVariableGet* expr) override;
     void visit(ExprVariableSet* expr) override;
 

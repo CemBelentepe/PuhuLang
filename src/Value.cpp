@@ -2,10 +2,9 @@
 #include "Callable.hpp"
 #include "Type.hpp"
 
-Value::Value() 
-    : data(), type(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID))
+Value::Value()
+    : data(Data(nullptr)), type(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::VOID))
 {
-    
 }
 Value::Value(bool data)
     : data(Data(data)), type(std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::BOOL))
@@ -69,9 +68,10 @@ std::ostream& operator<<(std::ostream& os, const Value& val)
     }
     else if (val.type->tag == Type::Tag::POINTER)
     {
-        os << std::get<Data*>(val.data.data);
+        Value* ptr = std::get<Value*>(val.data.data);
+        os << "*" << *ptr << "[" << ptr << "]";
     }
-    else if(val.type->tag == Type::Tag::FUNCTION)
+    else if (val.type->tag == Type::Tag::FUNCTION)
     {
         os << std::get<std::shared_ptr<Callable>>(val.data.data)->name();
     }
