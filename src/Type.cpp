@@ -42,6 +42,7 @@ std::string TypePrimitive::toString()
     case PrimitiveTag::DOUBLE:
         return "double";
     }
+    return "[invalid primitive type]";
 }
 
 bool TypeString::isSame(const std::shared_ptr<Type>& other) const
