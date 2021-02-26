@@ -1,10 +1,12 @@
 #pragma once
-#include "Type.hpp"
-#include "Stmt.hpp"
-#include "Interpreter.hpp"
-
+#include "Value.hpp"
+#include <string>
 #include <vector>
+#include <memory>
 
+class Type;
+class Interpreter;
+class DeclFunc;
 class Callable
 {
 public:

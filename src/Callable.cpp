@@ -1,4 +1,6 @@
 #include "Callable.hpp"
+#include "Type.hpp"
+#include "Interpreter.hpp"
 
 PuhuFunction::PuhuFunction(DeclFunc* func)
     : func(func)

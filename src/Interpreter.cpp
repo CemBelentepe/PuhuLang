@@ -1,5 +1,6 @@
 #include "Interpreter.hpp"
 #include "Callable.hpp"
+#include "Native/Native.hpp"
 
 #include <algorithm>
 
@@ -30,6 +31,7 @@ Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, const std::un
     : root(root), hadError(false), global(std::make_unique<Namespace<RunTimeVariable>>(global, nullptr)), currentEnviroment(nullptr)
 {
     init();
+    NativeFunc::InitTo(this);
     currentNamespace = this->global.get();
 }
 
@@ -67,6 +69,11 @@ bool Interpreter::fail()
     return hadError;
 }
 
+void Interpreter::addNativeCallable(std::shared_ptr<NativeFunc> func) 
+{
+    global->getVariable(func->getNamespace(), func->tokenName()).val = Value(func);
+}
+
 void Interpreter::visit(ExprLogic* expr)
 {
     Value lhs = expr->lhs->accept(this);
@@ -90,7 +97,10 @@ void Interpreter::visit(ExprBinary* expr)
 {
     Value lhs = expr->lhs->accept(this);
     Value rhs = expr->rhs->accept(this);
-    result = binaryFunctions[expr->op.type](lhs, rhs);
+    if(expr->type->tag == Type::Tag::PRIMITIVE)
+        result = binaryFunctions[expr->op.type](lhs, rhs);
+    else if (expr->type->tag == Type::Tag::STRING)
+        result = Value(std::get<std::string>(lhs.data.data) + std::get<std::string>(rhs.data.data));
 }
 
 void Interpreter::visit(ExprUnary* expr)
@@ -180,7 +190,7 @@ void Interpreter::visit(ExprVariableSet* expr)
 void Interpreter::visit(StmtExpr* stmt)
 {
     Value res = stmt->expr->accept(this);
-    std::cout << res << std::endl;
+    // std::cout << res << std::endl;
 }
 
 void Interpreter::visit(StmtBody* stmt)

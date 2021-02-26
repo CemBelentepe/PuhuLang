@@ -18,6 +18,7 @@ public:
     ~Namespace() = default;
 
     Namespace<Var_T>* makeNamespace(Token name);
+    Namespace<Var_T>* makeNamespace(std::string name);
     Namespace<Var_T>* getParent();
     Namespace<Var_T>* getChild(Token name);
     std::string getName();
@@ -65,6 +66,16 @@ Namespace<Var_T>* Namespace<Var_T>::makeNamespace(Token name)
     auto it = childs.find(sName);
     if (it == childs.end())
         return childs.insert({sName, std::make_unique<Namespace<Var_T>>(this, sName)}).first->second.get();
+    else
+        return it->second.get();
+}
+
+template <typename Var_T>
+Namespace<Var_T>* Namespace<Var_T>::makeNamespace(std::string name)
+{
+    auto it = childs.find(name);
+    if (it == childs.end())
+        return childs.insert({name, std::make_unique<Namespace<Var_T>>(this, name)}).first->second.get();
     else
         return it->second.get();
 }

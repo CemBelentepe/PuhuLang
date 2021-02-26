@@ -44,8 +44,53 @@ float Token::getFloat() const
 
 std::string Token::getString() const
 {
-    std::string val(lexeme.substr(1, lexeme.size() - 2));
-    return val;
+    std::string_view str = lexeme.substr(1, lexeme.size() - 2);
+    std::stringstream ss;
+    size_t i = 0;
+    while (i < str.size())
+    {
+        if (str[i] == '\\')
+        {
+            switch (str[++i])
+            {
+            case 'n':
+                ss << '\n';
+                break;
+            case 't':
+                ss << '\t';
+                break;
+            case '\\':
+                ss << '\\';
+                break;
+            case 'r':
+                ss << '\r';
+                break;
+            case 'b':
+                ss << '\b';
+                break;
+            case 'a':
+                ss << '\a';
+                break;
+            case 'v':
+                ss << '\v';
+                break;
+            case '0':
+                ss << '\0';
+                break;
+            case '\'':
+                ss << '\'';
+                break;
+            default:
+                break;
+            }
+            i++;
+        }
+        else
+        {
+            ss << str[i++];
+        }
+    }
+    return ss.str();
 }
 
 char Token::getChar() const
@@ -67,9 +112,9 @@ std::string Token::toStringInLine(Logger::LogColor color) const
     std::stringstream ss;
 
     std::string_view& sLine = lines[line - 1];
-    ss << sLine.substr(0, col-1);
-    Logger::log(ss, sLine.substr(col-1, lexeme.size()), color);
-    ss << sLine.substr(col+lexeme.size()-1, sLine.size() - col - lexeme.size() + 1) << "\n";
+    ss << sLine.substr(0, col - 1);
+    Logger::log(ss, sLine.substr(col - 1, lexeme.size()), color);
+    ss << sLine.substr(col + lexeme.size() - 1, sLine.size() - col - lexeme.size() + 1) << "\n";
     for (int i = 0; i < col - 1; i++)
         ss << ' ';
     Logger::setColor(ss, color);

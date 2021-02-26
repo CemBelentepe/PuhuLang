@@ -160,7 +160,12 @@ void AstDebugger::visit(DeclVar* decl)
 
 void AstDebugger::visit(DeclFunc* decl)
 {
-    os << "FUNC " << decl->name.lexeme << "(";
+    os << "FUNC ";
+    for(auto& str : decl->address)
+    {
+        std::cout << str << "::";
+    }
+    os << decl->name.lexeme << "(";
     for (size_t i = 0; i < decl->param_names.size(); i++)
     {
         if (i != 0)
@@ -173,7 +178,7 @@ void AstDebugger::visit(DeclFunc* decl)
 
 void AstDebugger::visit(DeclNamespace* decl) 
 {
-    os << "NAMESPACE " << decl->name.lexeme << "BEGIN\n";
+    os << "NAMESPACE " << decl->name.lexeme << " BEGIN\n";
     for(auto& stmt : decl->body)
     {
         stmt->accept(this);

@@ -1,11 +1,13 @@
 #include "DeclParser.hpp"
 #include "Parser.hpp"
 
+#include "Native/Native.hpp"
 #include <iostream>
 
 DeclParser::DeclParser(std::vector<std::unique_ptr<Stmt>>& root)
     : global(std::make_unique<Namespace<Variable>>()), root(root), currentNamespace(global.get()), hadError(false)
 {
+    NativeFunc::InitTo(this);
 }
 
 std::unique_ptr<Namespace<Variable>> DeclParser::parse()
@@ -31,6 +33,17 @@ bool DeclParser::fail()
     return hadError;
 }
 
+void DeclParser::addNativeCallable(NativeFunc* func)
+{
+    currentNamespace = global.get();
+    for(auto& str : func->getNamespace())
+    {
+        currentNamespace = currentNamespace->makeNamespace(str);
+    }
+    currentNamespace->addVariable(Variable(func->tokenName(), func->getType(), true));
+    currentNamespace = global.get();
+}
+
 void DeclParser::visit(DeclVar* decl)
 {
     currentNamespace->addVariable(Variable(decl->name, decl->type, decl->initter != nullptr));
@@ -42,10 +55,10 @@ void DeclParser::visit(DeclFunc* decl)
     currentNamespace->addVariable(Variable(decl->name, decl->type, true));
 }
 
-void DeclParser::visit(DeclNamespace* decl) 
+void DeclParser::visit(DeclNamespace* decl)
 {
     currentNamespace = currentNamespace->makeNamespace(decl->name);
-    for(auto& stmt : decl->body)
+    for (auto& stmt : decl->body)
         stmt->accept(this);
     currentNamespace = currentNamespace->parent;
 }
@@ -62,12 +75,10 @@ void DeclParser::visit(StmtReturn* stmt)
 {
 }
 
-void DeclParser::visit(StmtIf* stmt) 
+void DeclParser::visit(StmtIf* stmt)
 {
-    
 }
 
-void DeclParser::visit(StmtWhile* stmt) 
+void DeclParser::visit(StmtWhile* stmt)
 {
-    
 }

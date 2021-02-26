@@ -83,6 +83,8 @@ void TypeChecker::visit(ExprBinary* expr)
 
     if (type_lhs->tag == Type::Tag::PRIMITIVE)
         expr->type = resolvePrimitiveBinary(expr->op, std::dynamic_pointer_cast<TypePrimitive>(type_lhs), std::dynamic_pointer_cast<TypePrimitive>(type_rhs));
+    else if(type_lhs->tag == Type::Tag::STRING && type_rhs->tag == Type::Tag::STRING)
+        expr->type = type_lhs;
     // else if (type_lhs->tag == Type::Tag::USER_DEF)
     //     expr->type = resolveUserDefBinary(expr->op, type_lhs, type_rhs);
     else

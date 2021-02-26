@@ -9,6 +9,7 @@
 				"-g",
 				"-std=c++17",
 				"-O2",
+				"${workspaceFolder}/src/Native/*.cpp",
 				"${workspaceFolder}/src/*.cpp",
 				"-o",
 				"${workspaceFolder}/bin/puhuc"
@@ -32,6 +33,7 @@
 			"args": [
 				"-g",
 				"-std=c++17",
+				"${workspaceFolder}/src/Native/*.cpp",
 				"${workspaceFolder}/src/*.cpp",
 				"-o",
 				"${workspaceFolder}/bin/puhuc_debug"

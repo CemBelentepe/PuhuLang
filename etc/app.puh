@@ -1,47 +1,6 @@
-namespace math
-{
-    int fibonacci(int n)
-    {
-        if(n > 1)
-        {
-            return fibonacci(n - 1) + fibonacci(n - 2);
-        }
-        else
-            return 1;
-    }
-
-    namespace math
-    {
-        int fibonacci(int n)
-        {
-            return 2;
-        }
-    }
-
-    void test()
-    {
-        fibonacci(i);
-        ::fibonacci(i);
-        math::fibonacci(i);
-        ::math::fibonacci(i);
-        math::math::fibonacci(i);
-        ::math::math::fibonacci(i);
-    }
-}
-
-int fibonacci(int n)
-{
-    return 1;
-}
-
-int i = 20;
 void main()
 {
-    fibonacci(i);
-    ::fibonacci(i);
-    math::fibonacci(i);
-    ::math::fibonacci(i);
-    math::math::fibonacci(i);
-    ::math::math::fibonacci(i);
-    math::test();
+    phc::print("Hello, What is your name?\n");
+    string name = phc::input();
+    phc::print("Nice to meet you " + name + "!\n");
 }

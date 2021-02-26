@@ -7,6 +7,8 @@
 
 #include <unordered_map>
 
+class NativeFunc;
+
 class Interpreter : public ExprVisitor<Value>, public StmtVisitor<void>
 {
 public:
@@ -32,6 +34,7 @@ public:
 
     void run();
     bool fail();
+    void addNativeCallable(std::shared_ptr<NativeFunc> func);
 
     void visit(ExprLogic* expr) override;
     void visit(ExprBinary* expr) override;

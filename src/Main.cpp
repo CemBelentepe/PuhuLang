@@ -6,12 +6,13 @@
 
 #include "AstDebugger.hpp"
 #include "Common.hpp"
-#include "Token.hpp"
-#include "Scanner.hpp"
-#include "Parser.hpp"
 #include "DeclParser.hpp"
-#include "TypeChecker.hpp"
 #include "Interpreter.hpp"
+#include "Native/Native.hpp"
+#include "Parser.hpp"
+#include "Scanner.hpp"
+#include "Token.hpp"
+#include "TypeChecker.hpp"
 
 void run(const char* filepath);
 
@@ -47,7 +48,7 @@ void run(const char* filepath)
 
     Scanner scanner(file_content);
     std::vector<Token> tokens = scanner.scanTokens();
-    if(scanner.fail())
+    if (scanner.fail())
     {
         std::cout << "Terminated due to scanning error.\n";
         return;
@@ -66,12 +67,18 @@ void run(const char* filepath)
         std::cout << "Terminated due to parse error.\n";
         return;
     }
+#if LOG_AST_TYPELESS || LOG_AST_TYPED
     AstDebugger debugger(root);
+#endif
+#if LOG_AST_TYPELESS
     debugger.debug();
+#endif
+
+    NativeFunc::Init();
 
     DeclParser declParser(root);
     std::unique_ptr<Namespace<Variable>> global = declParser.parse();
-    if(parser.fail())
+    if (parser.fail())
     {
         std::cout << "Terminated due to decleration error.\n";
         return;
@@ -79,17 +86,19 @@ void run(const char* filepath)
 
     TypeChecker typeChecker(root, global);
     typeChecker.check();
-    if(typeChecker.fail())
+    if (typeChecker.fail())
     {
         std::cout << "Terminated due to type error.\n";
         return;
     }
+#if LOG_AST_TYPELESS
     debugger.showTypes(true);
     debugger.debug();
+#endif
 
     Interpreter interpreter(root, std::move(global));
     interpreter.run();
-    if(interpreter.fail())
+    if (interpreter.fail())
     {
         std::cout << "Terminated due to run time error.\n";
         return;

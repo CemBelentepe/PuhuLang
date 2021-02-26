@@ -6,6 +6,7 @@
 
 #include <vector>
 
+class NativeFunc;
 class DeclParser : public StmtVisitor<void>
 {
 public:
@@ -15,6 +16,7 @@ public:
 
     std::unique_ptr<Namespace<Variable>> parse();
     bool fail();
+    void addNativeCallable(NativeFunc* func);
 
     void visit(StmtExpr* stmt) override;
     void visit(StmtBody* stmt) override;
