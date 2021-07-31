@@ -1,0 +1,105 @@
+typedef Value = double;
+
+enum Type { ID, PLUS, MINUS, STAR, SLASH, NUMBER };
+
+struct Token
+{
+    Type type;
+    String lexeme;
+}
+
+impl Token
+{
+    Token(Type type, String lexeme)
+    {
+        this->type = type;
+        this->lexeme = lexeme;
+    }
+}
+
+interface Expr
+{
+public:
+    Value evaluate();
+}
+
+struct ExprLiteral impl Expr
+{
+public:
+    Token literal;
+}
+
+impl ExprLiteral
+{
+    ExprLiteral(Token literal)
+    {
+        this->literal = literal;
+    }
+
+    Value evaluate() override
+    {
+        return lexeme.parseInt();
+    }
+}
+
+struct ExprUnary impl Expr
+{
+public:
+    Expr* rhs;
+    Token op;
+}
+
+impl ExprUnary 
+{
+    ExprUnary(Expr* rhs, Token op)
+    {
+        this->rhs = rhs;
+        this->op = op;
+    }
+
+    Value evaluate() override
+    {
+        Value val = rhs->evaluate();
+        if(op.type == Type::PLUS)
+            return val;
+        else
+            return -val;
+    }
+}
+
+struct ExprBinary impl Expr
+{
+public:
+    Expr* lhs, rhs;
+    Token op;
+}
+
+impl ExprBinary
+{
+    ExprBinary(Expr* lhs, Expr* rhs, Token op)
+    {
+        this->lhs = lhs;
+        this->rhs = rhs;
+        this->op = op;
+    }
+
+    Value evaluate() override
+    {
+        Value v_lhs = lhs->evaluate();
+        Value v_rhs = rhs->evaluate();
+
+        if(op.type == Type::PLUS)
+            return v_lhs + v_rhs;
+        else if(op.type == Type::MINUS)
+            return v_lhs - v_rhs;
+        else if(op.type == Type::STAR)
+            return v_lhs * v_rhs;
+        else if(op.type == Type::SLASH)
+            return v_lhs / v_rhs;
+    }
+}
+
+void main()
+{
+    
+}
