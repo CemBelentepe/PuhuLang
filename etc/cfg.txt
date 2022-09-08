@@ -1,0 +1,21 @@
+// Statements
+stmt   -> stmtExpr
+stmtExpr -> expression ';'
+
+// Expressions
+expression 	-> logic_or
+logic_or 	-> logic_and ("||" logic_and)*
+logic_and 	-> bit_or  ("&&" bit_or)*
+bit_or 		-> bit_xor ("|" bit_xor)*
+bit_xor 	-> bit_and ("^" bit_and)*
+bit_and 	-> equality ("&" equality)*
+equality 	-> comparison (("==" || "!=") comparison)*
+comparison  -> bitshift (("<" | ">" | "<=" | ">=") bitshift)*
+bitshift	-> addition (("<<" | ">>") addition)*
+addition 	-> multiplication (("+" | "-") multiplication)*
+multiplication -> prefix (("*" | "/" | "%") prefix)*
+prefix 		-> ("-" | "+" | "++" | "--")? unary
+unary 		-> ("!" | "~" | "^" | "ref" | cast) unary | postfix
+postfix		-> call ("++" | "--")?
+call		-> primary ( ("(" arguments? ")")  | ("[" expression "]") | ( "." IDENTIFIER)*
+primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | ("::"? (IDENTIFIER "::")* IDENTIFIER) | ("heap" typeName ("(" arguments? ")"))

@@ -1,0 +1,13 @@
+using System.IO;
+// This is a multi line comment
+
+int main() {
+    print("Hello, world\n");
+    print("\"Hi\" said Peter");
+    return 0;
+
+    /* And here
+        a multi line
+        comment
+    */
+}
