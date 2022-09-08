@@ -1,0 +1,6 @@
+true && false || false;
+3 + 2;
+9.7f * 75.0f;
+9.70 * 75.092;
+8 + -9;
+"Hello World!";

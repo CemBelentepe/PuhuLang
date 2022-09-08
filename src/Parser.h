@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 #include <vector>
 #include <unordered_map>
 #include "Token.h"
@@ -13,7 +12,7 @@
 class Parser
 {
 public:
-	explicit Parser(const std::vector<Token>& tokens);
+	explicit Parser(std::vector<Token>  tokens);
 
 	std::vector<std::unique_ptr<Stmt>> parse();
 
@@ -31,7 +30,7 @@ private:
 	Token peek();
 	Token advance();
 	Token consume(TokenType type, const std::string& errorMessage);
-	[[nodiscard]] int getPrecedence (TokenType t) const;
+	[[nodiscard]] static int getPrecedence (TokenType t) ;
 	bool match(TokenType type);
 	bool match(std::vector<TokenType> types);
 	[[nodiscard]] Token consumed() const;

@@ -5,14 +5,6 @@
 #include "AstVisitor.h"
 #include "Expr.h"
 
-
-template<typename T>
-T Expr::accept(ExprVisitor<T>* visitor)
-{
-	do_accept(visitor);
-	return visitor->result;
-}
-
 template<>
 void Expr::accept(ExprVisitor<void>* visitor)
 {

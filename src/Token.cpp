@@ -22,22 +22,25 @@ std::string Token::showInfo() const
 	return ss.str();
 }
 
-std::shared_ptr<Type> Token::getType()
+std::shared_ptr<Type> Token::getType() const
 {
 	switch (type)
 	{
 	case TokenType::INTEGER_LITERAL:
-		return std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::INT);
+		return TypeFactory::getPrimitive(PrimitiveTag::INT);
 	case TokenType::FLOAT_LITERAL:
-		return std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::FLOAT);
+		return TypeFactory::getPrimitive(PrimitiveTag::FLOAT);
 	case TokenType::DOUBLE_LITERAL:
-		return std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::DOUBLE);
+		return TypeFactory::getPrimitive(PrimitiveTag::DOUBLE);
 	case TokenType::CHAR_LITERAL:
-		return std::make_shared<TypePrimitive>(TypePrimitive::PrimitiveTag::CHAR);
+		return TypeFactory::getPrimitive(PrimitiveTag::CHAR);
+	case TokenType::TRUE:
+	case TokenType::FALSE:
+		return  TypeFactory::getPrimitive(PrimitiveTag::BOOL);
 	case TokenType::STRING_LITERAL:
-		return std::make_shared<TypeString>();
+		return TypeFactory::getString();
 	default:
-		return Type::getNullType();
+		return TypeFactory::getNull();
 	}
 }
 

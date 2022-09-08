@@ -11,14 +11,14 @@
 class Scanner
 {
 public:
-	explicit Scanner(const std::string& source);
+	explicit Scanner(std::string  source);
 	~Scanner();
 
 	std::vector<Token> scan();
 
 private:
 	Token scanToken();
-	Token makeToken(TokenType type) const;
+	[[nodiscard]] Token makeToken(TokenType type) const;
 
 	Token scanString();
 	Token scanChar();
@@ -29,14 +29,13 @@ private:
 
 	char advance();
 	bool match(char c);
-	bool match(std::vector<char> c);
 	[[nodiscard]] char peek() const;
 	[[nodiscard]] char peekNext() const;
 	[[nodiscard]] bool isAtEnd() const;
 	[[nodiscard]] std::string_view currentLexeme() const;
 
-	[[nodiscard]] bool isAlpha(char c) const;
-	[[nodiscard]] bool isNumber(char c) const;
+	[[nodiscard]] static bool isAlpha(char c) ;
+	[[nodiscard]] static bool isNumber(char c) ;
 
 private:
 	std::string source;

@@ -3,16 +3,16 @@
 //
 
 #include <algorithm>
+#include <utility>
 #include "Scanner.h"
 
-Scanner::Scanner(const std::string& source)
-		: source(source), startPos(0), currentPos(0), currentLine(1), currentCol(0)
+Scanner::Scanner(std::string  source)
+		: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0)
 {
 }
 
 Scanner::~Scanner()
-{
-}
+= default;
 
 std::vector<Token> Scanner::scan()
 {
@@ -305,16 +305,6 @@ bool Scanner::match(char c)
 	return false;
 }
 
-bool Scanner::match(std::vector<char> c)
-{
-	if (std::find(c.begin(), c.end(), source[currentPos]) != c.end())
-	{
-		advance();
-		return true;
-	}
-	return false;
-}
-
 char Scanner::peek() const
 {
 	return source[currentPos];
@@ -330,12 +320,12 @@ bool Scanner::isAtEnd() const
 	return currentPos >= source.length();
 }
 
-bool Scanner::isAlpha(char c) const
+bool Scanner::isAlpha(char c)
 {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-bool Scanner::isNumber(char c) const
+bool Scanner::isNumber(char c)
 {
 	return (c >= '0' && c <= '9');
 }

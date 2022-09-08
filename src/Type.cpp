@@ -6,11 +6,6 @@
 #include <string>
 #include <sstream>
 
-std::shared_ptr<Type> Type::getNullType()
-{
-	return std::make_shared<TypeError>();
-}
-
 bool TypeError::isSame(const std::shared_ptr<Type>& other) const
 {
 	return false;
@@ -54,19 +49,19 @@ bool TypePointer::isSame(const std::shared_ptr<Type>& other) const
 {
 	if (other->tag == Tag::POINTER)
 	{
-		return !instrinsicType || !other->instrinsicType || instrinsicType->isSame(other->instrinsicType);
+		return !intrinsicType || !other->intrinsicType || intrinsicType->isSame(other->intrinsicType);
 	}
 	return false;
 }
 
 std::string TypePointer::toString()
 {
-	if (instrinsicType)
+	if (intrinsicType)
 	{
 		if(isOwner)
-			return instrinsicType->toString() + "&";
+			return intrinsicType->toString() + "&";
 		else
-			return instrinsicType->toString() + "*";
+			return intrinsicType->toString() + "*";
 	}
 	else
 	{
@@ -104,8 +99,8 @@ bool TypeFunction::isSame(const std::shared_ptr<Type>& other) const
 std::string TypeFunction::toString()
 {
 	std::stringstream ss;
-	ss << instrinsicType->toString() << "(";
-	if (param_types.size() > 0)
+	ss << intrinsicType->toString() << "(";
+	if (!param_types.empty())
 	{
 		ss << param_types[0]->toString();
 		for (auto it = ++param_types.begin(); it != param_types.end(); ++it)
@@ -116,3 +111,18 @@ std::string TypeFunction::toString()
 	ss << ")";
 	return ss.str();
 }
+
+TypePtr TypeFactory::getNull()
+{
+	return std::make_shared<TypeError>();
+}
+
+TypePtr TypeFactory::getPrimitive(PrimitiveTag tag)
+{
+	return std::make_shared<TypePrimitive>(tag);
+}
+TypePtr TypeFactory::getString()
+{
+	return std::make_shared<TypeString>();
+}
+

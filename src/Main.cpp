@@ -7,6 +7,8 @@
 #include "Token.h"
 #include "Parser.h"
 #include "Stmt.h"
+#include "AstDebugger.h"
+#include "TypeChecker.h"
 
 int run(const std::string& fileName);
 
@@ -29,11 +31,12 @@ int run(const std::string& fileName)
 	std::vector<Token> tokens = scanner.scan();
 
 	// TODO add a compiler flag
-	if (true)
+	if (false)
 	{
 		std::cout << "Tokens: " << std::endl;
 		for (auto& tok: tokens)
 			std::cout << tok.showInfo() << std::endl;
+		std::cout << std::endl;
 	}
 
 	Parser parser(tokens);
@@ -41,7 +44,22 @@ int run(const std::string& fileName)
 
 	if (true)
 	{
-		// AstDebugger.debug(statements);
+		std::cout << "AST: " << std::endl;
+		AstDebugger debugger(statements, std::cout);
+		debugger.debug();
+		std::cout << std::endl;
+	}
+
+	TypeChecker typeChecker(statements);
+	typeChecker.check();
+
+	if(false)
+	{
+		std::cout << "Typed AST: " << std::endl;
+		AstDebugger debugger(statements, std::cout);
+		debugger.setShowTypes(true);
+		debugger.debug();
+		std::cout << std::endl;
 	}
 
 	return EXIT_SUCCESS;

@@ -55,7 +55,7 @@ public:
 
 	// Value getValue() const;
 
-	std::string showInfo() const;
+	[[nodiscard]] std::string showInfo() const;
 
-	std::shared_ptr<Type> getType();
+	[[nodiscard]] std::shared_ptr<Type> getType() const;
 };

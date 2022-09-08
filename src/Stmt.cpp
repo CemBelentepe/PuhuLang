@@ -8,7 +8,7 @@
 template<typename T>
 T Stmt::accept(StmtVisitor<T>* visitor)
 {
-	do_accept(visitor);
+	doAccept(visitor);
 	return visitor->result;
 }
 

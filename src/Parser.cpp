@@ -4,17 +4,22 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include "Parser.h"
 
-Parser::Parser(const std::vector<Token>& tokens)
-		: tokens(tokens), currentToken(0)
+Parser::Parser(std::vector<Token> tokens)
+	: tokens(std::move(tokens)), currentToken(0)
 {
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
 	std::vector<std::unique_ptr<Stmt>> statements;
-	statements.push_back(parseStmt());
+	while(peek().type != TokenType::EOF_TOKEN)
+	{
+		// TODO Implement errors and stuff
+		statements.push_back(parseStmt());
+	}
 	return statements;
 }
 
@@ -128,10 +133,15 @@ Token Parser::consume(TokenType type, const std::string& errorMessage)
 	throw std::runtime_error("[ERROR] " + errorMessage);
 }
 
-int Parser::getPrecedence(TokenType t) const
+int Parser::getPrecedence(TokenType t)
 {
 	switch (t)
 	{
+	case TokenType::OR:
+		return 1;
+	case TokenType::AND:
+		return 2;
+
 		// Bitwise
 	case TokenType::BIT_OR:
 		return 10;
@@ -167,6 +177,7 @@ int Parser::getPrecedence(TokenType t) const
 	case TokenType::SLASH:
 	case TokenType::MODULUS:
 		return 60;
+
 	default:
 		return -1;
 	}

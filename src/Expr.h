@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include "Token.h"
 
 class ExprVisitorBase;
@@ -25,14 +26,18 @@ public:
 
 	Expr() = delete;
 	explicit Expr(Instance instance, std::shared_ptr<Type> type)
-			: instance(instance), type(type)
+			: instance(instance), type(std::move(type))
 	{
 	}
 
 	virtual ~Expr() = default;
 
 	template <typename T>
-	T accept(ExprVisitor<T>* visitor);
+	T accept(ExprVisitor<T>* visitor)
+	{
+		doAccept(visitor);
+		return visitor->result;
+	}
 
 private:
 	virtual void doAccept(ExprVisitorBase* visitor) = 0;
@@ -46,7 +51,7 @@ public:
 	std::unique_ptr<Expr> rhs;
 
 	explicit ExprBinary(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
-		: Expr(Instance::Binary, Type::getNullType()), op(op), lhs(std::move(lhs)), rhs(std::move(rhs))
+		: Expr(Instance::Binary, TypeFactory::getNull()), op(op), lhs(std::move(lhs)), rhs(std::move(rhs))
 	{}
 
 private:
@@ -60,7 +65,7 @@ public:
 	std::unique_ptr<Expr> rhs;
 
 	explicit ExprUnary(std::unique_ptr<Expr> rhs, Token op)
-			: Expr(Instance::Unary, Type::getNullType()), op(op), rhs(std::move(rhs))
+			: Expr(Instance::Unary, TypeFactory::getNull()), op(op), rhs(std::move(rhs))
 	{}
 
 private:

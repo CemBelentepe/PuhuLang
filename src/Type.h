@@ -8,13 +8,11 @@
 #include <utility>
 #include <vector>
 
-// TODO Implement a TypeFactory class, pls :(
+class Type;
+using TypePtr = std::shared_ptr<Type>;
 
 class Type
 {
-protected:
-	using TypePtr = std::shared_ptr<Type>;
-
 public:
 	enum class Tag
 	{
@@ -27,11 +25,11 @@ public:
 		ERROR = -1
 	};
 	Tag tag;
-	TypePtr instrinsicType;
+	TypePtr intrinsicType;
 
 	Type() = delete;
 	explicit Type(Tag tag, TypePtr intrinsicType)
-			: tag(tag), instrinsicType(std::move(intrinsicType))
+			: tag(tag), intrinsicType(std::move(intrinsicType))
 	{
 	}
 
@@ -39,8 +37,6 @@ public:
 
 	[[nodiscard]] virtual bool isSame(const std::shared_ptr<Type>& other) const = 0;
 	virtual std::string toString() = 0;
-
-	static TypePtr getNullType(); // TODO make it so that it holds all the created types
 };
 
 class TypeError : public Type
@@ -55,18 +51,19 @@ public:
 	std::string toString() override;
 };
 
+enum class PrimitiveTag
+{
+	VOID,
+	BOOL,
+	CHAR,
+	INT,
+	FLOAT,
+	DOUBLE
+};
+
 class TypePrimitive : public Type
 {
 public:
-	enum class PrimitiveTag
-	{
-		VOID,
-		BOOL,
-		CHAR,
-		INT,
-		FLOAT,
-		DOUBLE
-	};
 	PrimitiveTag special_tag;
 
 	explicit TypePrimitive(PrimitiveTag special_tag)
@@ -115,4 +112,16 @@ public:
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
 	std::string toString() override;
+};
+
+// TODO Implement a cache for the type factory
+class TypeFactory
+{
+public:
+	static TypePtr getNull();
+	static TypePtr getPrimitive(PrimitiveTag tag);
+	static TypePtr getString();
+	// static TypePtr getArray(std::shared_ptr<Type> intrinsicType);
+	// static TypePtr getPointer(std::shared_ptr<Type> intrinsicType);
+	// static TypePtr getFunction(TypePtr ret_type, std::vector<TypePtr> param_types = {});
 };
