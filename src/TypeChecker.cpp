@@ -51,6 +51,7 @@ void TypeChecker::visit(ExprBinary* expr)
 		case TokenType::BIT_AND:
 		case TokenType::BITSHIFT_LEFT:
 		case TokenType::BITSHIFT_RIGHT:
+		case TokenType::MODULUS:
 		{
 			typeMatch = typeLhsP == typeRhsP && typeLhsP == PT::INT;
 			break;
@@ -80,7 +81,6 @@ void TypeChecker::visit(ExprBinary* expr)
 		case TokenType::MINUS:
 		case TokenType::STAR:
 		case TokenType::SLASH:
-		case TokenType::MODULUS:
 		{
 			typeMatch = typeLhsP == typeRhsP && typeLhsP >= PT::INT;
 			break;
@@ -112,5 +112,4 @@ void TypeChecker::visit(ExprLiteral* expr)
 	expr->type = expr->literal.getType();
 	this->result = expr->type;
 }
-
 

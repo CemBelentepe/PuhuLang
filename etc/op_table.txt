@@ -1,0 +1,57 @@
+|| bool bool -> bool
+&& bool bool -> bool
+
+| int int -> int
+^ int int -> int
+& int int -> int
+<< int int -> int
+>> int int -> int
+% int int -> int
+
+== bool bool -> bool
+== char char -> bool
+== int int -> bool
+== float float -> bool
+== double double -> bool
+
+!= bool bool -> bool
+!= char char -> bool
+!= int int -> bool
+!= float float -> bool
+!= double double -> bool
+
+< char char -> bool
+< int int -> bool
+< float float -> bool
+< double double -> bool
+
+<= char char -> bool
+<= int int -> bool
+<= float float -> bool
+<= double double -> bool
+
+> char char -> bool
+> int int -> bool
+> float float -> bool
+> double double -> bool
+
+>= char char -> bool
+>= int int -> bool
+>= float float -> bool
+>= double double -> bool
+
++ int int -> int
++ float float -> float
++ double double -> double
+
+- int int -> int
+- float float -> float
+- double double -> double
+
+* int int -> int
+* float float -> float
+* double double -> double
+
+/ int int -> int
+/ float float -> float
+/ double double -> double

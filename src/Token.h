@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 #include "Type.h"
+#include "Value.h"
 
 enum class TokenType
 {
@@ -47,15 +48,27 @@ public:
 	std::string_view lexeme;
 	unsigned long line;
 	unsigned long col;
-	// Value val;
+	Value val;
 
 	Token();
 
 	Token(TokenType type, unsigned long line, unsigned long col, std::string_view lexeme);
 
-	// Value getValue() const;
-
 	[[nodiscard]] std::string showInfo() const;
 
 	[[nodiscard]] std::shared_ptr<Type> getType() const;
+
+	Value getValue();
+
+private:
+	bool valInit;
+
+	[[nodiscard]] bool readAsBool() const;
+	[[nodiscard]] char readAsChar() const;
+	[[nodiscard]] int readAsInt() const;
+	[[nodiscard]] float readAsFloat() const;
+	[[nodiscard]] double readAsDouble() const;
+	[[nodiscard]] std::string readAsString() const;
+
+	[[nodiscard]] static char getEscapeCharacter(char c) ;
 };
