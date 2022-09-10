@@ -4,5 +4,7 @@ true && false || (7 < 9);
 ((7 << 2) & (1 << 3));
 9.70 * 75.092;
 8 + -9;
-"Hello World!";
+"Hello, World!";
+7;
+!false;
 '1';
