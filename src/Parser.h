@@ -20,6 +20,11 @@ public:
 private:
 	std::unique_ptr<Stmt> parseStmt();
 	std::unique_ptr<Stmt> parseStmtExpr();
+	std::unique_ptr<Stmt> parseStmtBlock();
+	std::unique_ptr<Stmt> parseStmtIf();
+	std::unique_ptr<Stmt> parseStmtWhile();
+	std::unique_ptr<Stmt> parseStmtFor();
+	std::unique_ptr<Stmt> parseStmtReturn();
 
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();

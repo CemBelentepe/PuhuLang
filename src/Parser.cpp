@@ -40,14 +40,84 @@ bool Parser::fail() const
 
 std::unique_ptr<Stmt> Parser::parseStmt()
 {
-	return parseStmtExpr();
+	switch (peek().type)
+	{
+	case TokenType::OPEN_BRACE:
+		return parseStmtBlock();
+	case TokenType::IF:
+		return parseStmtIf();
+	case TokenType::WHILE:
+		return parseStmtWhile();
+	case TokenType::FOR:
+		return parseStmtFor();
+	case TokenType::RETURN:
+		return parseStmtReturn();
+	default:
+		return parseStmtExpr();
+	}
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtExpr()
 {
 	auto expr = parseExpr();
-	Token sm = consume(TokenType::SEMI_COLON, "Expected ';' after an expression statement.");
+	Token sm = consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
 	return std::make_unique<StmtExpr>(std::move(expr), sm);
+}
+
+std::unique_ptr<Stmt> Parser::parseStmtBlock()
+{
+	Token openBrace = consume(TokenType::OPEN_BRACE, "[DEV] Invalid call to function.");
+
+	std::vector<std::unique_ptr<Stmt>> stmts;
+
+	while (peek().type != TokenType::CLOSE_BRACE || !isAtEnd())
+	{
+		stmts.push_back(std::move(parseStmt()));
+	}
+
+	Token closeBrace = consume(TokenType::CLOSE_BRACE, "Expected `}` after the end of a block statements.");
+
+	return std::make_unique<StmtBlock>(std::move(stmts), openBrace, closeBrace);
+}
+
+std::unique_ptr<Stmt> Parser::parseStmtIf()
+{
+	consume(TokenType::IF, "[DEV] Invalid call to function.");
+	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `if` keyword.");
+	auto cond = parseExpr();
+	consume(TokenType::CLOSE_PAREN, "Expected `)` after the end of an `if` condition.");
+	auto then = parseStmt();
+
+	std::unique_ptr<Stmt> els = nullptr;
+	if(match(TokenType::ELSE))
+		els = parseStmt();
+
+	return std::make_unique<StmtIf>(std::move(cond), std::move(then), std::move(els), paren);
+}
+
+std::unique_ptr<Stmt> Parser::parseStmtWhile()
+{
+	consume(TokenType::WHILE, "[DEV] Invalid call to function.");
+	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `while` keyword.");
+	auto cond = parseExpr();
+	consume(TokenType::CLOSE_PAREN, "Expected `)` after the end of an `while` condition.");
+	auto body = parseStmt();
+
+	return std::make_unique<StmtWhile>(std::move(cond), std::move(body), paren);
+}
+
+std::unique_ptr<Stmt> Parser::parseStmtFor()
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+std::unique_ptr<Stmt> Parser::parseStmtReturn()
+{
+	Token ret = consume(TokenType::RETURN, "[DEV] Invalid call to function.");
+	auto expr = parseExpr();
+	consume(TokenType::SEMI_COLON, "Expected `;` at the end of `return` statement.");
+
+	return std::make_unique<StmtReturn>(std::move(expr), ret);
 }
 
 std::unique_ptr<Expr> Parser::parseExpr()
