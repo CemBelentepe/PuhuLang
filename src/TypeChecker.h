@@ -30,6 +30,6 @@ private:
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	bool failed;
-	static std::vector<std::tuple<BinaryFuncDef, PrimitiveTag>> binaryOperations;
-	static std::vector<std::tuple<UnaryFuncDef, PrimitiveTag>> unaryOps;
+	static const std::vector<std::tuple<BinaryFuncDef, PrimitiveTag>> binaryOperations;
+	static const std::vector<std::tuple<UnaryFuncDef, PrimitiveTag>> unaryOps;
 };

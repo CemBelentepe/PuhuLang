@@ -125,7 +125,7 @@ bool TypeChecker::fail() const
 	return failed;
 }
 
-std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
+const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
 	{{ TokenType::MINUS, PrimitiveTag::FLOAT }, PrimitiveTag::FLOAT },
 	{{ TokenType::MINUS, PrimitiveTag::DOUBLE }, PrimitiveTag::DOUBLE },
@@ -137,7 +137,7 @@ std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::un
 	{{ TokenType::BANG, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::TILDE, PrimitiveTag::INT }, PrimitiveTag::INT }};
 
-std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
+const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::AND, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::BIT_OR, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },

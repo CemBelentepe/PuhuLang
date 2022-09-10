@@ -108,7 +108,7 @@ void Interpreter::visit(ExprLiteral* expr)
 	this->result = expr->literal.getValue();
 }
 
-std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
+const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(-std::get<int>(rhs)); }},
 	{{ TokenType::MINUS, PrimitiveTag::FLOAT }, [](Value::Data rhs)
@@ -130,7 +130,7 @@ std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> In
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
 
-std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
+const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{ return Value::Data(std::get<bool>(lhs) || std::get<bool>(rhs)); }},
 	{{ TokenType::AND, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)

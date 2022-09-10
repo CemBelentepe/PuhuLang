@@ -32,6 +32,6 @@ private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	std::ostream& os;
 	bool failed;
-	static std::vector<std::tuple<BinaryFuncDef, BinaryFuncDec>> binaryOps;
-	static std::vector<std::tuple<UnaryFuncDef, UnaryFuncDec>> unaryOps;
+	static const std::vector<std::tuple<BinaryFuncDef, BinaryFuncDec>> binaryOps;
+	static const std::vector<std::tuple<UnaryFuncDef, UnaryFuncDec>> unaryOps;
 };
