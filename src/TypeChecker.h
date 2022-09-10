@@ -15,6 +15,7 @@ public:
 	~TypeChecker() override;
 
 	void check();
+	[[nodiscard]] bool fail() const;
 
 	void visit(StmtExpr* stmt) override;
 

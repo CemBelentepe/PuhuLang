@@ -14,6 +14,7 @@ public:
 	~Interpreter() override;
 
 	void run();
+	[[nodiscard]] bool fail() const;
 
 	void visit(StmtExpr* stmt) override;
 

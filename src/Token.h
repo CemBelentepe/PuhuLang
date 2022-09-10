@@ -40,7 +40,7 @@ enum class TokenType
 	ERROR, EOF_TOKEN
 };
 
-// TODO add value for value to be calculated
+
 class Token
 {
 public:
@@ -51,18 +51,13 @@ public:
 	Value val;
 
 	Token();
-
 	Token(TokenType type, unsigned long line, unsigned long col, std::string_view lexeme);
 
 	[[nodiscard]] std::string showInfo() const;
-
 	[[nodiscard]] std::shared_ptr<Type> getType() const;
-
 	Value getValue();
 
 private:
-	bool valInit;
-
 	[[nodiscard]] bool readAsBool() const;
 	[[nodiscard]] char readAsChar() const;
 	[[nodiscard]] int readAsInt() const;
@@ -70,5 +65,8 @@ private:
 	[[nodiscard]] double readAsDouble() const;
 	[[nodiscard]] std::string readAsString() const;
 
-	[[nodiscard]] static char getEscapeCharacter(char c) ;
+	[[nodiscard]] static char getEscapeCharacter(char c);
+
+private:
+	bool valInit;
 };

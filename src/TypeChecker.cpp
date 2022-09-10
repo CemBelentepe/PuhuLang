@@ -88,6 +88,11 @@ void TypeChecker::visit(ExprLiteral* expr)
 	this->result = expr->type;
 }
 
+bool TypeChecker::fail() const
+{
+	return false;
+}
+
 std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {{{TokenType::MINUS, PrimitiveTag::INT}, PrimitiveTag::INT },
 																						  {{TokenType::MINUS, PrimitiveTag::FLOAT}, PrimitiveTag::FLOAT },
 																						  {{TokenType::MINUS, PrimitiveTag::DOUBLE}, PrimitiveTag::DOUBLE },

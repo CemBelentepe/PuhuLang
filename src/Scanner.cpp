@@ -2,17 +2,20 @@
 // Created by cembelentepe on 08/09/22.
 //
 
-#include <algorithm>
-#include <utility>
 #include "Scanner.h"
 
+#include <algorithm>
+#include <utility>
+#include <stdexcept>
+#include <iostream>
+#include <sstream>
+
 Scanner::Scanner(std::string  source)
-		: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0)
+		: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0), failed(false)
 {
 }
 
-Scanner::~Scanner()
-= default;
+Scanner::~Scanner() = default;
 
 std::vector<Token> Scanner::scan()
 {
@@ -20,10 +23,23 @@ std::vector<Token> Scanner::scan()
 
 	do
 	{
-		tokens.push_back(scanToken());
+		try
+		{
+			tokens.push_back(scanToken());
+		}
+		catch (std::runtime_error& e)
+		{
+			std::cerr << e.what() << std::endl;
+			failed = true;
+		}
 	} while (tokens.back().type != TokenType::EOF_TOKEN);
 
 	return tokens;
+}
+
+bool Scanner::fail() const
+{
+	return failed;
 }
 
 Token Scanner::scanToken()
@@ -140,7 +156,11 @@ Token Scanner::scanToken()
 		else if (isAlpha(c))
 			return scanIdentifier();
 		else
-			return makeToken(TokenType::ERROR);
+		{
+			std::stringstream ssErr;
+			ssErr << "[ERROR " << currentLine << ":" << currentCol << "] Unexpected character '" << c << "'";
+			throw std::runtime_error(ssErr.str());
+		}
 	}
 	}
 }
@@ -161,11 +181,7 @@ Token Scanner::scanString()
 			advance();
 	}
 
-	// TODO string problems
-	// if (isAtEnd()) throw ScannerError
-	// if (!match('"')) throw ScannerError
-
-	advance(); // consume '"'
+	consume('"', "String literal is not terminated.");
 
 	return makeToken(TokenType::STRING_LITERAL);
 }
@@ -173,16 +189,14 @@ Token Scanner::scanString()
 Token Scanner::scanChar()
 {
 	char prev = '\'';
-	while ((peek() != '\'' || prev == '\\') && !isAtEnd())
+	while (peek() != '\'' && !isAtEnd())
 	{
 		prev = advance();
+		if (prev == '\\')
+			prev = advance();
 	}
 
-	// TODO char problems
-	// if (isAtEnd()) throw ScannerError
-	// if (!match('"')) throw ScannerError
-	// check char literal size here !
-	advance(); // consume '\''
+	consume('\'', "Character literal is not terminated.");
 
 	return makeToken(TokenType::CHAR_LITERAL);
 }
@@ -246,8 +260,8 @@ void Scanner::skipWhitespace()
 						currentLine++;
 					}
 				}
-				advance();
-				advance();
+				consume('*', "Unterminated comment.");
+				consume('/', "Unterminated comment.");
 				skipWhitespace();
 			}
 			return;
@@ -259,7 +273,7 @@ void Scanner::skipWhitespace()
 
 Token Scanner::scanIdentifier()
 {
-	while (isAlpha(peek()) || isNumber(peek()))
+	while (isAlpha(peek()) || isNumber(peek()) || peek() == '_')
 		advance();
 
 	std::string_view lexeme = currentLexeme();
@@ -305,6 +319,18 @@ bool Scanner::match(char c)
 	return false;
 }
 
+void Scanner::consume(char c, const std::string& msg)
+{
+	if(!match(c))
+	{
+		advance();
+		std::stringstream ssErr;
+		ssErr << "[ERROR " << currentLine << ":" << currentCol << "] " << msg << "\n";
+
+		throw std::runtime_error(ssErr.str());
+	}
+}
+
 char Scanner::peek() const
 {
 	return source[currentPos];
@@ -336,7 +362,4 @@ std::string_view Scanner::currentLexeme() const
 	lexeme = lexeme.substr(startPos, currentPos - startPos);
 	return lexeme;
 }
-
-
-
 

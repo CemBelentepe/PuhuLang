@@ -15,6 +15,7 @@ public:
 	~Scanner();
 
 	std::vector<Token> scan();
+	[[nodiscard]] bool fail() const;
 
 private:
 	Token scanToken();
@@ -29,6 +30,7 @@ private:
 
 	char advance();
 	bool match(char c);
+	void consume(char c, const std::string& msg);
 	[[nodiscard]] char peek() const;
 	[[nodiscard]] char peekNext() const;
 	[[nodiscard]] bool isAtEnd() const;
@@ -39,8 +41,10 @@ private:
 
 private:
 	std::string source;
-	unsigned long startPos;
-	unsigned long currentPos;
-	unsigned long currentLine;
-	unsigned long currentCol;
+	size_t startPos;
+	size_t currentPos;
+	size_t currentLine;
+	size_t currentCol;
+	bool failed;
+
 };

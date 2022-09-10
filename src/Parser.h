@@ -15,6 +15,7 @@ public:
 	explicit Parser(std::vector<Token>  tokens);
 
 	std::vector<std::unique_ptr<Stmt>> parse();
+	[[nodiscard]] bool fail() const;
 
 private:
 	std::unique_ptr<Stmt> parseStmt();

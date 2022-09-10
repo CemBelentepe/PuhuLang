@@ -210,3 +210,8 @@ Token Parser::consumed() const
 	return tokens[currentToken - 1];
 }
 
+bool Parser::fail() const
+{
+	return false;
+}
+

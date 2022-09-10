@@ -83,7 +83,7 @@ bool Token::readAsBool() const
 		return true;
 	if (type == TokenType::FALSE)
 		return false;
-	static_assert(true, "Invalid token for 'bool' literal");
+	throw std::runtime_error("Invalid token for 'bool' literal");
 }
 
 char Token::readAsChar() const
@@ -97,7 +97,7 @@ char Token::readAsChar() const
 	{
 		return getEscapeCharacter(chr[1]);
 	}
-	static_assert(true, "Invalid token for 'char' literal");
+	throw std::runtime_error("Invalid token for 'char' literal");
 }
 
 int Token::readAsInt() const
@@ -167,7 +167,7 @@ char Token::getEscapeCharacter(char c)
 	case '"': return '"';
 	case '?': return '\?';
 	default:
-		static_assert(true, "Invalid character for escape sequence.");
+		throw std::runtime_error("Invalid character for escape sequence.");
 	}
 }
 

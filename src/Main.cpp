@@ -11,7 +11,7 @@
 #include "TypeChecker.h"
 #include "Interpreter.h"
 
-int run(const std::string& fileName);
+int run(const std::string& filepath);
 
 int main(int argc, char** argv)
 {
@@ -20,16 +20,28 @@ int main(int argc, char** argv)
 	return run(argv[1]);
 }
 
-int run(const std::string& fileName)
+int run(const std::string& filepath)
 {
-	std::ifstream file(fileName);
+	std::ifstream file(filepath);
 	std::stringstream fileContent;
 
-	// TODO handle file error
+	if (file.fail())
+	{
+		std::cout << "[ERROR] File cannot be opened: '" << filepath << "'\n";
+		return -1;
+	}
+
 	fileContent << file.rdbuf();
+	file.close();
 
 	Scanner scanner(std::move(fileContent.str()));
 	std::vector<Token> tokens = scanner.scan();
+
+	if (scanner.fail())
+	{
+		std::cout << "Terminated due to a lexing failure." << std::endl;
+		return -1;
+	}
 
 	// TODO add a compiler flag
 	if (false)
@@ -43,7 +55,13 @@ int run(const std::string& fileName)
 	Parser parser(tokens);
 	std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
 
-	if (true)
+	if (parser.fail())
+	{
+		std::cout << "Terminated due to a parsing failure." << std::endl;
+		return -1;
+	}
+
+	if (false)
 	{
 		std::cout << "AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
@@ -54,7 +72,13 @@ int run(const std::string& fileName)
 	TypeChecker typeChecker(statements);
 	typeChecker.check();
 
-	if(true)
+	if (typeChecker.fail())
+	{
+		std::cout << "Terminated due to a type checking failure." << std::endl;
+		return -1;
+	}
+
+	if (false)
 	{
 		std::cout << "Typed AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
@@ -66,6 +90,12 @@ int run(const std::string& fileName)
 	std::cout << "Interpreter: " << std::endl;
 	Interpreter interpreter(statements, std::cout);
 	interpreter.run();
+
+	if (interpreter.fail())
+	{
+		std::cout << "Terminated due to a runtime failure." << std::endl;
+		return -1;
+	}
 
 	return EXIT_SUCCESS;
 }
