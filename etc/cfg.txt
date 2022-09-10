@@ -15,7 +15,7 @@ bitshift	-> addition (("<<" | ">>") addition)*
 addition 	-> multiplication (("+" | "-") multiplication)*
 multiplication -> prefix (("*" | "/" | "%") prefix)*
 prefix 		-> ("-" | "+" | "++" | "--")? unary
-unary 		-> ("!" | "~" | "^" | "ref" | cast) unary | postfix
+unary 		-> ("!" | "~" | cast) unary | postfix
 postfix		-> call ("++" | "--")?
 call		-> primary ( ("(" arguments? ")")  | ("[" expression "]") | ( "." IDENTIFIER)*
 primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")") | ("::"? (IDENTIFIER "::")* IDENTIFIER) | ("heap" typeName ("(" arguments? ")"))

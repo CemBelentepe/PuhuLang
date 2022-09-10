@@ -9,6 +9,7 @@
 #include "Stmt.h"
 #include "AstDebugger.h"
 #include "TypeChecker.h"
+#include "Interpreter.h"
 
 int run(const std::string& fileName);
 
@@ -53,7 +54,7 @@ int run(const std::string& fileName)
 	TypeChecker typeChecker(statements);
 	typeChecker.check();
 
-	if(false)
+	if(true)
 	{
 		std::cout << "Typed AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
@@ -61,6 +62,10 @@ int run(const std::string& fileName)
 		debugger.debug();
 		std::cout << std::endl;
 	}
+
+	std::cout << "Interpreter: " << std::endl;
+	Interpreter interpreter(statements, std::cout);
+	interpreter.run();
 
 	return EXIT_SUCCESS;
 }

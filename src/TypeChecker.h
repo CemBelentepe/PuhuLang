@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <set>
+#include <unordered_map>
 #include "AstVisitor.h"
 
 class TypeChecker : public ExprVisitor<std::shared_ptr<Type>>, public StmtVisitor<void>
@@ -21,5 +23,11 @@ public:
 	void visit(ExprLiteral* expr) override;
 
 private:
+	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;
+	using UnaryFuncDef = std::tuple<TokenType, PrimitiveTag>;
+
+private:
 	std::vector<std::unique_ptr<Stmt>>& root;
+	static std::vector<std::tuple<BinaryFuncDef, PrimitiveTag>> binaryOperations;
+	static std::vector<std::tuple<UnaryFuncDef, PrimitiveTag>> unaryOps;
 };

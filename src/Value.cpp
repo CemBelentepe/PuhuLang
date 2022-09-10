@@ -29,9 +29,11 @@ TypePtr Value::getType() const
 
 std::string Value::getInfo() const
 {
-	if (type->tag != Type::Tag::PRIMITIVE)
-		throw std::runtime_error("Invalid type for a value.");
-	else
+	if (type->tag == Type::Tag::STRING)
+	{
+		return std::get<std::string>(data);
+	}
+	else if(type->tag == Type::Tag::PRIMITIVE)
 	{
 		PrimitiveTag tag = ((TypePrimitive*)type.get())->special_tag;
 		std::stringstream res;
@@ -59,4 +61,6 @@ std::string Value::getInfo() const
 		}
 		return res.str();
 	}
+	else
+		throw std::runtime_error("Invalid type for a value.");
 }

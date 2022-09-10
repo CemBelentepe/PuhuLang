@@ -148,6 +148,8 @@ std::string Token::readAsString() const
 		}
 		i++;
 	}
+
+	return ss.str();
 }
 char Token::getEscapeCharacter(char c)
 {

@@ -1,0 +1,57 @@
+OR || bool bool bool
+AND && bool bool bool
+
+BIT_OR | int int int
+BIT_XOR ^ int int int
+BIT_AND & int int int
+BITSHIFT_LEFT << int int int
+BITSHIFT_RIGHT >> int int int
+MODULUS % int int int
+
+EQUAL_EQUAL == bool bool bool
+EQUAL_EQUAL == bool char char
+EQUAL_EQUAL == bool int int
+EQUAL_EQUAL == bool float float
+EQUAL_EQUAL == bool double double
+
+BANG_EQUAL != bool bool bool
+BANG_EQUAL != bool char char
+BANG_EQUAL != bool int int
+BANG_EQUAL != bool float float
+BANG_EQUAL != bool double double
+
+LESS < bool char char
+LESS < bool int int
+LESS < bool float float
+LESS < bool double double
+
+LESS_EQUAL <= bool char char
+LESS_EQUAL <= bool int int
+LESS_EQUAL <= bool float float
+LESS_EQUAL <= bool double double
+
+GREAT > bool char char
+GREAT > bool int int
+GREAT > bool float float
+GREAT > bool double double
+
+GREAT_EQUAL >= bool char char
+GREAT_EQUAL >= bool int int
+GREAT_EQUAL >= bool float float
+GREAT_EQUAL >= bool double double
+
+PLUS + int int int
+PLUS + float float float
+PLUS + double double double
+
+MINUS - int int int
+MINUS - float float float
+MINUS - double double double
+
+STAR * int int int
+STAR * float float float
+STAR * double double double
+
+SLASH / int int int
+SLASH / float float float
+SLASH / double double double
