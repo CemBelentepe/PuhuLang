@@ -66,6 +66,7 @@ std::unique_ptr<Stmt> Parser::parseStmtExpr()
 
 std::unique_ptr<Stmt> Parser::parseStmtBlock()
 {
+	// TODO add expected consume for dev errors
 	Token openBrace = consume(TokenType::OPEN_BRACE, "[DEV] Invalid call to function.");
 
 	std::vector<std::unique_ptr<Stmt>> stmts;
@@ -82,6 +83,7 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 std::unique_ptr<Stmt> Parser::parseStmtIf()
 {
+	// TODO add expected consume for dev errors
 	consume(TokenType::IF, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `if` keyword.");
 	auto cond = parseExpr();
@@ -97,6 +99,7 @@ std::unique_ptr<Stmt> Parser::parseStmtIf()
 
 std::unique_ptr<Stmt> Parser::parseStmtWhile()
 {
+	// TODO add expected consume for dev errors
 	consume(TokenType::WHILE, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `while` keyword.");
 	auto cond = parseExpr();
@@ -113,6 +116,7 @@ std::unique_ptr<Stmt> Parser::parseStmtFor()
 
 std::unique_ptr<Stmt> Parser::parseStmtReturn()
 {
+	// TODO add expected consume for dev errors
 	Token ret = consume(TokenType::RETURN, "[DEV] Invalid call to function.");
 	auto expr = parseExpr();
 	consume(TokenType::SEMI_COLON, "Expected `;` at the end of `return` statement.");
