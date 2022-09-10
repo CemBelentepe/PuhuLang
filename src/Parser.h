@@ -43,4 +43,5 @@ private:
 	std::vector<Token> tokens;
 	size_t currentToken;
 	bool failed;
+	static const std::unordered_map<TokenType, int> precedenceTable;
 };

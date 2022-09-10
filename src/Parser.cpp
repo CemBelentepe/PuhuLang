@@ -10,7 +10,7 @@
 #include "Parser.h"
 
 Parser::Parser(std::vector<Token> tokens)
-		: tokens(std::move(tokens)), currentToken(0), failed(false)
+	: tokens(std::move(tokens)), currentToken(0), failed(false)
 {
 }
 
@@ -129,7 +129,8 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 	default:
 	{
 		std::stringstream ssErr;
-		ssErr << "[ERROR " << peek().line << ":" << peek().col << "] Invalid identifier: \"" + token.getLexeme() + "\".";
+		ssErr << "[ERROR " << peek().line << ":" << peek().col
+			  << "] Invalid identifier: \"" + token.getLexeme() + "\".";
 		throw std::runtime_error(ssErr.str());
 	}
 	}
@@ -157,52 +158,10 @@ Token Parser::consume(TokenType type, const std::string& errorMessage)
 
 int Parser::getPrecedence(TokenType t)
 {
-	switch (t)
-	{
-	case TokenType::OR:
-		return 1;
-	case TokenType::AND:
-		return 2;
-
-		// Bitwise
-	case TokenType::BIT_OR:
-		return 10;
-	case TokenType::BIT_XOR:
-		return 11;
-	case TokenType::BIT_AND:
-		return 12;
-
-		// Equality
-	case TokenType::EQUAL_EQUAL:
-	case TokenType::BANG_EQUAL:
-		return 20;
-
-		// Comparison
-	case TokenType::LESS:
-	case TokenType::LESS_EQUAL:
-	case TokenType::GREAT:
-	case TokenType::GREAT_EQUAL:
-		return 30;
-
-		// Bitshift
-	case TokenType::BITSHIFT_LEFT:
-	case TokenType::BITSHIFT_RIGHT:
-		return 40;
-
-		// Addition
-	case TokenType::PLUS:
-	case TokenType::MINUS:
-		return 50;
-
-		// Multiplication
-	case TokenType::STAR:
-	case TokenType::SLASH:
-	case TokenType::MODULUS:
-		return 60;
-
-	default:
+	auto it = precedenceTable.find(t);
+	if (it == precedenceTable.end())
 		return -1;
-	}
+	return it->second;
 }
 
 bool Parser::match(TokenType type)
@@ -248,3 +207,23 @@ void Parser::recover()
 	}
 }
 
+const std::unordered_map<TokenType, int> Parser::precedenceTable = {
+	{ TokenType::OR, 1 },
+	{ TokenType::AND, 2 },
+	{ TokenType::BIT_OR, 10 },
+	{ TokenType::BIT_XOR, 11 },
+	{ TokenType::BIT_AND, 12 },
+	{ TokenType::EQUAL_EQUAL, 20 },
+	{ TokenType::BANG_EQUAL, 20 },
+	{ TokenType::LESS, 30 },
+	{ TokenType::LESS_EQUAL, 30 },
+	{ TokenType::GREAT, 30 },
+	{ TokenType::GREAT_EQUAL, 30 },
+	{ TokenType::BITSHIFT_LEFT, 40 },
+	{ TokenType::BITSHIFT_RIGHT, 40 },
+	{ TokenType::PLUS, 50 },
+	{ TokenType::MINUS, 50 },
+	{ TokenType::STAR, 60 },
+	{ TokenType::SLASH, 60 },
+	{ TokenType::MODULUS, 60 },
+};
