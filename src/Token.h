@@ -57,6 +57,8 @@ public:
 	[[nodiscard]] std::shared_ptr<Type> getType() const;
 	Value getValue();
 
+	[[nodiscard]] std::string getLexeme() const;
+
 private:
 	[[nodiscard]] bool readAsBool() const;
 	[[nodiscard]] char readAsChar() const;

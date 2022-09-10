@@ -6,12 +6,12 @@
 #include "Token.h"
 
 Token::Token()
-	: type(TokenType::ERROR), lexeme(), line(0), col(0), valInit(false)
+		: type(TokenType::ERROR), lexeme(), line(0), col(0), valInit(false)
 {
 }
 
 Token::Token(TokenType type, unsigned long line, unsigned long col, std::string_view lexeme)
-	: type(type), lexeme(lexeme), line(line), col(col), valInit(false)
+		: type(type), lexeme(lexeme), line(line), col(col), valInit(false)
 {
 }
 
@@ -151,24 +151,44 @@ std::string Token::readAsString() const
 
 	return ss.str();
 }
+
 char Token::getEscapeCharacter(char c)
 {
 	switch (c)
 	{
-	case 'a': return '\a';
-	case 'b': return '\b';
-	case 'f': return '\f';
-	case 'n': return '\n';
-	case 'r': return '\r';
-	case 't': return '\t';
-	case 'v': return '\v';
-	case '\\': return '\\';
-	case '\'': return '\'';
-	case '"': return '"';
-	case '?': return '\?';
+	case 'a':
+		return '\a';
+	case 'b':
+		return '\b';
+	case 'f':
+		return '\f';
+	case 'n':
+		return '\n';
+	case 'r':
+		return '\r';
+	case 't':
+		return '\t';
+	case 'v':
+		return '\v';
+	case '\\':
+		return '\\';
+	case '\'':
+		return '\'';
+	case '"':
+		return '"';
+	case '?':
+		return '\?';
 	default:
 		throw std::runtime_error("Invalid character for escape sequence.");
 	}
+}
+
+std::string Token::getLexeme() const
+{
+	if (type != TokenType::EOF_TOKEN)
+		return std::string(lexeme);
+	else
+		return "";
 }
 
 

@@ -35,9 +35,12 @@ private:
 	bool match(TokenType type);
 	bool match(std::vector<TokenType> types);
 	[[nodiscard]] Token consumed() const;
+	[[nodiscard]] bool isAtEnd() const;
+
+	void recover();
 
 private:
 	std::vector<Token> tokens;
 	size_t currentToken;
-
+	bool failed;
 };

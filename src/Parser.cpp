@@ -5,22 +5,37 @@
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
+#include <iostream>
+#include <sstream>
 #include "Parser.h"
 
 Parser::Parser(std::vector<Token> tokens)
-	: tokens(std::move(tokens)), currentToken(0)
+		: tokens(std::move(tokens)), currentToken(0), failed(false)
 {
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
 	std::vector<std::unique_ptr<Stmt>> statements;
-	while(peek().type != TokenType::EOF_TOKEN)
+	while (peek().type != TokenType::EOF_TOKEN && !isAtEnd())
 	{
-		// TODO Implement errors and stuff
-		statements.push_back(parseStmt());
+		try
+		{
+			statements.push_back(parseStmt());
+		}
+		catch (std::runtime_error& e)
+		{
+			failed = true;
+			recover();
+			std::cerr << e.what() << std::endl;
+		}
 	}
 	return statements;
+}
+
+bool Parser::fail() const
+{
+	return failed;
 }
 
 std::unique_ptr<Stmt> Parser::parseStmt()
@@ -112,7 +127,11 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 		return std::move(inside);
 	}
 	default:
-		throw std::runtime_error("[ERROR] Invalid identifier: \"" + std::string(token.lexeme) + "\".");
+	{
+		std::stringstream ssErr;
+		ssErr << "[ERROR " << peek().line << ":" << peek().col << "] Invalid identifier: \"" + token.getLexeme() + "\".";
+		throw std::runtime_error(ssErr.str());
+	}
 	}
 }
 
@@ -130,7 +149,10 @@ Token Parser::consume(TokenType type, const std::string& errorMessage)
 {
 	if (peek().type == type)
 		return advance();
-	throw std::runtime_error("[ERROR] " + errorMessage);
+
+	std::stringstream ssErr;
+	ssErr << "[ERROR " << peek().line << ":" << peek().col << "] " << errorMessage;
+	throw std::runtime_error(ssErr.str());
 }
 
 int Parser::getPrecedence(TokenType t)
@@ -210,8 +232,19 @@ Token Parser::consumed() const
 	return tokens[currentToken - 1];
 }
 
-bool Parser::fail() const
+bool Parser::isAtEnd() const
 {
-	return false;
+	return currentToken >= tokens.size();
+}
+
+void Parser::recover()
+{
+	TokenType c = advance().type;
+	while (!isAtEnd())
+	{
+		if (c == TokenType::SEMI_COLON) break;
+
+		c = advance().type;
+	}
 }
 

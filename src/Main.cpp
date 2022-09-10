@@ -34,7 +34,7 @@ int run(const std::string& filepath)
 	fileContent << file.rdbuf();
 	file.close();
 
-	Scanner scanner(std::move(fileContent.str()));
+	Scanner scanner(fileContent.str());
 	std::vector<Token> tokens = scanner.scan();
 
 	if (scanner.fail())
