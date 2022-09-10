@@ -41,6 +41,31 @@ void Interpreter::visit(StmtExpr* stmt)
 	os << res.getInfo() << std::endl;
 }
 
+void Interpreter::visit(StmtBlock* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void Interpreter::visit(StmtIf* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void Interpreter::visit(StmtWhile* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void Interpreter::visit(StmtFor* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void Interpreter::visit(StmtReturn* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
 void Interpreter::visit(ExprBinary* expr)
 {
 	Value lhs = expr->lhs->accept(this);

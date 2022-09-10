@@ -36,6 +36,31 @@ void TypeChecker::visit(StmtExpr* stmt)
 	stmt->expr->accept(this);
 }
 
+void TypeChecker::visit(StmtBlock* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void TypeChecker::visit(StmtIf* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void TypeChecker::visit(StmtWhile* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void TypeChecker::visit(StmtFor* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void TypeChecker::visit(StmtReturn* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
 void TypeChecker::visit(ExprBinary* expr)
 {
 	auto typeLhs = expr->lhs->accept(this);

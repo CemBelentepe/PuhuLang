@@ -17,6 +17,11 @@ public:
 	[[nodiscard]] bool fail() const;
 
 	void visit(StmtExpr* stmt) override;
+	void visit(StmtBlock* stmt) override;
+	void visit(StmtIf* stmt) override;
+	void visit(StmtWhile* stmt) override;
+	void visit(StmtFor* stmt) override;
+	void visit(StmtReturn* stmt) override;
 
 	void visit(ExprBinary* expr) override;
 	void visit(ExprUnary* expr) override;

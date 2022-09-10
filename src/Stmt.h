@@ -5,11 +5,12 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include "Token.h"
 #include "Expr.h"
 
 class StmtVisitorBase;
-template <typename T>
+template<typename T>
 class StmtVisitor;
 
 class Stmt
@@ -31,8 +32,96 @@ public:
 	Token semicolon;
 
 	explicit StmtExpr(std::unique_ptr<Expr> expr, Token semicolon)
-		: expr(std::move(expr)), semicolon(semicolon)
-	{}
+		: expr(std::move(expr)), semicolon(std::move(semicolon))
+	{
+	}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};
+
+class StmtBlock : public Stmt
+{
+public:
+	std::vector<std::unique_ptr<Stmt>> stmts;
+	Token openBrace;
+	Token closeBrace;
+
+	explicit StmtBlock(std::vector<std::unique_ptr<Stmt>> stmts, Token openBrace, Token closeBrace)
+		: stmts(std::move(stmts)), openBrace(std::move(openBrace)), closeBrace(std::move(closeBrace))
+	{
+	}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};
+
+class StmtIf : public Stmt
+{
+public:
+	std::unique_ptr<Expr> cond;
+	std::unique_ptr<Stmt> then;
+	std::unique_ptr<Stmt> els;
+	Token paren;
+
+	explicit StmtIf(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> then, std::unique_ptr<Stmt> els, Token paren)
+		: cond(std::move(cond)), then(std::move(then)), els(std::move(els)), paren(std::move(paren))
+	{
+	}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};
+
+class StmtWhile : public Stmt
+{
+public:
+	std::unique_ptr<Expr> cond;
+	std::unique_ptr<Stmt> body;
+	Token paren;
+
+	explicit StmtWhile(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, Token paren)
+		: cond(std::move(cond)), body(std::move(body)), paren(std::move(paren))
+	{
+	}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};
+
+class StmtFor : public Stmt
+{
+public:
+	std::unique_ptr<Stmt> init;
+	std::unique_ptr<Expr> cond;
+	std::unique_ptr<Stmt> fin;
+	std::unique_ptr<Stmt> body;
+	Token paren;
+
+	explicit StmtFor(std::unique_ptr<Stmt> init,
+		std::unique_ptr<Expr> cond,
+		std::unique_ptr<Stmt> fin,
+		std::unique_ptr<Stmt> body,
+		Token paren)
+		: init(std::move(init)), cond(std::move(cond)), fin(std::move(fin)), body(std::move(body)),
+		  paren(std::move(paren))
+	{
+	}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};
+
+class StmtReturn : public Stmt
+{
+public:
+	std::unique_ptr<Expr> expr;
+	Token ret;
+
+	explicit StmtReturn(std::unique_ptr<Expr> expr, Token ret)
+		: expr(std::move(expr)), ret(std::move(ret))
+	{
+	}
 
 private:
 	void doAccept(StmtVisitorBase* visitor) override;

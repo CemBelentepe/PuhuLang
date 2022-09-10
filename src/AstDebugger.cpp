@@ -15,7 +15,7 @@ AstDebugger::~AstDebugger() = default;
 
 void AstDebugger::debug()
 {
-	for(auto& stmt : root)
+	for (auto& stmt : root)
 	{
 		stmt->accept(this);
 	}
@@ -31,25 +31,51 @@ void AstDebugger::visit(StmtExpr* stmt)
 {
 	os << "EXPR: " << stmt->expr->accept(this) << "\n";
 }
+
+void AstDebugger::visit(StmtBlock* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void AstDebugger::visit(StmtIf* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void AstDebugger::visit(StmtWhile* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void AstDebugger::visit(StmtFor* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
+void AstDebugger::visit(StmtReturn* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
 void AstDebugger::visit(ExprBinary* expr)
 {
 	std::string lhs = expr->lhs->accept(this);
 	std::string rhs = expr->rhs->accept(this);
-	this->result = "(" + std::string (expr->op.lexeme) + " " + lhs + ", " + rhs + ")";
-	if(isShowTypes)
+	this->result = "(" + std::string(expr->op.lexeme) + " " + lhs + ", " + rhs + ")";
+	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }
 
 void AstDebugger::visit(ExprUnary* expr)
 {
 	std::string rhs = expr->rhs->accept(this);
-	this->result = "(" + std::string (expr->op.lexeme) + " " + rhs + ")";
-	if(isShowTypes)
+	this->result = "(" + std::string(expr->op.lexeme) + " " + rhs + ")";
+	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }
 void AstDebugger::visit(ExprLiteral* expr)
 {
-	this->result = "(" + std::string (expr->literal.lexeme) + ")";
-	if(isShowTypes)
+	this->result = "(" + std::string(expr->literal.lexeme) + ")";
+	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }

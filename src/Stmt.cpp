@@ -25,5 +25,10 @@ void T::doAccept(StmtVisitorBase* visitor)\
 }
 
 VISITOR_ACCEPT(StmtExpr)
+VISITOR_ACCEPT(StmtBlock)
+VISITOR_ACCEPT(StmtIf)
+VISITOR_ACCEPT(StmtWhile)
+VISITOR_ACCEPT(StmtFor)
+VISITOR_ACCEPT(StmtReturn)
 
 #undef VISITOR_ACCEPT
