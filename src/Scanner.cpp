@@ -10,7 +10,7 @@
 #include <iostream>
 #include <sstream>
 
-Scanner::Scanner(std::string  source)
+Scanner::Scanner(std::string source)
 		: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0), failed(false)
 {
 }
@@ -278,25 +278,32 @@ Token Scanner::scanIdentifier()
 
 	std::string_view lexeme = currentLexeme();
 
-	if (lexeme == "using") return makeToken(TokenType::USING);
-	if (lexeme == "namespace") return makeToken(TokenType::NAMESPACE);
-	if (lexeme == "class") return makeToken(TokenType::CLASS);
-	if (lexeme == "var") return makeToken(TokenType::VAR);
-	if (lexeme == "if") return makeToken(TokenType::IF);
-	if (lexeme == "else") return makeToken(TokenType::ELSE);
-	if (lexeme == "int") return makeToken(TokenType::INT);
-	if (lexeme == "float") return makeToken(TokenType::FLOAT);
-	if (lexeme == "double") return makeToken(TokenType::DOUBLE);
-	if (lexeme == "char") return makeToken(TokenType::CHAR);
-	if (lexeme == "string") return makeToken(TokenType::STRING);
-	if (lexeme == "bool") return makeToken(TokenType::BOOL);
-	if (lexeme == "void") return makeToken(TokenType::VOID);
-	if (lexeme == "while") return makeToken(TokenType::WHILE);
-	if (lexeme == "for") return makeToken(TokenType::FOR);
-	if (lexeme == "true") return makeToken(TokenType::TRUE);
-	if (lexeme == "false") return makeToken(TokenType::FALSE);
-	if (lexeme == "null") return makeToken(TokenType::NULL_TOKEN);
-	if (lexeme == "return") return makeToken(TokenType::RETURN);
+	static const std::unordered_map<std::string, TokenType> lut = {
+			{ "using",     TokenType::USING },
+			{ "namespace", TokenType::NAMESPACE },
+			{ "class",     TokenType::CLASS },
+			{ "var",       TokenType::VAR },
+			{ "const",     TokenType::CONST },
+			{ "if",        TokenType::IF },
+			{ "else",      TokenType::ELSE },
+			{ "int",       TokenType::INT },
+			{ "float",     TokenType::FLOAT },
+			{ "double",    TokenType::DOUBLE },
+			{ "char",      TokenType::CHAR },
+			{ "string",    TokenType::STRING },
+			{ "bool",      TokenType::BOOL },
+			{ "void",      TokenType::VOID },
+			{ "while",     TokenType::WHILE },
+			{ "for",       TokenType::FOR },
+			{ "true",      TokenType::TRUE },
+			{ "false",     TokenType::FALSE },
+			{ "null",      TokenType::NULL_TOKEN },
+			{ "return",    TokenType::RETURN },
+	};
+
+	auto it = lut.find(std::string(lexeme));
+	if (it != lut.end())
+		return makeToken(it->second);
 
 	return makeToken(TokenType::IDENTIFIER);
 }
@@ -321,7 +328,7 @@ bool Scanner::match(char c)
 
 void Scanner::consume(char c, const std::string& msg)
 {
-	if(!match(c))
+	if (!match(c))
 	{
 		advance();
 		std::stringstream ssErr;
