@@ -26,12 +26,16 @@ private:
 	std::unique_ptr<Stmt> parseStmtFor();
 	std::unique_ptr<Stmt> parseStmtReturn();
 
+	std::unique_ptr<Stmt> parseDeclVar();
+
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();
 	std::unique_ptr<Expr> parseExprBinaryHelper(std::unique_ptr<Expr> lhs, int precedence);
 	std::unique_ptr<Expr> parseExprPrefix();
 	std::unique_ptr<Expr> parseExprUnary();
 	std::unique_ptr<Expr> parseExprPrimary();
+
+	TypePtr parseType();
 
 	Token peek();
 	Token advance();

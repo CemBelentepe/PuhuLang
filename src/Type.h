@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include "Token.h"
 
 class Type;
 using TypePtr = std::shared_ptr<Type>;
@@ -26,10 +27,11 @@ public:
 	};
 	Tag tag;
 	TypePtr intrinsicType;
+	bool isConst;
 
 	Type() = delete;
-	explicit Type(Tag tag, TypePtr intrinsicType)
-			: tag(tag), intrinsicType(std::move(intrinsicType))
+	explicit Type(Tag tag, TypePtr intrinsicType, bool isConst = false)
+			: tag(tag), intrinsicType(std::move(intrinsicType)), isConst(isConst)
 	{
 	}
 
@@ -78,9 +80,20 @@ public:
 class TypePointer : public Type
 {
 public:
-	bool isOwner;
-	explicit TypePointer(TypePtr intrinsic, bool isOwner)
-			: Type(Tag::POINTER, std::move(intrinsic)), isOwner(isOwner)
+	explicit TypePointer(TypePtr intrinsic)
+			: Type(Tag::POINTER, std::move(intrinsic))
+	{
+	}
+
+	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
+	std::string toString() override;
+};
+
+class TypeArray: public Type
+{
+public:
+	explicit TypeArray(TypePtr intrinsic)
+			: Type(Tag::POINTER, std::move(intrinsic))
 	{
 	}
 
@@ -121,7 +134,9 @@ public:
 	static TypePtr getNull();
 	static TypePtr getPrimitive(PrimitiveTag tag);
 	static TypePtr getString();
-	// static TypePtr getArray(std::shared_ptr<Type> intrinsicType);
-	// static TypePtr getPointer(std::shared_ptr<Type> intrinsicType);
-	// static TypePtr getFunction(TypePtr ret_type, std::vector<TypePtr> param_types = {});
+	static TypePtr getArray(const std::shared_ptr<Type>& intrinsicType);
+	static TypePtr getPointer(const std::shared_ptr<Type>& intrinsicType);
+	static TypePtr getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types = {});
+
+	static TypePtr fromToken(TokenType token);
 };

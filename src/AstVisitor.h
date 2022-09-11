@@ -27,6 +27,8 @@ public:
 	virtual void visit(StmtWhile* stmt) = 0;
 	virtual void visit(StmtFor* stmt) = 0;
 	virtual void visit(StmtReturn* stmt) = 0;
+
+	virtual void visit(StmtDeclVar* stmt) = 0;
 };
 
 template <typename T>

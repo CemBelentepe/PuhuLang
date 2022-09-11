@@ -126,3 +126,19 @@ public:
 private:
 	void doAccept(StmtVisitorBase* visitor) override;
 };
+
+class StmtDeclVar : public Stmt
+{
+public:
+	TypePtr type;
+	Token name;
+	Token eq;
+	std::unique_ptr<Expr> init;
+
+	explicit StmtDeclVar(TypePtr type, Token name, Token eq, std::unique_ptr<Expr> init)
+		: type(std::move(type)), name(std::move(name)), eq(std::move(eq)), init(std::move(init))
+	{}
+
+private:
+	void doAccept(StmtVisitorBase* visitor) override;
+};

@@ -147,6 +147,24 @@ std::unique_ptr<Stmt> Parser::parseStmtReturn()
 	return std::make_unique<StmtReturn>(std::move(expr), ret);
 }
 
+std::unique_ptr<Stmt> Parser::parseDeclVar()
+{
+	TypePtr type = parseType();
+	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
+	Token eq;
+	std::unique_ptr<Expr> init = nullptr;
+
+	if(match(TokenType::EQUAL))
+	{
+		eq = consumed();
+		init = parseExpr();
+	}
+
+	consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
+
+	return std::make_unique<StmtDeclVar>(type, name, eq, std::move(init));
+}
+
 std::unique_ptr<Expr> Parser::parseExpr()
 {
 	return parseExprBinary();
@@ -231,6 +249,36 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 		throw std::runtime_error(ssErr.str());
 	}
 	}
+}
+
+TypePtr Parser::parseType()
+{
+	TypePtr type = TypeFactory::fromToken(advance());
+
+	if (match(TokenType::CONST))
+		type->isConst = true;
+
+	while (match({TokenType::OPEN_BRACE, TokenType::STAR}))
+	{
+		if(consumed().type == TokenType::OPEN_BRACE)
+		{
+			consume(TokenType::CLOSE_BRACE, "Expect `]` after `[` for array type.");
+			type = TypeFactory::getArray(type);
+		}
+		else if(consumed().type == (TokenType::STAR))
+		{
+			type = TypeFactory::getPointer(type);
+		}
+		else
+		{
+			throw std::runtime_error("[DEV] Token is not added as type!");
+		}
+
+		if (match(TokenType::CONST))
+			type->isConst = true;
+	}
+
+	return type;
 }
 
 Token Parser::peek()
