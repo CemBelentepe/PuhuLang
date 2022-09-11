@@ -365,6 +365,7 @@ bool Parser::isAtEnd() const
 
 void Parser::recoverStmt()
 {
+	// TODO this is not working
 	TokenType c = advance().type;
 	while (!isAtEnd())
 	{
