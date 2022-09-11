@@ -28,7 +28,7 @@ int run(const std::string& filepath)
 	if (file.fail())
 	{
 		std::cout << "[ERROR] File cannot be opened: '" << filepath << "'\n";
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	fileContent << file.rdbuf();
@@ -40,7 +40,7 @@ int run(const std::string& filepath)
 	if (scanner.fail())
 	{
 		std::cout << "Terminated due to a lexing failure." << std::endl;
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	// TODO add a compiler flag
@@ -58,7 +58,7 @@ int run(const std::string& filepath)
 	if (parser.fail())
 	{
 		std::cout << "Terminated due to a parsing failure." << std::endl;
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if (false)
@@ -75,7 +75,7 @@ int run(const std::string& filepath)
 	if (typeChecker.fail())
 	{
 		std::cout << "Terminated due to a type checking failure." << std::endl;
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if (false)
@@ -94,7 +94,7 @@ int run(const std::string& filepath)
 	if (interpreter.fail())
 	{
 		std::cout << "Terminated due to a runtime failure." << std::endl;
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
