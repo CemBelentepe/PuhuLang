@@ -3,6 +3,8 @@
 //
 
 #include "Value.h"
+#include "Type.h"
+
 #include <utility>
 #include <stdexcept>
 #include <sstream>

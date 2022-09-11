@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 #include "Token.h"
+#include "Type.h"
 
 class ExprVisitorBase;
 template <typename T>

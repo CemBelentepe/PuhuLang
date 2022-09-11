@@ -10,14 +10,14 @@
 #include "Parser.h"
 
 Parser::Parser(std::vector<Token> tokens)
-		: tokens(std::move(tokens)), currentToken(0), failed(false)
+	: tokens(std::move(tokens)), currentToken(0), failed(false)
 {
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
 	std::vector<std::unique_ptr<Stmt>> statements;
-	while (peek().type != TokenType::EOF_TOKEN && !isAtEnd())
+	while (!isAtEnd() && peek().type != TokenType::EOF_TOKEN)
 	{
 		try
 		{
@@ -26,7 +26,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 		catch (std::runtime_error& e)
 		{
 			failed = true;
-			recover();
+			recoverStmt();
 			std::cerr << e.what() << std::endl;
 		}
 	}
@@ -40,21 +40,31 @@ bool Parser::fail() const
 
 std::unique_ptr<Stmt> Parser::parseStmt()
 {
-	switch (peek().type)
+	try
 	{
-	case TokenType::OPEN_BRACE:
-		return parseStmtBlock();
-	case TokenType::IF:
-		return parseStmtIf();
-	case TokenType::WHILE:
-		return parseStmtWhile();
-	case TokenType::FOR:
-		return parseStmtFor();
-	case TokenType::RETURN:
-		return parseStmtReturn();
-	default:
-		return parseStmtExpr();
+		switch (peek().type)
+		{
+		case TokenType::OPEN_BRACE:
+			return parseStmtBlock();
+		case TokenType::IF:
+			return parseStmtIf();
+		case TokenType::WHILE:
+			return parseStmtWhile();
+		case TokenType::FOR:
+			return parseStmtFor();
+		case TokenType::RETURN:
+			return parseStmtReturn();
+		default:
+			return parseStmtExpr();
+		}
 	}
+	catch (parser_stmt_err& e)
+	{
+		failed = true;
+		recoverStmt();
+		std::cerr << e.what() << std::endl;
+	}
+
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtExpr()
@@ -73,8 +83,20 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 	while (peek().type != TokenType::CLOSE_BRACE && !isAtEnd())
 	{
-		// TODO StmtBody -> DeclVar | Stmt
-		stmts.push_back(std::move(parseStmt()));
+		size_t savedPos = currentToken;
+		try
+		{
+			TypePtr type = parseType();
+			if (peek().type != TokenType::IDENTIFIER)
+				throw parser_rollback();
+			stmts.push_back(parseDeclVar(type));
+		}
+		catch (parser_rollback& e)
+		{
+			currentToken = savedPos;
+			stmts.push_back(std::move(parseStmt()));
+		}
+
 	}
 
 	Token closeBrace = consume(TokenType::CLOSE_BRACE, "Expected `}` after the end of a block statements.");
@@ -135,7 +157,7 @@ std::unique_ptr<Stmt> Parser::parseStmtFor()
 	std::unique_ptr<Stmt> body = parseStmt();
 
 	return std::make_unique<StmtFor>(std::move(init), std::move(cond),
-			std::move(fin), std::move(body), paren);
+		std::move(fin), std::move(body), paren);
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtReturn()
@@ -148,14 +170,13 @@ std::unique_ptr<Stmt> Parser::parseStmtReturn()
 	return std::make_unique<StmtReturn>(std::move(expr), ret);
 }
 
-std::unique_ptr<Stmt> Parser::parseDeclVar()
+std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type)
 {
-	TypePtr type = parseType();
 	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
 	Token eq;
 	std::unique_ptr<Expr> init = nullptr;
 
-	if(match(TokenType::EQUAL))
+	if (match(TokenType::EQUAL))
 	{
 		eq = consumed();
 		init = parseExpr();
@@ -247,32 +268,32 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 		std::stringstream ssErr;
 		ssErr << "[ERROR " << peek().line << ":" << peek().col
 			  << "] Invalid identifier: \"" + token.getLexeme() + "\".";
-		throw std::runtime_error(ssErr.str());
+		throw parser_stmt_err(ssErr.str());
 	}
 	}
 }
 
 TypePtr Parser::parseType()
 {
-	TypePtr type = TypeFactory::fromToken(advance().type);
+	TypePtr type = TypeFactory::fromToken(advance());
 
 	if (match(TokenType::CONST))
 		type->isConst = true;
 
-	while (match({TokenType::OPEN_BRACE, TokenType::STAR}))
+	while (match({ TokenType::OPEN_BRACKET, TokenType::STAR }))
 	{
-		if(consumed().type == TokenType::OPEN_BRACE)
+		if (consumed().type == TokenType::OPEN_BRACKET)
 		{
-			consume(TokenType::CLOSE_BRACE, "Expect `]` after `[` for array type.");
+			consume(TokenType::CLOSE_BRACKET, "Expect `]` after `[` for array type.");
 			type = TypeFactory::getArray(type);
 		}
-		else if(consumed().type == (TokenType::STAR))
+		else if (consumed().type == (TokenType::STAR))
 		{
 			type = TypeFactory::getPointer(type);
 		}
 		else
 		{
-			throw std::runtime_error("[DEV] Token is not added as type!");
+			throw parser_stmt_err("[DEV] Token is not added as type!");
 		}
 
 		if (match(TokenType::CONST))
@@ -342,34 +363,45 @@ bool Parser::isAtEnd() const
 	return currentToken >= tokens.size();
 }
 
-void Parser::recover()
+void Parser::recoverStmt()
 {
 	TokenType c = advance().type;
 	while (!isAtEnd())
 	{
-		if (c == TokenType::SEMI_COLON) break;
+		if (c == TokenType::SEMI_COLON) return;
 
+		switch (peek().type)
+		{
+		case TokenType::OPEN_BRACE:
+		case TokenType::IF:
+		case TokenType::WHILE:
+		case TokenType::FOR:
+		case TokenType::RETURN:
+			return;
+		default:
+			break;
+		}
 		c = advance().type;
 	}
 }
 
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {
-		{ TokenType::OR,             1 },
-		{ TokenType::AND,            2 },
-		{ TokenType::BIT_OR,         10 },
-		{ TokenType::BIT_XOR,        11 },
-		{ TokenType::BIT_AND,        12 },
-		{ TokenType::EQUAL_EQUAL,    20 },
-		{ TokenType::BANG_EQUAL,     20 },
-		{ TokenType::LESS,           30 },
-		{ TokenType::LESS_EQUAL,     30 },
-		{ TokenType::GREAT,          30 },
-		{ TokenType::GREAT_EQUAL,    30 },
-		{ TokenType::BITSHIFT_LEFT,  40 },
-		{ TokenType::BITSHIFT_RIGHT, 40 },
-		{ TokenType::PLUS,           50 },
-		{ TokenType::MINUS,          50 },
-		{ TokenType::STAR,           60 },
-		{ TokenType::SLASH,          60 },
-		{ TokenType::MODULUS,        60 },
+	{ TokenType::OR, 1 },
+	{ TokenType::AND, 2 },
+	{ TokenType::BIT_OR, 10 },
+	{ TokenType::BIT_XOR, 11 },
+	{ TokenType::BIT_AND, 12 },
+	{ TokenType::EQUAL_EQUAL, 20 },
+	{ TokenType::BANG_EQUAL, 20 },
+	{ TokenType::LESS, 30 },
+	{ TokenType::LESS_EQUAL, 30 },
+	{ TokenType::GREAT, 30 },
+	{ TokenType::GREAT_EQUAL, 30 },
+	{ TokenType::BITSHIFT_LEFT, 40 },
+	{ TokenType::BITSHIFT_RIGHT, 40 },
+	{ TokenType::PLUS, 50 },
+	{ TokenType::MINUS, 50 },
+	{ TokenType::STAR, 60 },
+	{ TokenType::SLASH, 60 },
+	{ TokenType::MODULUS, 60 },
 };

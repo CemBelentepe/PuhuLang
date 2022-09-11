@@ -78,6 +78,14 @@ void AstDebugger::visit(StmtFor* stmt)
 	os << indented() << "END FOR";
 }
 
+void AstDebugger::visit(StmtDeclVar* stmt)
+{
+	os << indented() << "DECL " << stmt->name.lexeme << ": " << stmt->type->toString();
+	if(stmt->init)
+		os << " = " << stmt->init->accept(this);
+	os << "\n";
+}
+
 void AstDebugger::visit(StmtReturn* stmt)
 {
 	throw std::runtime_error("Not implemented.");
@@ -91,7 +99,6 @@ void AstDebugger::visit(ExprBinary* expr)
 	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }
-
 void AstDebugger::visit(ExprUnary* expr)
 {
 	std::string rhs = expr->rhs->accept(this);
@@ -99,6 +106,7 @@ void AstDebugger::visit(ExprUnary* expr)
 	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }
+
 void AstDebugger::visit(ExprLiteral* expr)
 {
 	this->result = "(" + std::string(expr->literal.lexeme) + ")";
@@ -109,9 +117,4 @@ void AstDebugger::visit(ExprLiteral* expr)
 std::string AstDebugger::indented() const
 {
 	return std::string(indent, '\t');
-}
-
-void AstDebugger::visit(StmtDeclVar* stmt)
-{
-	throw std::runtime_error("Not implemented.");
 }

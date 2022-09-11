@@ -4,13 +4,11 @@
 
 #pragma once
 
-#include <memory>
 #include <utility>
 #include <vector>
 #include "TokenType.h"
-
-class Type;
-using TypePtr = std::shared_ptr<Type>;
+#include "Token.h"
+#include "Common.h"
 
 class Type
 {
@@ -38,7 +36,10 @@ public:
 	virtual ~Type() = default;
 
 	[[nodiscard]] virtual bool isSame(const std::shared_ptr<Type>& other) const = 0;
-	virtual std::string toString() = 0;
+	std::string toString();
+
+protected:
+	virtual std::string toStringHook() = 0;
 };
 
 class TypeError : public Type
@@ -50,7 +51,9 @@ public:
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 enum class PrimitiveTag
@@ -74,7 +77,9 @@ public:
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 class TypePointer : public Type
@@ -86,19 +91,23 @@ public:
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 class TypeArray: public Type
 {
 public:
 	explicit TypeArray(TypePtr intrinsic)
-			: Type(Tag::POINTER, std::move(intrinsic))
+			: Type(Tag::ARRAY, std::move(intrinsic))
 	{
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 class TypeString : public Type
@@ -110,7 +119,9 @@ public:
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 class TypeFunction : public Type
@@ -124,7 +135,25 @@ public:
 	}
 
 	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
-	std::string toString() override;
+
+protected:
+	std::string toStringHook() override;
+};
+
+class TypeUserDefined : public Type
+{
+public:
+	Token name;
+
+	explicit TypeUserDefined(Token name)
+		: Type(Tag::USER_DEF, nullptr), name(name)
+	{
+	}
+
+	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
+
+protected:
+	std::string toStringHook() override;
 };
 
 // TODO Implement a cache for the type factory
@@ -137,6 +166,7 @@ public:
 	static TypePtr getArray(const std::shared_ptr<Type>& intrinsicType);
 	static TypePtr getPointer(const std::shared_ptr<Type>& intrinsicType);
 	static TypePtr getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types = {});
+	static TypePtr getUserDefined(Token name);
 
-	static TypePtr fromToken(TokenType token);
+	static TypePtr fromToken(Token token);
 };

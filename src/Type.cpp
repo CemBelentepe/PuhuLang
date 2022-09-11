@@ -6,12 +6,20 @@
 #include <string>
 #include <sstream>
 
+std::string Type::toString()
+{
+	std::string res = this->toStringHook();
+	if(isConst)
+		res += " const";
+	return res;
+}
+
 bool TypeError::isSame(const std::shared_ptr<Type>& other) const
 {
 	return false;
 }
 
-std::string TypeError::toString()
+std::string TypeError::toStringHook()
 {
 	return "Error_t";
 }
@@ -25,7 +33,7 @@ bool TypePrimitive::isSame(const std::shared_ptr<Type>& other) const
 	return false;
 }
 
-std::string TypePrimitive::toString()
+std::string TypePrimitive::toStringHook()
 {
 	switch (special_tag)
 	{
@@ -54,7 +62,7 @@ bool TypePointer::isSame(const std::shared_ptr<Type>& other) const
 	return false;
 }
 
-std::string TypePointer::toString()
+std::string TypePointer::toStringHook()
 {
 	if (intrinsicType)
 		return intrinsicType->toString() + "*";
@@ -71,7 +79,7 @@ bool TypeArray::isSame(const std::shared_ptr<Type>& other) const
 	return false;
 }
 
-std::string TypeArray::toString()
+std::string TypeArray::toStringHook()
 {
 	return intrinsicType->toString() + "[]";
 }
@@ -81,7 +89,7 @@ bool TypeString::isSame(const std::shared_ptr<Type>& other) const
 	return other->tag == Type::Tag::STRING;
 }
 
-std::string TypeString::toString()
+std::string TypeString::toStringHook()
 {
 	return "string";
 }
@@ -103,7 +111,7 @@ bool TypeFunction::isSame(const std::shared_ptr<Type>& other) const
 	return false;
 }
 
-std::string TypeFunction::toString()
+std::string TypeFunction::toStringHook()
 {
 	std::stringstream ss;
 	ss << intrinsicType->toString() << "(";
@@ -117,6 +125,22 @@ std::string TypeFunction::toString()
 	}
 	ss << ")";
 	return ss.str();
+}
+
+bool TypeUserDefined::isSame(const std::shared_ptr<Type>& other) const
+{
+	if (other->tag == Type::Tag::USER_DEF)
+	{
+		Token otherName = std::dynamic_pointer_cast<TypeUserDefined>(other)->name;
+		return name.getLexeme() == otherName.getLexeme();
+	}
+
+	return false;
+}
+
+std::string TypeUserDefined::toStringHook()
+{
+	return std::string(name.lexeme);
 }
 
 TypePtr TypeFactory::getNull()
@@ -149,9 +173,14 @@ TypePtr TypeFactory::getFunction(const TypePtr& ret_type, const std::vector<Type
 	return std::make_shared<TypeFunction>(ret_type, param_types);
 }
 
-TypePtr TypeFactory::fromToken(TokenType token)
+TypePtr TypeFactory::getUserDefined(Token name)
 {
-	switch (token)
+	return std::make_shared<TypeUserDefined>(name);
+}
+
+TypePtr TypeFactory::fromToken(Token token)
+{
+	switch (token.type)
 	{
 	case TokenType::VOID:
 		return getPrimitive(PrimitiveTag::VOID);
@@ -166,9 +195,8 @@ TypePtr TypeFactory::fromToken(TokenType token)
 	case TokenType::STRING:
 		return getString();
 	case TokenType::IDENTIFIER:
-		throw std::runtime_error("User defined types are not added."); // return getUserDefined()
+		return getUserDefined(token);
 	default:
 		throw std::runtime_error("Invalid token for type description.");
 	}
 }
-

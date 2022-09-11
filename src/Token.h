@@ -7,7 +7,9 @@
 #include <string_view>
 #include <vector>
 #include "Value.h"
-#include "Type.h"
+#include "TokenType.h"
+
+class Type;
 
 class Token
 {

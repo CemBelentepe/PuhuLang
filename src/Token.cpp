@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include "Token.h"
+#include "Type.h"
 
 Token::Token()
 		: type(TokenType::ERROR), lexeme(), line(0), col(0), valInit(false)

@@ -12,7 +12,7 @@
 class Parser
 {
 public:
-	explicit Parser(std::vector<Token>  tokens);
+	explicit Parser(std::vector<Token> tokens);
 
 	std::vector<std::unique_ptr<Stmt>> parse();
 	[[nodiscard]] bool fail() const;
@@ -26,7 +26,7 @@ private:
 	std::unique_ptr<Stmt> parseStmtFor();
 	std::unique_ptr<Stmt> parseStmtReturn();
 
-	std::unique_ptr<Stmt> parseDeclVar();
+	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type);
 
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();
@@ -40,17 +40,35 @@ private:
 	Token peek();
 	Token advance();
 	Token consume(TokenType type, const std::string& errorMessage);
-	[[nodiscard]] static int getPrecedence (TokenType t) ;
+	[[nodiscard]] static int getPrecedence(TokenType t);
 	bool match(TokenType type);
 	bool match(std::vector<TokenType> types);
 	[[nodiscard]] Token consumed() const;
 	[[nodiscard]] bool isAtEnd() const;
 
-	void recover();
+	void recoverStmt();
 
 private:
 	std::vector<Token> tokens;
 	size_t currentToken;
 	bool failed;
 	static const std::unordered_map<TokenType, int> precedenceTable;
+
+private:
+	class parser_rollback : public std::exception
+	{
+	public:
+		explicit parser_rollback() : std::exception()
+		{
+		}
+	};
+
+	class parser_stmt_err : public std::runtime_error
+	{
+	public:
+		explicit parser_stmt_err(const std::string& msg)
+			: std::runtime_error(msg)
+		{
+		}
+	};
 };

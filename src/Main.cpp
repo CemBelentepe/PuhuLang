@@ -62,13 +62,15 @@ int run(const std::string& filepath)
 		return EXIT_FAILURE;
 	}
 
-	if (false)
+	if (true)
 	{
 		std::cout << "AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
 		debugger.debug();
 		std::cout << std::endl;
 	}
+
+	return 0;
 
 	TypeChecker typeChecker(statements);
 	typeChecker.check();
@@ -79,7 +81,7 @@ int run(const std::string& filepath)
 		return EXIT_FAILURE;
 	}
 
-	if (true)
+	if (false)
 	{
 		std::cout << "Typed AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
