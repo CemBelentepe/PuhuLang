@@ -178,6 +178,11 @@ const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeCheck
 		{{ TokenType::BANG,        PrimitiveTag::BOOL },   PrimitiveTag::BOOL },
 		{{ TokenType::TILDE,       PrimitiveTag::INT },    PrimitiveTag::INT }};
 
+void TypeChecker::visit(StmtDeclVar* stmt)
+{
+	throw std::runtime_error("Not Implemented");
+}
+
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 		{{ TokenType::OR,             PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 		{{ TokenType::AND,            PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },

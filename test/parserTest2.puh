@@ -1,6 +1,5 @@
-if(3 > 2){
+if(3 > 2)
     "3 > 2 is true :)";
-}
 
 if(2 > 9){
     "2 > 9 is true :(";
@@ -8,9 +7,14 @@ if(2 > 9){
     "2 > 9 is false :(";
 }
 
+for(;;)
+    "Hellooo";
+
 
 if(2 > 9){
     "2 > 9 is true :(";
+    if(true)
+        "Hiiii";
 }else if(1 < 2){
     "1 < 2 is true :(";
 } else {

@@ -79,7 +79,7 @@ int run(const std::string& filepath)
 		return EXIT_FAILURE;
 	}
 
-	if (false)
+	if (true)
 	{
 		std::cout << "Typed AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);
@@ -90,7 +90,7 @@ int run(const std::string& filepath)
 
 	std::cout << "Interpreter: " << std::endl;
 	Interpreter interpreter(statements, std::cout);
-	interpreter.run();
+	//interpreter.run();
 
 	if (interpreter.fail())
 	{

@@ -28,6 +28,8 @@ public:
 	void visit(ExprUnary* expr) override;
 	void visit(ExprLiteral* expr) override;
 
+	void visit(StmtDeclVar* stmt) override;
+
 private:
 	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;
 	using UnaryFuncDef = std::tuple<TokenType, PrimitiveTag>;

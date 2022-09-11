@@ -26,8 +26,13 @@ public:
 	void visit(ExprUnary* expr) override;
 	void visit(ExprLiteral* expr) override;
 
+	void visit(StmtDeclVar* stmt) override;
+private:
+	[[nodiscard]] std::string indented() const;
+
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	std::ostream& os;
 	bool isShowTypes;
+	int indent;
 };

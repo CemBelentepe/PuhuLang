@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "Token.h"
+#include "TokenType.h"
 
 class Type;
 using TypePtr = std::shared_ptr<Type>;

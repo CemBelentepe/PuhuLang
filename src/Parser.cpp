@@ -253,7 +253,7 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 
 TypePtr Parser::parseType()
 {
-	TypePtr type = TypeFactory::fromToken(advance());
+	TypePtr type = TypeFactory::fromToken(advance().type);
 
 	if (match(TokenType::CONST))
 		type->isConst = true;

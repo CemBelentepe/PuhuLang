@@ -6,7 +6,7 @@
 #include <iostream>
 
 AstDebugger::AstDebugger(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
-	: root(root), os(os), isShowTypes(false)
+	: root(root), os(os), isShowTypes(false), indent(0)
 {
 
 }
@@ -29,27 +29,53 @@ void AstDebugger::setShowTypes(bool isShow)
 
 void AstDebugger::visit(StmtExpr* stmt)
 {
-	os << "EXPR: " << stmt->expr->accept(this) << "\n";
+	os << indented() << "EXPR: " << stmt->expr->accept(this) << "\n";
 }
 
 void AstDebugger::visit(StmtBlock* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	os << indented() << "BEGIN\n";
+	indent++;
+	for(auto& s : stmt->stmts)
+		s->accept(this);
+	indent--;
+	os << indented() << "END\n";
 }
 
 void AstDebugger::visit(StmtIf* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	os << indented() << "IF (" << stmt->cond->accept(this) << ")\n";
+	indent++;
+	stmt->then->accept(this);
+	indent--;
+	if(stmt->els)
+	{
+		os << indented() << "ELSE\n";
+		indent++;
+		stmt->els->accept(this);
+		indent--;
+	}
+	os << indented() << "END IF\n";
 }
 
 void AstDebugger::visit(StmtWhile* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	os << indented() << "WHILE (" << stmt->cond->accept(this) << ")\n";
+	indent++;
+	stmt->body->accept(this);
+	indent--;
+	os << indented() << "END WHILE\n";
 }
 
 void AstDebugger::visit(StmtFor* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	os << indented() << (stmt->init ? stmt->init->accept(this) + "\n": "");
+	os << indented() << "FOR (" << (stmt->cond ? stmt->cond->accept(this) : "true") << ")\n";
+	indent++;
+	stmt->body->accept(this);
+	if (stmt->fin) os << indented() << stmt->fin->accept(this) << "\n";
+	indent--;
+	os << indented() << "END FOR";
 }
 
 void AstDebugger::visit(StmtReturn* stmt)
@@ -78,4 +104,14 @@ void AstDebugger::visit(ExprLiteral* expr)
 	this->result = "(" + std::string(expr->literal.lexeme) + ")";
 	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
+}
+
+std::string AstDebugger::indented() const
+{
+	return std::string(indent, '\t');
+}
+
+void AstDebugger::visit(StmtDeclVar* stmt)
+{
+	throw std::runtime_error("Not implemented.");
 }

@@ -167,6 +167,11 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 		{{ TokenType::TILDE,       PrimitiveTag::INT },    [](Value::Data rhs)
 														   { return Value::Data(~std::get<int>(rhs)); }}};
 
+void Interpreter::visit(StmtDeclVar* stmt)
+{
+	throw std::runtime_error("Not Implemented");
+}
+
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 		{{ TokenType::OR,             PrimitiveTag::BOOL,   PrimitiveTag::BOOL },   [](Value::Data lhs, Value::Data rhs)
 																					{
