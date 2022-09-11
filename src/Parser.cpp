@@ -10,7 +10,7 @@
 #include "Parser.h"
 
 Parser::Parser(std::vector<Token> tokens)
-	: tokens(std::move(tokens)), currentToken(0), failed(false)
+		: tokens(std::move(tokens)), currentToken(0), failed(false)
 {
 }
 
@@ -91,7 +91,7 @@ std::unique_ptr<Stmt> Parser::parseStmtIf()
 	auto then = parseStmt();
 
 	std::unique_ptr<Stmt> els = nullptr;
-	if(match(TokenType::ELSE))
+	if (match(TokenType::ELSE))
 		els = parseStmt();
 
 	return std::make_unique<StmtIf>(std::move(cond), std::move(then), std::move(els), paren);
@@ -101,7 +101,7 @@ std::unique_ptr<Stmt> Parser::parseStmtWhile()
 {
 	// TODO add expected consume for dev errors
 	consume(TokenType::WHILE, "[DEV] Invalid call to function.");
-	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `while` keyword.");
+	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `while` keyword.");
 	auto cond = parseExpr();
 	consume(TokenType::CLOSE_PAREN, "Expected `)` after the end of an `while` condition.");
 	auto body = parseStmt();
@@ -111,7 +111,31 @@ std::unique_ptr<Stmt> Parser::parseStmtWhile()
 
 std::unique_ptr<Stmt> Parser::parseStmtFor()
 {
-	throw std::runtime_error("Not implemented.");
+	// TODO add expected consume for dev errors
+	consume(TokenType::FOR, "[DEV] Invalid call to function.");
+	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `for` keyword.");
+
+	std::unique_ptr<Stmt> init = nullptr;
+	if (!match(TokenType::SEMI_COLON))
+		init = parseStmt();
+
+	std::unique_ptr<Expr> cond = nullptr;
+	if (peek().type != TokenType::SEMI_COLON)
+	{
+		cond = parseExpr();
+	}
+	consume(TokenType::SEMI_COLON, "Expected `;` after the condition of `for` statement.");
+
+	std::unique_ptr<Stmt> fin = nullptr;
+	if (peek().type != TokenType::CLOSE_PAREN)
+		fin = parseStmt();
+
+	consume(TokenType::CLOSE_PAREN, "Expected `)` after the statements of `for` statement.");
+
+	std::unique_ptr<Stmt> body = parseStmt();
+
+	return std::make_unique<StmtFor>(std::move(init), std::move(cond),
+			std::move(fin), std::move(body), paren);
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtReturn()
@@ -282,22 +306,22 @@ void Parser::recover()
 }
 
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {
-	{ TokenType::OR, 1 },
-	{ TokenType::AND, 2 },
-	{ TokenType::BIT_OR, 10 },
-	{ TokenType::BIT_XOR, 11 },
-	{ TokenType::BIT_AND, 12 },
-	{ TokenType::EQUAL_EQUAL, 20 },
-	{ TokenType::BANG_EQUAL, 20 },
-	{ TokenType::LESS, 30 },
-	{ TokenType::LESS_EQUAL, 30 },
-	{ TokenType::GREAT, 30 },
-	{ TokenType::GREAT_EQUAL, 30 },
-	{ TokenType::BITSHIFT_LEFT, 40 },
-	{ TokenType::BITSHIFT_RIGHT, 40 },
-	{ TokenType::PLUS, 50 },
-	{ TokenType::MINUS, 50 },
-	{ TokenType::STAR, 60 },
-	{ TokenType::SLASH, 60 },
-	{ TokenType::MODULUS, 60 },
+		{ TokenType::OR,             1 },
+		{ TokenType::AND,            2 },
+		{ TokenType::BIT_OR,         10 },
+		{ TokenType::BIT_XOR,        11 },
+		{ TokenType::BIT_AND,        12 },
+		{ TokenType::EQUAL_EQUAL,    20 },
+		{ TokenType::BANG_EQUAL,     20 },
+		{ TokenType::LESS,           30 },
+		{ TokenType::LESS_EQUAL,     30 },
+		{ TokenType::GREAT,          30 },
+		{ TokenType::GREAT_EQUAL,    30 },
+		{ TokenType::BITSHIFT_LEFT,  40 },
+		{ TokenType::BITSHIFT_RIGHT, 40 },
+		{ TokenType::PLUS,           50 },
+		{ TokenType::MINUS,          50 },
+		{ TokenType::STAR,           60 },
+		{ TokenType::SLASH,          60 },
+		{ TokenType::MODULUS,        60 },
 };
