@@ -92,15 +92,15 @@ private:
 class StmtFor : public Stmt
 {
 public:
-	std::unique_ptr<Stmt> init;
+	std::unique_ptr<Expr> init; // Make decl or expr
 	std::unique_ptr<Expr> cond;
-	std::unique_ptr<Stmt> fin;
+	std::unique_ptr<Expr> fin;
 	std::unique_ptr<Stmt> body;
 	Token paren;
 
-	explicit StmtFor(std::unique_ptr<Stmt> init,
+	explicit StmtFor(std::unique_ptr<Expr> init,
 		std::unique_ptr<Expr> cond,
-		std::unique_ptr<Stmt> fin,
+		std::unique_ptr<Expr> fin,
 		std::unique_ptr<Stmt> body,
 		Token paren)
 		: init(std::move(init)), cond(std::move(cond)), fin(std::move(fin)), body(std::move(body)),

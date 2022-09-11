@@ -71,7 +71,7 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 	std::vector<std::unique_ptr<Stmt>> stmts;
 
-	while (peek().type != TokenType::CLOSE_BRACE || !isAtEnd())
+	while (peek().type != TokenType::CLOSE_BRACE && !isAtEnd())
 	{
 		stmts.push_back(std::move(parseStmt()));
 	}
@@ -115,20 +115,19 @@ std::unique_ptr<Stmt> Parser::parseStmtFor()
 	consume(TokenType::FOR, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `for` keyword.");
 
-	std::unique_ptr<Stmt> init = nullptr;
-	if (!match(TokenType::SEMI_COLON))
-		init = parseStmt();
+	std::unique_ptr<Expr> init = nullptr;
+	if (peek().type != TokenType::SEMI_COLON)
+		init = parseExpr();
+	consume(TokenType::SEMI_COLON, "Expected `;` after the initializer of `for` statement.");
 
 	std::unique_ptr<Expr> cond = nullptr;
 	if (peek().type != TokenType::SEMI_COLON)
-	{
 		cond = parseExpr();
-	}
 	consume(TokenType::SEMI_COLON, "Expected `;` after the condition of `for` statement.");
 
-	std::unique_ptr<Stmt> fin = nullptr;
+	std::unique_ptr<Expr> fin = nullptr;
 	if (peek().type != TokenType::CLOSE_PAREN)
-		fin = parseStmt();
+		fin = parseExpr();
 
 	consume(TokenType::CLOSE_PAREN, "Expected `)` after the statements of `for` statement.");
 
