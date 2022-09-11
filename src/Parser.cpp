@@ -73,6 +73,7 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 	while (peek().type != TokenType::CLOSE_BRACE && !isAtEnd())
 	{
+		// TODO StmtBody -> DeclVar | Stmt
 		stmts.push_back(std::move(parseStmt()));
 	}
 

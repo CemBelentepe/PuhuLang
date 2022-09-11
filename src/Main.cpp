@@ -90,7 +90,7 @@ int run(const std::string& filepath)
 
 	std::cout << "Interpreter: " << std::endl;
 	Interpreter interpreter(statements, std::cout);
-	//interpreter.run();
+	interpreter.run();
 
 	if (interpreter.fail())
 	{
