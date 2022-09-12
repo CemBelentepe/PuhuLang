@@ -52,7 +52,7 @@ public:
 	std::unique_ptr<Expr> rhs;
 
 	explicit ExprBinary(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
-		: Expr(Instance::Binary, TypeFactory::getNull()), op(op), lhs(std::move(lhs)), rhs(std::move(rhs))
+		: Expr(Instance::Binary, TypeFactory::getNull()), op(std::move(op)), lhs(std::move(lhs)), rhs(std::move(rhs))
 	{}
 
 private:
@@ -66,7 +66,7 @@ public:
 	std::unique_ptr<Expr> rhs;
 
 	explicit ExprUnary(std::unique_ptr<Expr> rhs, Token op)
-			: Expr(Instance::Unary, TypeFactory::getNull()), op(op), rhs(std::move(rhs))
+			: Expr(Instance::Unary, TypeFactory::getNull()), op(std::move(op)), rhs(std::move(rhs))
 	{}
 
 private:
@@ -78,7 +78,7 @@ class ExprLiteral : public Expr
 public:
 	Token literal;
 
-	explicit ExprLiteral(Token literal)
+	explicit ExprLiteral(const Token& literal)
 			: Expr(Instance::Literal, literal.getType()), literal(literal)
 	{
 	}

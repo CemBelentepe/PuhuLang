@@ -6,6 +6,7 @@
 
 #include "Value.h"
 #include "AstVisitor.h"
+#include "Environment.h"
 
 class Interpreter : public ExprVisitor<Value>, public StmtVisitor<void>
 {
@@ -38,6 +39,7 @@ private:
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	std::ostream& os;
+	std::unique_ptr<Environment<Value>> environment;
 	bool failed;
 	static const std::vector<std::tuple<BinaryFuncDef, BinaryFuncDec>> binaryOps;
 	static const std::vector<std::tuple<UnaryFuncDef, UnaryFuncDec>> unaryOps;

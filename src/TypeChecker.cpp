@@ -31,6 +31,11 @@ void TypeChecker::check()
 	}
 }
 
+bool TypeChecker::fail() const
+{
+	return failed;
+}
+
 void TypeChecker::visit(StmtExpr* stmt)
 {
 	stmt->expr->accept(this);
@@ -39,7 +44,17 @@ void TypeChecker::visit(StmtExpr* stmt)
 void TypeChecker::visit(StmtBlock* stmt)
 {
 	for (auto& s: stmt->stmts)
-		s->accept(this);
+	{
+		try
+		{
+			s->accept(this);
+		}
+		catch (std::runtime_error& e)
+		{
+			failed = true;
+			std::cerr << e.what() << std::endl;
+		}
+	}
 }
 
 void TypeChecker::visit(StmtIf* stmt)
@@ -161,9 +176,21 @@ void TypeChecker::visit(ExprLiteral* expr)
 	this->result = expr->type;
 }
 
-bool TypeChecker::fail() const
+void TypeChecker::visit(StmtDeclVar* stmt)
 {
-	return failed;
+	if(stmt->init)
+	{
+		TypePtr initType = stmt->init->accept(this);
+		if(!initType->isSame(stmt->type))
+		{
+			std::stringstream ssErr;
+
+			ssErr << "[ERROR " << stmt->eq.line << ":" << stmt->eq.col << "]  Cannot initialize type of `" << stmt->type->toString()
+				  << "` with the type of `" << initType->toString() << "`.";
+
+			throw std::runtime_error(ssErr.str());
+		}
+	}
 }
 
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
@@ -177,11 +204,6 @@ const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeCheck
 		{{ TokenType::MINUS_MINUS, PrimitiveTag::INT },    PrimitiveTag::INT },
 		{{ TokenType::BANG,        PrimitiveTag::BOOL },   PrimitiveTag::BOOL },
 		{{ TokenType::TILDE,       PrimitiveTag::INT },    PrimitiveTag::INT }};
-
-void TypeChecker::visit(StmtDeclVar* stmt)
-{
-	throw std::runtime_error("Not Implemented");
-}
 
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 		{{ TokenType::OR,             PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
