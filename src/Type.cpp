@@ -197,6 +197,6 @@ TypePtr TypeFactory::fromToken(Token token)
 	case TokenType::IDENTIFIER:
 		return getUserDefined(token);
 	default:
-		throw std::runtime_error("Invalid token for type description.");
+		throw std::runtime_error("Invalid token `" + token.getLexeme() + "` for type description.");
 	}
 }

@@ -11,6 +11,24 @@
 
 class Parser
 {
+private:
+	class parser_rollback : public std::exception
+	{
+	public:
+		explicit parser_rollback() : std::exception()
+		{
+		}
+	};
+
+	class parser_stmt_err : public std::runtime_error
+	{
+	public:
+		explicit parser_stmt_err(const std::string& msg)
+			: std::runtime_error(msg)
+		{
+		}
+	};
+
 public:
 	explicit Parser(std::vector<Token> tokens);
 
@@ -46,29 +64,11 @@ private:
 	[[nodiscard]] Token consumed() const;
 	[[nodiscard]] bool isAtEnd() const;
 
-	void recoverStmt();
+	void recoverStmt(parser_stmt_err& e);
 
 private:
 	std::vector<Token> tokens;
 	size_t currentToken;
 	bool failed;
 	static const std::unordered_map<TokenType, int> precedenceTable;
-
-private:
-	class parser_rollback : public std::exception
-	{
-	public:
-		explicit parser_rollback() : std::exception()
-		{
-		}
-	};
-
-	class parser_stmt_err : public std::runtime_error
-	{
-	public:
-		explicit parser_stmt_err(const std::string& msg)
-			: std::runtime_error(msg)
-		{
-		}
-	};
 };

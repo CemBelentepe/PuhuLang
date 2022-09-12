@@ -19,16 +19,8 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 	std::vector<std::unique_ptr<Stmt>> statements;
 	while (!isAtEnd() && peek().type != TokenType::EOF_TOKEN)
 	{
-		try
-		{
-			statements.push_back(parseStmt());
-		}
-		catch (std::runtime_error& e)
-		{
-			failed = true;
-			recoverStmt();
-			std::cerr << e.what() << std::endl;
-		}
+		// TODO Error handling for declarations should be done in parseDecl or somewhere else idk
+		statements.push_back(parseStmt());
 	}
 	return statements;
 }
@@ -60,9 +52,7 @@ std::unique_ptr<Stmt> Parser::parseStmt()
 	}
 	catch (parser_stmt_err& e)
 	{
-		failed = true;
-		recoverStmt();
-		std::cerr << e.what() << std::endl;
+		recoverStmt(e);
 	}
 
 }
@@ -81,22 +71,34 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 	std::vector<std::unique_ptr<Stmt>> stmts;
 
-	while (peek().type != TokenType::CLOSE_BRACE && !isAtEnd())
+	while (!isAtEnd() && peek().type != TokenType::CLOSE_BRACE)
 	{
 		size_t savedPos = currentToken;
 		try
 		{
-			TypePtr type = parseType();
+			TypePtr type;
+			try
+			{
+				type = parseType();
+			}
+			catch (std::runtime_error& e)
+			{
+				throw parser_rollback();
+			}
+
 			if (peek().type != TokenType::IDENTIFIER)
 				throw parser_rollback();
 			stmts.push_back(parseDeclVar(type));
+		}
+		catch (parser_stmt_err& e)
+		{
+			recoverStmt(e);
 		}
 		catch (parser_rollback& e)
 		{
 			currentToken = savedPos;
 			stmts.push_back(std::move(parseStmt()));
 		}
-
 	}
 
 	Token closeBrace = consume(TokenType::CLOSE_BRACE, "Expected `}` after the end of a block statements.");
@@ -315,12 +317,15 @@ Token Parser::advance()
 
 Token Parser::consume(TokenType type, const std::string& errorMessage)
 {
-	if (peek().type == type)
+	if (!isAtEnd() && peek().type == type)
 		return advance();
 
 	std::stringstream ssErr;
-	ssErr << "[ERROR " << peek().line << ":" << peek().col << "] " << errorMessage;
-	throw std::runtime_error(ssErr.str());
+	if (!isAtEnd())
+		ssErr << "[ERROR " << peek().line << ":" << peek().col << "] " << errorMessage;
+	else
+		ssErr << "[ERROR EOF] " << errorMessage;
+	throw parser_stmt_err(ssErr.str());
 }
 
 int Parser::getPrecedence(TokenType t)
@@ -333,7 +338,7 @@ int Parser::getPrecedence(TokenType t)
 
 bool Parser::match(TokenType type)
 {
-	if (peek().type == type)
+	if (!isAtEnd() && peek().type == type)
 	{
 		advance();
 		return true;
@@ -344,7 +349,7 @@ bool Parser::match(TokenType type)
 bool Parser::match(std::vector<TokenType> types)
 {
 	TokenType t = peek().type;
-	if (std::find(types.begin(), types.end(), t) != types.end())
+	if (!isAtEnd() && std::find(types.begin(), types.end(), t) != types.end())
 	{
 		advance();
 		return true;
@@ -363,16 +368,18 @@ bool Parser::isAtEnd() const
 	return currentToken >= tokens.size();
 }
 
-void Parser::recoverStmt()
+void Parser::recoverStmt(parser_stmt_err& e)
 {
-	// TODO this is not working
-	TokenType c = advance().type;
+	failed = true;
+	std::cerr << e.what() << std::endl;
+
 	while (!isAtEnd())
 	{
-		if (c == TokenType::SEMI_COLON) return;
-
 		switch (peek().type)
 		{
+		case TokenType::SEMI_COLON:
+			advance();
+			return;
 		case TokenType::OPEN_BRACE:
 		case TokenType::IF:
 		case TokenType::WHILE:
@@ -382,7 +389,7 @@ void Parser::recoverStmt()
 		default:
 			break;
 		}
-		c = advance().type;
+		advance();
 	}
 }
 
