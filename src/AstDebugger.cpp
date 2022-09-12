@@ -77,13 +77,18 @@ void AstDebugger::visit(StmtWhile* stmt)
 
 void AstDebugger::visit(StmtFor* stmt)
 {
-	os << indented() << (stmt->init ? stmt->init->accept(this) + "\n": "");
-	os << indented() << "FOR (" << (stmt->cond ? stmt->cond->accept(this) : "true") << ")\n";
+	os << indented() << "FOR:\n";
+	indent++;
+	if(stmt->init)
+		stmt->init->accept(this);
+	os << indented() << "WHILE (" << (stmt->cond ? stmt->cond->accept(this) : "true") << ")\n";
 	indent++;
 	stmt->body->accept(this);
 	if (stmt->fin) os << indented() << stmt->fin->accept(this) << "\n";
 	indent--;
-	os << indented() << "END FOR";
+	os << indented() << "END";
+	indent--;
+	os << indented() << "ROF";
 }
 
 void AstDebugger::visit(StmtReturn* stmt)

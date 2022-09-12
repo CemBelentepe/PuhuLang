@@ -65,8 +65,8 @@ std::unique_ptr<Stmt> Parser::parseStmt()
 std::unique_ptr<Stmt> Parser::parseStmtExpr()
 {
 	auto expr = parseExpr();
-	Token sm = consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
-	return std::make_unique<StmtExpr>(std::move(expr), sm);
+	consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
+	return std::make_unique<StmtExpr>(std::move(expr));
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtBlock()
@@ -93,7 +93,7 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 
 			if (peek().type != TokenType::IDENTIFIER)
 				throw parser_rollback();
-			stmts.push_back(parseDeclVar(type));
+			stmts.push_back(parseDeclVar(type, true));
 		}
 		catch (parser_stmt_err& e)
 		{
@@ -145,9 +145,32 @@ std::unique_ptr<Stmt> Parser::parseStmtFor()
 	consume(TokenType::FOR, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `for` keyword.");
 
-	std::unique_ptr<Expr> init = nullptr;
+	std::unique_ptr<Stmt> init = nullptr;
 	if (peek().type != TokenType::SEMI_COLON)
-		init = parseExpr();
+	{
+		size_t savedPos = currentToken;
+		try
+		{
+			TypePtr type;
+			try
+			{
+				type = parseType();
+			}
+			catch (std::runtime_error& e)
+			{
+				throw parser_rollback();
+			}
+
+			if (peek().type != TokenType::IDENTIFIER)
+				throw parser_rollback();
+			init = parseDeclVar(type, false);
+		}
+		catch (parser_rollback& e)
+		{
+			currentToken = savedPos;
+			init = std::make_unique<StmtExpr>(parseExpr());
+		}
+	}
 	consume(TokenType::SEMI_COLON, "Expected `;` after the initializer of `for` statement.");
 
 	std::unique_ptr<Expr> cond = nullptr;
@@ -177,7 +200,7 @@ std::unique_ptr<Stmt> Parser::parseStmtReturn()
 	return std::make_unique<StmtReturn>(std::move(expr), ret);
 }
 
-std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type)
+std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
 {
 	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
 	Token eq;
@@ -189,7 +212,8 @@ std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type)
 		init = parseExpr();
 	}
 
-	consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
+	if(consumeSemi)
+		consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
 
 	return std::make_unique<StmtDeclVar>(type, name, eq, std::move(init));
 }
@@ -236,6 +260,7 @@ std::unique_ptr<Expr> Parser::parseExprBinaryHelper(std::unique_ptr<Expr> lhs, i
 
 std::unique_ptr<Expr> Parser::parseExprPrefix()
 {
+	// TODO "--" or "++" should modify the value of the variable
 	if (match({ TokenType::MINUS, TokenType::PLUS, TokenType::MINUS_MINUS, TokenType::PLUS_PLUS }))
 	{
 		Token op = consumed();

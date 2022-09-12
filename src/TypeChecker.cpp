@@ -99,6 +99,7 @@ void TypeChecker::visit(StmtWhile* stmt)
 
 void TypeChecker::visit(StmtFor* stmt)
 {
+	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
 	if (stmt->init) stmt->init->accept(this);
 	if (stmt->cond) stmt->cond->accept(this);
 	if (stmt->fin) stmt->fin->accept(this);
@@ -106,6 +107,8 @@ void TypeChecker::visit(StmtFor* stmt)
 
 	if (stmt->cond && !stmt->cond->type->isSame(TypeFactory::getPrimitive(PrimitiveTag::BOOL)))
 		throw std::runtime_error("Condition of the `while` statement must evaluate to a `bool` type.");
+
+	environment = environment->moveParent();
 }
 
 void TypeChecker::visit(StmtReturn* stmt)

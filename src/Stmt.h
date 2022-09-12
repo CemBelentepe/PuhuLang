@@ -29,10 +29,9 @@ class StmtExpr : public Stmt
 {
 public:
 	std::unique_ptr<Expr> expr;
-	Token semicolon;
 
-	explicit StmtExpr(std::unique_ptr<Expr> expr, Token semicolon)
-		: expr(std::move(expr)), semicolon(std::move(semicolon))
+	explicit StmtExpr(std::unique_ptr<Expr> expr)
+		: expr(std::move(expr))
 	{
 	}
 
@@ -92,13 +91,13 @@ private:
 class StmtFor : public Stmt
 {
 public:
-	std::unique_ptr<Expr> init; // Make decl or expr
+	std::unique_ptr<Stmt> init; // Make decl or expr
 	std::unique_ptr<Expr> cond;
 	std::unique_ptr<Expr> fin;
 	std::unique_ptr<Stmt> body;
 	Token paren;
 
-	explicit StmtFor(std::unique_ptr<Expr> init,
+	explicit StmtFor(std::unique_ptr<Stmt> init,
 		std::unique_ptr<Expr> cond,
 		std::unique_ptr<Expr> fin,
 		std::unique_ptr<Stmt> body,

@@ -44,7 +44,7 @@ private:
 	std::unique_ptr<Stmt> parseStmtFor();
 	std::unique_ptr<Stmt> parseStmtReturn();
 
-	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type);
+	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type, bool consumeSemi);
 
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();
