@@ -27,6 +27,14 @@ void AstDebugger::setShowTypes(bool isShow)
 	isShowTypes = isShow;
 }
 
+void AstDebugger::visit(StmtDeclVar* stmt)
+{
+	os << indented() << "DECL " << stmt->name.lexeme << ": " << stmt->type->toString();
+	if(stmt->init)
+		os << " = " << stmt->init->accept(this);
+	os << "\n";
+}
+
 void AstDebugger::visit(StmtExpr* stmt)
 {
 	os << indented() << "EXPR: " << stmt->expr->accept(this) << "\n";
@@ -78,14 +86,6 @@ void AstDebugger::visit(StmtFor* stmt)
 	os << indented() << "END FOR";
 }
 
-void AstDebugger::visit(StmtDeclVar* stmt)
-{
-	os << indented() << "DECL " << stmt->name.lexeme << ": " << stmt->type->toString();
-	if(stmt->init)
-		os << " = " << stmt->init->accept(this);
-	os << "\n";
-}
-
 void AstDebugger::visit(StmtReturn* stmt)
 {
 	throw std::runtime_error("Not implemented.");
@@ -112,6 +112,11 @@ void AstDebugger::visit(ExprLiteral* expr)
 	this->result = "(" + std::string(expr->literal.lexeme) + ")";
 	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
+}
+
+void AstDebugger::visit(ExprVarGet* expr)
+{
+	this->result = "(GET " + expr->name.getLexeme() + ")";
 }
 
 std::string AstDebugger::indented() const

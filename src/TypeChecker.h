@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <set>
-#include <unordered_map>
 #include "AstVisitor.h"
+#include "Environment.h"
+#include <unordered_map>
 
-class TypeChecker : public ExprVisitor<std::shared_ptr<Type>>, public StmtVisitor<void>
+class TypeChecker : public ExprVisitor<TypePtr>, public StmtVisitor<void>
 {
 public:
 	explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root);
@@ -16,6 +16,8 @@ public:
 
 	void check();
 	[[nodiscard]] bool fail() const;
+
+	void visit(StmtDeclVar* stmt) override;
 
 	void visit(StmtExpr* stmt) override;
 	void visit(StmtBlock* stmt) override;
@@ -27,8 +29,7 @@ public:
 	void visit(ExprBinary* expr) override;
 	void visit(ExprUnary* expr) override;
 	void visit(ExprLiteral* expr) override;
-
-	void visit(StmtDeclVar* stmt) override;
+	void visit(ExprVarGet* expr) override;
 
 private:
 	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;
@@ -36,6 +37,7 @@ private:
 
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
+	std::unique_ptr<Environment<TypePtr>> environment;
 	bool failed;
 	static const std::vector<std::tuple<BinaryFuncDef, PrimitiveTag>> binaryOperations;
 	static const std::vector<std::tuple<UnaryFuncDef, PrimitiveTag>> unaryOps;

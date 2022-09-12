@@ -52,9 +52,10 @@ public:
 
 	void setVariable(const Token& nameToken, const T& init)
 	{
-		auto it = symbolTable.find(nameToken.getLexeme());
-		if (it != symbolTable.end())
-			it->second = init;
+		std::string name = nameToken.getLexeme();
+		auto it = symbolTable.find(name);
+		if (it == symbolTable.end())
+			symbolTable[name] = init;
 		else if (parent)
 			parent->setVariable(nameToken, init);
 		else

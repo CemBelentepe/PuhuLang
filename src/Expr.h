@@ -21,6 +21,8 @@ public:
 		Binary,
 		Unary,
 		Literal,
+		VarGet,
+		VarSet,
 	};
 	const Instance instance;
 	std::shared_ptr<Type> type;
@@ -80,6 +82,20 @@ public:
 
 	explicit ExprLiteral(const Token& literal)
 			: Expr(Instance::Literal, literal.getType()), literal(literal)
+	{
+	}
+
+private:
+	void doAccept(ExprVisitorBase* visitor) override;
+};
+
+class ExprVarGet : public Expr
+{
+public:
+	Token name;
+
+	explicit ExprVarGet(const Token& name)
+		:Expr(Instance::VarGet, TypeFactory::getNull()), name(name)
 	{
 	}
 

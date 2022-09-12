@@ -3,4 +3,9 @@
     int const y = 123;
     string z = "Hi";
     string msg = "Hello, world";
+
+    x;
+    y;
+    z;
+    msg;
 }

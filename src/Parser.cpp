@@ -265,6 +265,10 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 		consume(TokenType::CLOSE_PAREN, "Expect ')' after grouping expression.");
 		return std::move(inside);
 	}
+	case TokenType::IDENTIFIER:
+	{
+		return std::make_unique<ExprVarGet>(token);
+	}
 	default:
 	{
 		std::stringstream ssErr;

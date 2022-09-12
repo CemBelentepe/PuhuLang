@@ -27,5 +27,6 @@ void T::doAccept(ExprVisitorBase* visitor)\
 VISITOR_ACCEPT(ExprBinary)
 VISITOR_ACCEPT(ExprUnary)
 VISITOR_ACCEPT(ExprLiteral)
+VISITOR_ACCEPT(ExprVarGet)
 
 #undef VISITOR_ACCEPT

@@ -34,6 +34,15 @@ bool Interpreter::fail() const
 	return failed;
 }
 
+void Interpreter::visit(StmtDeclVar* stmt)
+{
+	Value initVal;
+	if (stmt->init)
+		initVal = stmt->init->accept(this);
+
+	environment->addVariable(stmt->name, initVal);
+}
+
 void Interpreter::visit(StmtExpr* stmt)
 {
 	Value res = stmt->expr->accept(this);
@@ -147,13 +156,9 @@ void Interpreter::visit(ExprLiteral* expr)
 	this->result = expr->literal.getValue();
 }
 
-void Interpreter::visit(StmtDeclVar* stmt)
+void Interpreter::visit(ExprVarGet* expr)
 {
-	Value initVal;
-	if (stmt->init)
-		initVal = stmt->init->accept(this);
-
-	environment->addVariable(stmt->name, initVal);
+	this->result = environment->getVariable(expr->name);
 }
 
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
@@ -177,7 +182,6 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 	{ return Value::Data(!std::get<bool>(rhs)); }},
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
-
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{

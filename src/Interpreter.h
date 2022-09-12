@@ -17,6 +17,8 @@ public:
 	void run();
 	[[nodiscard]] bool fail() const;
 
+	void visit(StmtDeclVar* stmt) override;
+
 	void visit(StmtExpr* stmt) override;
 	void visit(StmtBlock* stmt) override;
 	void visit(StmtIf* stmt) override;
@@ -27,8 +29,7 @@ public:
 	void visit(ExprBinary* expr) override;
 	void visit(ExprUnary* expr) override;
 	void visit(ExprLiteral* expr) override;
-
-	void visit(StmtDeclVar* stmt) override;
+	void visit(ExprVarGet* expr) override;
 
 private:
 	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;

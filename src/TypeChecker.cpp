@@ -36,6 +36,24 @@ bool TypeChecker::fail() const
 	return failed;
 }
 
+void TypeChecker::visit(StmtDeclVar* stmt)
+{
+	environment->setVariable(stmt->name, stmt->type);
+	if(stmt->init)
+	{
+		TypePtr initType = stmt->init->accept(this);
+		if(!initType->isSame(stmt->type))
+		{
+			std::stringstream ssErr;
+
+			ssErr << "[ERROR " << stmt->eq.line << ":" << stmt->eq.col << "]  Cannot initialize type of `" << stmt->type->toString()
+				  << "` with the type of `" << initType->toString() << "`.";
+
+			throw std::runtime_error(ssErr.str());
+		}
+	}
+}
+
 void TypeChecker::visit(StmtExpr* stmt)
 {
 	stmt->expr->accept(this);
@@ -43,6 +61,7 @@ void TypeChecker::visit(StmtExpr* stmt)
 
 void TypeChecker::visit(StmtBlock* stmt)
 {
+	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
 	for (auto& s: stmt->stmts)
 	{
 		try
@@ -55,6 +74,7 @@ void TypeChecker::visit(StmtBlock* stmt)
 			std::cerr << e.what() << std::endl;
 		}
 	}
+	environment = std::move(environment->moveParent());
 }
 
 void TypeChecker::visit(StmtIf* stmt)
@@ -176,21 +196,9 @@ void TypeChecker::visit(ExprLiteral* expr)
 	this->result = expr->type;
 }
 
-void TypeChecker::visit(StmtDeclVar* stmt)
+void TypeChecker::visit(ExprVarGet* expr)
 {
-	if(stmt->init)
-	{
-		TypePtr initType = stmt->init->accept(this);
-		if(!initType->isSame(stmt->type))
-		{
-			std::stringstream ssErr;
-
-			ssErr << "[ERROR " << stmt->eq.line << ":" << stmt->eq.col << "]  Cannot initialize type of `" << stmt->type->toString()
-				  << "` with the type of `" << initType->toString() << "`.";
-
-			throw std::runtime_error(ssErr.str());
-		}
-	}
+	this->result = environment->getVariable(expr->name);
 }
 
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
@@ -204,7 +212,6 @@ const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeCheck
 		{{ TokenType::MINUS_MINUS, PrimitiveTag::INT },    PrimitiveTag::INT },
 		{{ TokenType::BANG,        PrimitiveTag::BOOL },   PrimitiveTag::BOOL },
 		{{ TokenType::TILDE,       PrimitiveTag::INT },    PrimitiveTag::INT }};
-
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 		{{ TokenType::OR,             PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 		{{ TokenType::AND,            PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
