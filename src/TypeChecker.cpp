@@ -214,7 +214,8 @@ void TypeChecker::visit(ExprVarSet* expr)
 	{
 		std::stringstream ssErr;
 
-		ssErr << "[ERROR " << expr->name.line << ":" << expr->name.col << "] Cannot assign a to variable `" << expr->name.lexeme
+		ssErr << "[ERROR " << expr->name.line << ":" << expr->name.col << "] Cannot assign a to variable `"
+			  << expr->name.lexeme
 			  << "` since it is const.";
 
 		throw std::runtime_error(ssErr.str());
@@ -232,6 +233,41 @@ void TypeChecker::visit(ExprVarSet* expr)
 	this->result = expr->type;
 }
 
+void TypeChecker::visit(ExprCall* expr)
+{
+	TypePtr funcType = expr->callee->accept(this);
+	std::vector<TypePtr> argTypes;
+	std::transform(expr->args.begin(), expr->args.end(), std::back_inserter(argTypes), [this](auto& arg)
+	{
+	  return arg->accept(this);
+	});
+
+	if (funcType->tag != Type::Tag::FUNCTION)
+	{
+		std::stringstream ssErr;
+
+		ssErr << "[ERROR " << expr->paren.line << ":" << expr->paren.col
+			  << "] Called type `"
+			  << funcType->toString() << "` is not a function.";
+
+		throw std::runtime_error(ssErr.str());
+	}
+
+	if (!funcType->isSame(TypeFactory::getFunction(funcType->intrinsicType, argTypes)))
+	{
+		std::stringstream ssErr;
+
+		ssErr << "[ERROR " << expr->paren.line << ":" << expr->paren.col
+			  << "] Expected type of `"
+			  << funcType->toString() << "` but provided `" << funcType->toString() << "` for function call.";
+
+		throw std::runtime_error(ssErr.str());
+	}
+
+	expr->type = funcType->intrinsicType;
+	this->result = expr->type;
+}
+
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
 	{{ TokenType::MINUS, PrimitiveTag::FLOAT }, PrimitiveTag::FLOAT },
@@ -242,7 +278,9 @@ const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeCheck
 	{{ TokenType::PLUS_PLUS, PrimitiveTag::INT }, PrimitiveTag::INT },
 	{{ TokenType::MINUS_MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
 	{{ TokenType::BANG, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
-	{{ TokenType::TILDE, PrimitiveTag::INT }, PrimitiveTag::INT }};
+	{{ TokenType::TILDE, PrimitiveTag::INT }, PrimitiveTag::INT }
+};
+
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::AND, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
@@ -322,4 +360,5 @@ const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeCheck
 	{{ TokenType::SLASH, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
 	 PrimitiveTag::FLOAT },
 	{{ TokenType::SLASH, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::DOUBLE }};
+	 PrimitiveTag::DOUBLE }
+};

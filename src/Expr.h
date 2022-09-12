@@ -23,6 +23,7 @@ public:
 		Literal,
 		VarGet,
 		VarSet,
+		Call,
 	};
 	const Instance instance;
 	std::shared_ptr<Type> type;
@@ -114,6 +115,22 @@ public:
 
 	explicit ExprVarSet(Token name, Token op, std::unique_ptr<Expr> val)
 		: Expr(Instance::VarSet, TypeFactory::getNull()), name(std::move(name)), op(std::move(op)), val(std::move(val))
+	{
+	}
+
+private:
+	void doAccept(ExprVisitorBase* visitor) override;
+};
+
+class ExprCall : public Expr
+{
+public:
+	std::unique_ptr<Expr> callee;
+	Token paren;
+	std::vector<std::unique_ptr<Expr>> args;
+
+	explicit ExprCall(std::unique_ptr<Expr> callee, Token paren, std::vector<std::unique_ptr<Expr>> args)
+		: Expr(Instance::Call, TypeFactory::getNull()), callee(std::move(callee)), paren(std::move(paren)), args(std::move(args))
 	{
 	}
 

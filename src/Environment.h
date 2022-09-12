@@ -10,6 +10,8 @@
 #include <sstream>
 #include "Token.h"
 
+// TODO Environment only supports stack variables, global variables are not added yet
+
 template<typename T>
 class Environment
 {

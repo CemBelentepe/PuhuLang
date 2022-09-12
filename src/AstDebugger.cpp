@@ -4,6 +4,7 @@
 
 #include "AstDebugger.h"
 #include <iostream>
+#include <sstream>
 
 AstDebugger::AstDebugger(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
 	: root(root), os(os), isShowTypes(false), indent(0)
@@ -127,6 +128,18 @@ void AstDebugger::visit(ExprVarGet* expr)
 void AstDebugger::visit(ExprVarSet* expr)
 {
 	this->result = "(SET " + expr->name.getLexeme() + ", " + expr->val->accept(this) + ")";
+}
+
+void AstDebugger::visit(ExprCall* expr)
+{
+	std::stringstream ss;
+	ss << "(CALL " << expr->callee->accept(this) << " (";
+	for(auto& e : expr->args)
+		ss << e->accept(this) << ", ";
+	ss << "))";
+	if(isShowTypes)
+		ss << ": " << expr->type->toString();
+	this->result = ss.str();
 }
 
 

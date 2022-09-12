@@ -16,6 +16,7 @@ public:
 	virtual void visit(ExprLiteral* expr) = 0;
 	virtual void visit(ExprVarGet* expr) = 0;
 	virtual void visit(ExprVarSet* expr) = 0;
+	virtual void visit(ExprCall* expr) = 0;
 };
 
 class StmtVisitorBase
