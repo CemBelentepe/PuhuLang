@@ -119,6 +119,12 @@ void AstDebugger::visit(ExprVarGet* expr)
 	this->result = "(GET " + expr->name.getLexeme() + ")";
 }
 
+void AstDebugger::visit(ExprVarSet* expr)
+{
+	this->result = "(SET " + expr->name.getLexeme() + ", " + expr->val->accept(this) + ")";
+}
+
+
 std::string AstDebugger::indented() const
 {
 	return std::string(indent, '\t');

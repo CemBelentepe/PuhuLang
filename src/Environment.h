@@ -54,7 +54,7 @@ public:
 	{
 		std::string name = nameToken.getLexeme();
 		auto it = symbolTable.find(name);
-		if (it == symbolTable.end())
+		if (it != symbolTable.end())
 			symbolTable[name] = init;
 		else if (parent)
 			parent->setVariable(nameToken, init);

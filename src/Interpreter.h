@@ -30,6 +30,7 @@ public:
 	void visit(ExprUnary* expr) override;
 	void visit(ExprLiteral* expr) override;
 	void visit(ExprVarGet* expr) override;
+	void visit(ExprVarSet* expr) override;
 
 private:
 	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;

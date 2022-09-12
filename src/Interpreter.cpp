@@ -161,6 +161,13 @@ void Interpreter::visit(ExprVarGet* expr)
 	this->result = environment->getVariable(expr->name);
 }
 
+void Interpreter::visit(ExprVarSet* expr)
+{
+	Value val = expr->val->accept(this);
+	this->environment->setVariable(expr->name, val);
+	this->result = val;
+}
+
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(-std::get<int>(rhs)); }},
@@ -182,6 +189,7 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 	{ return Value::Data(!std::get<bool>(rhs)); }},
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
+
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{

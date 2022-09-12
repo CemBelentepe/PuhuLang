@@ -32,6 +32,8 @@ bool Parser::fail() const
 
 std::unique_ptr<Stmt> Parser::parseStmt()
 {
+	// TODO find something better then return nullptr at error
+
 	try
 	{
 		switch (peek().type)
@@ -53,8 +55,11 @@ std::unique_ptr<Stmt> Parser::parseStmt()
 	catch (parser_stmt_err& e)
 	{
 		recoverStmt(e);
+		// Is this better than `return nullptr` ?
+		// if(!isAtEnd()) return parseStmt();
 	}
 
+	return nullptr;
 }
 
 std::unique_ptr<Stmt> Parser::parseStmtExpr()
@@ -191,7 +196,19 @@ std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type)
 
 std::unique_ptr<Expr> Parser::parseExpr()
 {
-	return parseExprBinary();
+	auto expr = parseExprBinary();
+	if (expr->instance == Expr::Instance::VarGet)
+	{
+		Token name = ((ExprVarGet*)(expr.get()))->name;
+		if (match(TokenType::EQUAL))
+		{
+			Token op = consumed();
+			auto lhs = parseExpr();
+			expr = std::make_unique<ExprVarSet>(name, op, std::move(lhs));
+		}
+		// TODO add other assignments
+	}
+	return std::move(expr);
 }
 
 std::unique_ptr<Expr> Parser::parseExprBinary()

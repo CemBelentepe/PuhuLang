@@ -1,6 +1,7 @@
 {
     int x = 9;
     int const y = 123;
+    int a = 2;
     string z = "Hi";
     string msg = "Hello, world";
 
@@ -8,4 +9,8 @@
     y;
     z;
     msg;
+    x = 12 + 9;
+    a = x = 35;
+    x;
+    a;
 }

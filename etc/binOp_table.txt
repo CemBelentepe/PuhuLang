@@ -8,6 +8,13 @@ BITSHIFT_LEFT << int int int
 BITSHIFT_RIGHT >> int int int
 MODULUS % int int int
 
+BIT_OR_EQUAL | int int int
+BIT_XOR_EQUAL ^ int int int
+BIT_AND_EQUAL & int int int
+BITSHIFT_LEFT_EQUAL << int int int
+BITSHIFT_RIGHT_EQUAL >> int int int
+MODULUS_EQUAL % int int int
+
 EQUAL_EQUAL == bool bool bool
 EQUAL_EQUAL == bool char char
 EQUAL_EQUAL == bool int int
@@ -55,3 +62,19 @@ STAR * double double double
 SLASH / int int int
 SLASH / float float float
 SLASH / double double double
+
+PLUS_EQUAL + int int int
+PLUS_EQUAL + float float float
+PLUS_EQUAL + double double double
+
+MINUS_EQUAL - int int int
+MINUS_EQUAL - float float float
+MINUS_EQUAL - double double double
+
+STAR_EQUAL * int int int
+STAR_EQUAL * float float float
+STAR_EQUAL * double double double
+
+SLASH_EQUAL / int int int
+SLASH_EQUAL / float float float
+SLASH_EQUAL / double double double
