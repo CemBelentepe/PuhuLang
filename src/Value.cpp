@@ -4,6 +4,7 @@
 
 #include "Value.h"
 #include "Type.h"
+#include "Callable.h"
 
 #include <utility>
 #include <stdexcept>

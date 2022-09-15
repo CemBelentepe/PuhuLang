@@ -1,0 +1,24 @@
+void main()
+{
+    int n = 100;
+    int[n] board;
+
+    board[n-2] = 1;
+    for(int i = 0; i < n - 2; i = i + 1)
+    {
+        for(int j = 0; j < n; j = j + 1)
+        {
+             if (j == 0)
+                print ' ';
+             else
+                print '*';
+        }
+
+        int pattern = (board[0] << 1) | board[1];
+        for(int j = 1; j < n-1; j++)
+        {
+             pattern = ((pattern << 1) | board[j+1]) & 7;
+             board[j] = (110 >> pattern) & 1;
+        }
+    }
+}

@@ -46,5 +46,4 @@ private:
 	size_t currentLine;
 	size_t currentCol;
 	bool failed;
-
 };

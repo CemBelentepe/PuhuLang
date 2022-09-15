@@ -2,9 +2,10 @@
 // Created by cembelentepe on 09/09/22.
 //
 
+#include "Interpreter.h"
+#include "Callable.h"
 #include <iostream>
 #include <algorithm>
-#include "Interpreter.h"
 
 Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
 	: root(root), os(os), failed(false), environment(nullptr)
@@ -168,6 +169,27 @@ void Interpreter::visit(ExprVarSet* expr)
 	this->result = val;
 }
 
+void Interpreter::visit(ExprCall* expr)
+{
+	throw std::runtime_error("Not Implemented");
+
+//	Value funcVal = expr->callee->accept(this);
+//	std::vector<Value> args;
+//	std::transform(expr->args.begin(), expr->args.end(), std::back_inserter(args), [this](auto& arg)
+//	{
+//	  return arg->accept(this);
+//	});
+//
+//	// TODO Implement call
+//	// If found in the variables, save the environment, move the program flow then restore the environment
+//	// If nothing found, throw an error
+//
+//	auto prevEnv = std::move(environment);
+//	environment = std::make_unique<Environment<Value>>(nullptr);
+//	funcVal.getDataTyped<std::shared_ptr<Callable>>()->call(this, args);
+//	environment = std::move(prevEnv);
+}
+
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(-std::get<int>(rhs)); }},
@@ -189,7 +211,6 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 	{ return Value::Data(!std::get<bool>(rhs)); }},
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
-
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{

@@ -36,6 +36,10 @@ public:
 	[[nodiscard]] bool fail() const;
 
 private:
+	std::unique_ptr<Stmt> parseDecl();
+	std::unique_ptr<Stmt> parseDeclFunc(const TypePtr& type);
+	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type, bool consumeSemi);
+
 	std::unique_ptr<Stmt> parseStmt();
 	std::unique_ptr<Stmt> parseStmtExpr();
 	std::unique_ptr<Stmt> parseStmtBlock();
@@ -44,13 +48,12 @@ private:
 	std::unique_ptr<Stmt> parseStmtFor();
 	std::unique_ptr<Stmt> parseStmtReturn();
 
-	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type, bool consumeSemi);
-
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();
 	std::unique_ptr<Expr> parseExprBinaryHelper(std::unique_ptr<Expr> lhs, int precedence);
 	std::unique_ptr<Expr> parseExprPrefix();
 	std::unique_ptr<Expr> parseExprUnary();
+	std::unique_ptr<Expr> parseExprCall();
 	std::unique_ptr<Expr> parseExprPrimary();
 
 	TypePtr parseType();

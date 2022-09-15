@@ -30,6 +30,24 @@ bool Parser::fail() const
 	return failed;
 }
 
+std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
+{
+	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
+	Token eq;
+	std::unique_ptr<Expr> init = nullptr;
+
+	if (match(TokenType::EQUAL))
+	{
+		eq = consumed();
+		init = parseExpr();
+	}
+
+	if (consumeSemi)
+		consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
+
+	return std::make_unique<StmtDeclVar>(type, name, eq, std::move(init));
+}
+
 std::unique_ptr<Stmt> Parser::parseStmt()
 {
 	// TODO find something better then return nullptr at error
@@ -200,24 +218,6 @@ std::unique_ptr<Stmt> Parser::parseStmtReturn()
 	return std::make_unique<StmtReturn>(std::move(expr), ret);
 }
 
-std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
-{
-	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
-	Token eq;
-	std::unique_ptr<Expr> init = nullptr;
-
-	if (match(TokenType::EQUAL))
-	{
-		eq = consumed();
-		init = parseExpr();
-	}
-
-	if(consumeSemi)
-		consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
-
-	return std::make_unique<StmtDeclVar>(type, name, eq, std::move(init));
-}
-
 std::unique_ptr<Expr> Parser::parseExpr()
 {
 	auto expr = parseExprBinary();
@@ -278,13 +278,34 @@ std::unique_ptr<Expr> Parser::parseExprUnary()
 	if (match({ TokenType::BANG, TokenType::TILDE }))
 	{
 		Token op = consumed();
-		std::unique_ptr<Expr> rhs = parseExprUnary();
+		std::unique_ptr<Expr> rhs = parseExprCall();
 		return std::make_unique<ExprUnary>(std::move(rhs), op);
 	}
 	else
 	{
-		return parseExprPrimary();
+		return parseExprCall();
 	}
+}
+
+std::unique_ptr<Expr> Parser::parseExprCall()
+{
+	std::unique_ptr<Expr> expr = parseExprPrimary();
+	if (match(TokenType::OPEN_PAREN))
+	{
+		Token paren = consumed();
+		std::vector<std::unique_ptr<Expr>> args;
+		if (peek().type != TokenType::CLOSE_PAREN)
+		{
+			args.push_back(parseExpr());
+			while (match(TokenType::COMMA))
+			{
+				args.push_back(parseExpr());
+			}
+		}
+		consume(TokenType::CLOSE_PAREN, "Expected a `)` after the arguments of a call.");
+		expr = std::make_unique<ExprCall>(std::move(expr), paren, std::move(args));
+	}
+	return std::move(expr);
 }
 
 std::unique_ptr<Expr> Parser::parseExprPrimary()
@@ -332,6 +353,7 @@ TypePtr Parser::parseType()
 	{
 		if (consumed().type == TokenType::OPEN_BRACKET)
 		{
+			// TODO Add support for sized arrays
 			consume(TokenType::CLOSE_BRACKET, "Expect `]` after `[` for array type.");
 			type = TypeFactory::getArray(type);
 		}
@@ -438,7 +460,6 @@ void Parser::recoverStmt(parser_stmt_err& e)
 		advance();
 	}
 }
-
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {
 	{ TokenType::OR, 1 },
 	{ TokenType::AND, 2 },

@@ -134,8 +134,11 @@ void AstDebugger::visit(ExprCall* expr)
 {
 	std::stringstream ss;
 	ss << "(CALL " << expr->callee->accept(this) << " (";
-	for(auto& e : expr->args)
-		ss << e->accept(this) << ", ";
+
+	if(!expr->args.empty())
+		ss << expr->args[0]->accept(this);
+	for(size_t i = 1; i < expr->args.size(); i++)
+		ss << ", " << expr->args[i]->accept(this);
 	ss << "))";
 	if(isShowTypes)
 		ss << ": " << expr->type->toString();

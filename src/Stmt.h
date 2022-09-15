@@ -141,3 +141,8 @@ public:
 private:
 	void doAccept(StmtVisitorBase* visitor) override;
 };
+
+class StmtDeclFunc : public Stmt
+{
+
+};
