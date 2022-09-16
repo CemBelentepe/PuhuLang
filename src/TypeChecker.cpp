@@ -8,10 +8,12 @@
 #include <sstream>
 #include "TypeChecker.h"
 
-TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root)
+TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unordered_map<std::string, TypePtr> decls)
 	: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
 {
 	this->globalEnvironment = environment.get();
+	for(auto& decl : decls)
+		this->globalEnvironment->addVariable(decl.first, decl.second);
 }
 
 TypeChecker::~TypeChecker() = default;
@@ -58,7 +60,13 @@ void TypeChecker::visit(StmtDeclVar* stmt)
 
 void TypeChecker::visit(StmtDeclFunc* stmt)
 {
-	throw std::runtime_error("Not implemented");
+	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
+	for(auto& param : stmt->params)
+		environment->addVariable(std::get<1>(param), std::get<0>(param));
+
+	stmt->body->accept(this);
+
+	environment = environment->moveParent();
 }
 
 void TypeChecker::visit(StmtExpr* stmt)
@@ -259,13 +267,14 @@ void TypeChecker::visit(ExprCall* expr)
 		throw std::runtime_error(ssErr.str());
 	}
 
-	if (!funcType->isSame(TypeFactory::getFunction(funcType->intrinsicType, argTypes)))
+	auto calledType = TypeFactory::getFunction(funcType->intrinsicType, argTypes);
+	if (!funcType->isSame(calledType))
 	{
 		std::stringstream ssErr;
 
 		ssErr << "[ERROR " << expr->paren.line << ":" << expr->paren.col
 			  << "] Expected type of `"
-			  << funcType->toString() << "` but provided `" << funcType->toString() << "` for function call.";
+			  << funcType->toString() << "` but provided `" << calledType->toString() << "` for function call.";
 
 		throw std::runtime_error(ssErr.str());
 	}

@@ -19,8 +19,15 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 	std::vector<std::unique_ptr<Stmt>> statements;
 	while (!isAtEnd() && peek().type != TokenType::EOF_TOKEN)
 	{
-		// TODO Error handling for declarations should be done in parseDecl or somewhere else idk
-		statements.push_back(parseDecl());
+		try
+		{
+			statements.push_back(parseDecl());
+		}
+		catch (parser_stmt_err& e)
+		{
+			failed = true;
+			std::cout << e.what() << std::endl;
+		}
 	}
 	return statements;
 }

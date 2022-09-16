@@ -10,6 +10,7 @@
 #include "AstDebugger.h"
 #include "TypeChecker.h"
 #include "Interpreter.h"
+#include "DeclCheck.h"
 
 int run(const std::string& filepath);
 
@@ -47,7 +48,7 @@ int run(const std::string& filepath)
 	if (false)
 	{
 		std::cout << "Tokens: " << std::endl;
-		for (auto& tok: tokens)
+		for (auto& tok : tokens)
 			std::cout << tok.showInfo() << std::endl;
 		std::cout << std::endl;
 	}
@@ -69,7 +70,15 @@ int run(const std::string& filepath)
 		std::cout << std::endl;
 	}
 
-	TypeChecker typeChecker(statements);
+	DeclCheck declCheck(statements);
+	auto decls = declCheck.check();
+	if (declCheck.fail())
+	{
+		std::cout << "Terminated due to a parsing failure." << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	TypeChecker typeChecker(statements, decls);
 	typeChecker.check();
 
 	if (typeChecker.fail())

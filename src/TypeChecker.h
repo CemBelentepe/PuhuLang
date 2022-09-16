@@ -11,7 +11,7 @@
 class TypeChecker : public ExprVisitor<TypePtr>, public StmtVisitor<void>
 {
 public:
-	explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root);
+	explicit TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unordered_map<std::string, TypePtr> decls);
 	~TypeChecker() override;
 
 	void check();

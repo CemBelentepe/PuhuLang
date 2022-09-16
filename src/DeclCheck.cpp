@@ -15,7 +15,7 @@ DeclCheck::DeclCheck(std::vector<std::unique_ptr<Stmt>>& root)
 
 DeclCheck::~DeclCheck() = default;
 
-std::unordered_map<std::string, Stmt*> DeclCheck::check()
+std::unordered_map<std::string, TypePtr> DeclCheck::check()
 {
 	for (auto& stmt : root)
 	{
@@ -30,7 +30,7 @@ std::unordered_map<std::string, Stmt*> DeclCheck::check()
 		}
 	}
 
-	return decls;
+	return std::move(decls);
 }
 
 bool DeclCheck::fail() const
@@ -40,18 +40,13 @@ bool DeclCheck::fail() const
 
 void DeclCheck::visit(StmtDeclVar* stmt)
 {
-	std::string name = stmt->name.getLexeme();
-	if (decls.find(name) == decls.end())
-		decls.insert({ name, stmt });
-	else
-		redefinitionError(stmt->name);
 }
 
 void DeclCheck::visit(StmtDeclFunc* stmt)
 {
 	std::string name = stmt->name.getLexeme();
 	if (decls.find(name) == decls.end())
-		decls.insert({ name, stmt });
+		decls.insert({ name, stmt->type });
 	else
 		redefinitionError(stmt->name);
 }
@@ -89,14 +84,15 @@ void DeclCheck::visit(StmtReturn* stmt)
 void DeclCheck::redefinitionError(const Token& name)
 {
 	std::stringstream ssErr;
-	ssErr << "[ERROR " << name.line << ":" << name.col <<"] Redefinition of `" << name.getLexeme() << "`.";
+	ssErr << "[ERROR " << name.line << ":" << name.col << "] Redefinition of `" << name.getLexeme() << "`.";
 	throw std::runtime_error(ssErr.str());
 }
 
 void DeclCheck::invalidDeclarationError(const Token& tok)
 {
 	std::stringstream ssErr;
-	ssErr << "[ERROR " << tok.line << ":" << tok.col <<"] Statement starting with `" << tok.getLexeme() << "` cannot be a declaration.";
+	ssErr << "[ERROR " << tok.line << ":" << tok.col << "] Statement starting with `" << tok.getLexeme()
+		  << "` cannot be a declaration.";
 	throw std::runtime_error(ssErr.str());
 }
 

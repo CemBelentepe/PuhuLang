@@ -13,7 +13,7 @@ public:
 	explicit DeclCheck(std::vector<std::unique_ptr<Stmt>>& root);
 	~DeclCheck() override;
 
-	std::unordered_map<std::string, Stmt*> check();
+	std::unordered_map<std::string, TypePtr> check();
 	[[nodiscard]] bool fail() const;
 
 	void visit(StmtDeclVar* stmt) override;
@@ -32,6 +32,6 @@ private:
 
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
-	std::unordered_map<std::string, Stmt*> decls;
+	std::unordered_map<std::string, TypePtr> decls;
 	bool failed;
 };

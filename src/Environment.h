@@ -52,6 +52,19 @@ public:
 		symbolTable[name] = init;
 	}
 
+	void addVariable(const std::string& name, const T& init)
+	{
+		auto it = symbolTable.find(name);
+		if (it != symbolTable.end())
+		{
+			std::stringstream ssErr;
+			ssErr << "[DEV] Redefinition of `" << name << "`.";
+			throw std::runtime_error(ssErr.str());
+		}
+
+		symbolTable[name] = init;
+	}
+
 	void setVariable(const Token& nameToken, const T& init)
 	{
 		std::string name = nameToken.getLexeme();
