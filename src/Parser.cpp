@@ -39,7 +39,7 @@ std::unique_ptr<Stmt> Parser::parseDecl()
 	}
 	else
 	{
-		return parseDeclVar(type, true);
+		return parseDeclVar(type);
 	}
 }
 
@@ -68,7 +68,7 @@ std::unique_ptr<StmtDeclFunc> Parser::parseDeclFunc(const TypePtr& type)
 	return std::make_unique<StmtDeclFunc>(funcType, name, paren, params, std::move(body));
 }
 
-std::unique_ptr<StmtDeclVar> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
+std::unique_ptr<StmtDeclVar> Parser::parseDeclVar(const TypePtr& type)
 {
 	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
 	Token eq;
@@ -80,8 +80,7 @@ std::unique_ptr<StmtDeclVar> Parser::parseDeclVar(const TypePtr& type, bool cons
 		init = parseExpr();
 	}
 
-	if (consumeSemi)
-		consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
+	consume(TokenType::SEMI_COLON, "Expected `;` at the end of a variable declaration");
 
 	return std::make_unique<StmtDeclVar>(type, name, eq, std::move(init));
 }
@@ -121,8 +120,8 @@ std::unique_ptr<Stmt> Parser::parseStmt()
 std::unique_ptr<StmtExpr> Parser::parseStmtExpr()
 {
 	auto expr = parseExpr();
-	consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
-	return std::make_unique<StmtExpr>(std::move(expr));
+	Token semicolon = consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
+	return std::make_unique<StmtExpr>(std::move(expr), semicolon);
 }
 
 std::unique_ptr<StmtBlock> Parser::parseStmtBlock()
@@ -149,7 +148,7 @@ std::unique_ptr<StmtBlock> Parser::parseStmtBlock()
 
 			if (peek().type != TokenType::IDENTIFIER)
 				throw parser_rollback();
-			stmts.push_back(parseDeclVar(type, true));
+			stmts.push_back(parseDeclVar(type));
 		}
 		catch (parser_stmt_err& e)
 		{
@@ -170,7 +169,7 @@ std::unique_ptr<StmtBlock> Parser::parseStmtBlock()
 std::unique_ptr<StmtIf> Parser::parseStmtIf()
 {
 	// TODO add expected consume for dev errors
-	consume(TokenType::IF, "[DEV] Invalid call to function.");
+	Token ifTok = consume(TokenType::IF, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after an `if` keyword.");
 	auto cond = parseExpr();
 	consume(TokenType::CLOSE_PAREN, "Expected `)` after the end of an `if` condition.");
@@ -180,25 +179,25 @@ std::unique_ptr<StmtIf> Parser::parseStmtIf()
 	if (match(TokenType::ELSE))
 		els = parseStmt();
 
-	return std::make_unique<StmtIf>(std::move(cond), std::move(then), std::move(els), paren);
+	return std::make_unique<StmtIf>(ifTok, std::move(cond), std::move(then), std::move(els), paren);
 }
 
 std::unique_ptr<StmtWhile> Parser::parseStmtWhile()
 {
 	// TODO add expected consume for dev errors
-	consume(TokenType::WHILE, "[DEV] Invalid call to function.");
+	Token whileTok = consume(TokenType::WHILE, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `while` keyword.");
 	auto cond = parseExpr();
 	consume(TokenType::CLOSE_PAREN, "Expected `)` after the end of an `while` condition.");
 	auto body = parseStmt();
 
-	return std::make_unique<StmtWhile>(std::move(cond), std::move(body), paren);
+	return std::make_unique<StmtWhile>(whileTok, std::move(cond), std::move(body), paren);
 }
 
 std::unique_ptr<StmtFor> Parser::parseStmtFor()
 {
 	// TODO add expected consume for dev errors
-	consume(TokenType::FOR, "[DEV] Invalid call to function.");
+	Token forTok = consume(TokenType::FOR, "[DEV] Invalid call to function.");
 	Token paren = consume(TokenType::OPEN_PAREN, "Expected `(` after a `for` keyword.");
 
 	std::unique_ptr<Stmt> init = nullptr;
@@ -219,15 +218,18 @@ std::unique_ptr<StmtFor> Parser::parseStmtFor()
 
 			if (peek().type != TokenType::IDENTIFIER)
 				throw parser_rollback();
-			init = parseDeclVar(type, false);
+			init = parseDeclVar(type);
 		}
 		catch (parser_rollback& e)
 		{
 			currentToken = savedPos;
-			init = std::make_unique<StmtExpr>(parseExpr());
+			init = parseStmtExpr();
 		}
 	}
-	consume(TokenType::SEMI_COLON, "Expected `;` after the initializer of `for` statement.");
+	else
+	{
+		consume(TokenType::SEMI_COLON, "Expected `;` after the initializer of `for` statement.");
+	}
 
 	std::unique_ptr<Expr> cond = nullptr;
 	if (peek().type != TokenType::SEMI_COLON)
@@ -242,7 +244,7 @@ std::unique_ptr<StmtFor> Parser::parseStmtFor()
 
 	std::unique_ptr<Stmt> body = parseStmt();
 
-	return std::make_unique<StmtFor>(std::move(init), std::move(cond),
+	return std::make_unique<StmtFor>(forTok, std::move(init), std::move(cond),
 			std::move(fin), std::move(body), paren);
 }
 

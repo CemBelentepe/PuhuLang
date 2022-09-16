@@ -29,6 +29,8 @@ std::unordered_map<std::string, Stmt*> DeclCheck::check()
 			std::cerr << e.what() << std::endl;
 		}
 	}
+
+	return decls;
 }
 
 bool DeclCheck::fail() const

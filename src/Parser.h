@@ -38,7 +38,7 @@ public:
 private:
 	std::unique_ptr<Stmt> parseDecl();
 	std::unique_ptr<StmtDeclFunc> parseDeclFunc(const TypePtr& type);
-	std::unique_ptr<StmtDeclVar> parseDeclVar(const TypePtr& type, bool consumeSemi);
+	std::unique_ptr<StmtDeclVar> parseDeclVar(const TypePtr& type);
 
 	std::unique_ptr<Stmt> 		parseStmt();
 	std::unique_ptr<StmtExpr> 	parseStmtExpr();
