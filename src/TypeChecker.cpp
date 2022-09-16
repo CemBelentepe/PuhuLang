@@ -9,8 +9,9 @@
 #include "TypeChecker.h"
 
 TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root)
-	: root(root), failed(false)
+	: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
 {
+	this->globalEnvironment = environment.get();
 }
 
 TypeChecker::~TypeChecker() = default;

@@ -41,7 +41,9 @@ private:
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	std::unique_ptr<Environment<TypePtr>> environment;
+	Environment<TypePtr>* globalEnvironment;
 	bool failed;
+
 	static const std::vector<std::tuple<BinaryFuncDef, PrimitiveTag>> binaryOperations;
 	static const std::vector<std::tuple<UnaryFuncDef, PrimitiveTag>> unaryOps;
 };
