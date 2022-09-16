@@ -32,9 +32,10 @@ class StmtExpr : public Stmt
 {
 public:
 	std::unique_ptr<Expr> expr;
+	Token semicolon;
 
-	explicit StmtExpr(std::unique_ptr<Expr> expr)
-			: expr(std::move(expr))
+	explicit StmtExpr(std::unique_ptr<Expr> expr, Token semicolon)
+		: expr(std::move(expr)), semicolon(std::move(semicolon))
 	{
 	}
 
@@ -50,7 +51,7 @@ public:
 	Token closeBrace;
 
 	explicit StmtBlock(std::vector<std::unique_ptr<Stmt>> stmts, Token openBrace, Token closeBrace)
-			: stmts(std::move(stmts)), openBrace(std::move(openBrace)), closeBrace(std::move(closeBrace))
+		: stmts(std::move(stmts)), openBrace(std::move(openBrace)), closeBrace(std::move(closeBrace))
 	{
 	}
 
@@ -61,13 +62,19 @@ private:
 class StmtIf : public Stmt
 {
 public:
+	Token ifTok;
 	std::unique_ptr<Expr> cond;
 	std::unique_ptr<Stmt> then;
 	std::unique_ptr<Stmt> els;
 	Token paren;
 
-	explicit StmtIf(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> then, std::unique_ptr<Stmt> els, Token paren)
-			: cond(std::move(cond)), then(std::move(then)), els(std::move(els)), paren(std::move(paren))
+	explicit StmtIf(Token ifTok,
+		std::unique_ptr<Expr> cond,
+		std::unique_ptr<Stmt> then,
+		std::unique_ptr<Stmt> els,
+		Token paren)
+		: ifTok(std::move(ifTok)), cond(std::move(cond)), then(std::move(then)), els(std::move(els)),
+		  paren(std::move(paren))
 	{
 	}
 
@@ -78,12 +85,13 @@ private:
 class StmtWhile : public Stmt
 {
 public:
+	Token whileTok;
 	std::unique_ptr<Expr> cond;
 	std::unique_ptr<Stmt> body;
 	Token paren;
 
-	explicit StmtWhile(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, Token paren)
-			: cond(std::move(cond)), body(std::move(body)), paren(std::move(paren))
+	explicit StmtWhile(Token whileTok, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, Token paren)
+		: whileTok(std::move(whileTok)), cond(std::move(cond)), body(std::move(body)), paren(std::move(paren))
 	{
 	}
 
@@ -94,19 +102,21 @@ private:
 class StmtFor : public Stmt
 {
 public:
+	Token forTok;
 	std::unique_ptr<Stmt> init; // Make decl or expr
 	std::unique_ptr<Expr> cond;
 	std::unique_ptr<Expr> fin;
 	std::unique_ptr<Stmt> body;
 	Token paren;
 
-	explicit StmtFor(std::unique_ptr<Stmt> init,
-			std::unique_ptr<Expr> cond,
-			std::unique_ptr<Expr> fin,
-			std::unique_ptr<Stmt> body,
-			Token paren)
-			: init(std::move(init)), cond(std::move(cond)), fin(std::move(fin)), body(std::move(body)),
-			  paren(std::move(paren))
+	explicit StmtFor(Token forTok,
+		std::unique_ptr<Stmt> init,
+		std::unique_ptr<Expr> cond,
+		std::unique_ptr<Expr> fin,
+		std::unique_ptr<Stmt> body,
+		Token paren)
+		: forTok(std::move(forTok)), init(std::move(init)), cond(std::move(cond)), fin(std::move(fin)),
+		  body(std::move(body)), paren(std::move(paren))
 	{
 	}
 
@@ -121,7 +131,7 @@ public:
 	Token ret;
 
 	explicit StmtReturn(std::unique_ptr<Expr> expr, Token ret)
-			: expr(std::move(expr)), ret(std::move(ret))
+		: expr(std::move(expr)), ret(std::move(ret))
 	{
 	}
 
@@ -138,7 +148,7 @@ public:
 	std::unique_ptr<Expr> init;
 
 	explicit StmtDeclVar(TypePtr type, Token name, Token eq, std::unique_ptr<Expr> init)
-			: type(std::move(type)), name(std::move(name)), eq(std::move(eq)), init(std::move(init))
+		: type(std::move(type)), name(std::move(name)), eq(std::move(eq)), init(std::move(init))
 	{
 	}
 
@@ -155,10 +165,10 @@ public:
 	std::vector<std::tuple<TypePtr, Token>> params;
 	std::unique_ptr<StmtBlock> body;
 
-
 	explicit StmtDeclFunc(std::shared_ptr<TypeFunction> type, Token name, Token paren,
-			std::vector<std::tuple<TypePtr, Token>> params, std::unique_ptr<StmtBlock> body)
-			: type(std::move(type)), name(std::move(name)), paren(std::move(paren)), params(std::move(params)), body(std::move(body))
+		std::vector<std::tuple<TypePtr, Token>> params, std::unique_ptr<StmtBlock> body)
+		: type(std::move(type)), name(std::move(name)), paren(std::move(paren)), params(std::move(params)),
+		  body(std::move(body))
 	{
 	}
 
