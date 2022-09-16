@@ -143,37 +143,37 @@ std::string TypeUserDefined::toStringHook()
 	return std::string(name.lexeme);
 }
 
-TypePtr TypeFactory::getNull()
+std::shared_ptr<TypeError> TypeFactory::getNull()
 {
 	return std::make_shared<TypeError>();
 }
 
-TypePtr TypeFactory::getPrimitive(PrimitiveTag tag)
+std::shared_ptr<TypePrimitive> TypeFactory::getPrimitive(PrimitiveTag tag)
 {
 	return std::make_shared<TypePrimitive>(tag);
 }
 
-TypePtr TypeFactory::getString()
+std::shared_ptr<TypeString> TypeFactory::getString()
 {
 	return std::make_shared<TypeString>();
 }
 
-TypePtr TypeFactory::getArray(const std::shared_ptr<Type>& intrinsicType)
+std::shared_ptr<TypeArray> TypeFactory::getArray(const std::shared_ptr<Type>& intrinsicType)
 {
 	return std::make_shared<TypeArray>(intrinsicType);
 }
 
-TypePtr TypeFactory::getPointer(const std::shared_ptr<Type>& intrinsicType)
+std::shared_ptr<TypePointer> TypeFactory::getPointer(const std::shared_ptr<Type>& intrinsicType)
 {
 	return std::make_shared<TypePointer>(intrinsicType);
 }
 
-TypePtr TypeFactory::getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types)
+std::shared_ptr<TypeFunction> TypeFactory::getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types)
 {
 	return std::make_shared<TypeFunction>(ret_type, param_types);
 }
 
-TypePtr TypeFactory::getUserDefined(Token name)
+std::shared_ptr<TypeUserDefined> TypeFactory::getUserDefined(Token name)
 {
 	return std::make_shared<TypeUserDefined>(name);
 }

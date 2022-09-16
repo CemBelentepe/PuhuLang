@@ -37,16 +37,16 @@ public:
 
 private:
 	std::unique_ptr<Stmt> parseDecl();
-	std::unique_ptr<Stmt> parseDeclFunc(const TypePtr& type);
-	std::unique_ptr<Stmt> parseDeclVar(const TypePtr& type, bool consumeSemi);
+	std::unique_ptr<StmtDeclFunc> parseDeclFunc(const TypePtr& type);
+	std::unique_ptr<StmtDeclVar> parseDeclVar(const TypePtr& type, bool consumeSemi);
 
-	std::unique_ptr<Stmt> parseStmt();
-	std::unique_ptr<Stmt> parseStmtExpr();
-	std::unique_ptr<Stmt> parseStmtBlock();
-	std::unique_ptr<Stmt> parseStmtIf();
-	std::unique_ptr<Stmt> parseStmtWhile();
-	std::unique_ptr<Stmt> parseStmtFor();
-	std::unique_ptr<Stmt> parseStmtReturn();
+	std::unique_ptr<Stmt> 		parseStmt();
+	std::unique_ptr<StmtExpr> 	parseStmtExpr();
+	std::unique_ptr<StmtBlock> 	parseStmtBlock();
+	std::unique_ptr<StmtIf> 	parseStmtIf();
+	std::unique_ptr<StmtWhile> 	parseStmtWhile();
+	std::unique_ptr<StmtFor> 	parseStmtFor();
+	std::unique_ptr<StmtReturn> parseStmtReturn();
 
 	std::unique_ptr<Expr> parseExpr();
 	std::unique_ptr<Expr> parseExprBinary();
@@ -58,7 +58,7 @@ private:
 
 	TypePtr parseType();
 
-	Token peek();
+	Token peek(int n = 0);
 	Token advance();
 	Token consume(TokenType type, const std::string& errorMessage);
 	[[nodiscard]] static int getPrecedence(TokenType t);

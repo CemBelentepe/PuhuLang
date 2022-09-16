@@ -9,17 +9,17 @@
 class Callable
 {
 public:
-	virtual void call(Interpreter* interpreter, std::vector<Value> args) = 0;
+	virtual Value call(Interpreter* interpreter, std::vector<Value> args) = 0;
 };
 
 class FunctionUser: public Callable
 {
 public:
-	FunctionUser(std::unique_ptr<Stmt> body);
-	void call(Interpreter* interpreter, std::vector<Value> args) override;
+	explicit FunctionUser(std::unique_ptr<StmtDeclFunc> func);
+	Value call(Interpreter* interpreter, std::vector<Value> args) override;
 
 private:
-	std::unique_ptr<Stmt> body;
+	std::unique_ptr<StmtDeclFunc> func;
 };
 
 class FunctionNative: public Callable
@@ -27,8 +27,9 @@ class FunctionNative: public Callable
 public:
 	using FuncPtr = auto (*)(Interpreter* interpreter, std::vector<Value> args) -> Value;
 
-	FunctionNative(FuncPtr func);
-	void call(Interpreter* interpreter, std::vector<Value> args) override;
+	explicit FunctionNative(FuncPtr func);
+	Value call(Interpreter* interpreter, std::vector<Value> args) override;
+
 private:
 	FuncPtr func;
 };

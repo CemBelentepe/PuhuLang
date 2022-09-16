@@ -160,13 +160,13 @@ protected:
 class TypeFactory
 {
 public:
-	static TypePtr getNull();
-	static TypePtr getPrimitive(PrimitiveTag tag);
-	static TypePtr getString();
-	static TypePtr getArray(const std::shared_ptr<Type>& intrinsicType);
-	static TypePtr getPointer(const std::shared_ptr<Type>& intrinsicType);
-	static TypePtr getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types = {});
-	static TypePtr getUserDefined(Token name);
+	static std::shared_ptr<TypeError> 		getNull();
+	static std::shared_ptr<TypePrimitive> 	getPrimitive(PrimitiveTag tag);
+	static std::shared_ptr<TypeString> 		getString();
+	static std::shared_ptr<TypeArray> 		getArray(const std::shared_ptr<Type>& intrinsicType);
+	static std::shared_ptr<TypePointer> 	getPointer(const std::shared_ptr<Type>& intrinsicType);
+	static std::shared_ptr<TypeFunction> 	getFunction(const TypePtr& ret_type, const std::vector<TypePtr>& param_types = {});
+	static std::shared_ptr<TypeUserDefined> getUserDefined(Token name);
 
 	static TypePtr fromToken(Token token);
 };

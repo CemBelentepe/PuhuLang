@@ -10,7 +10,7 @@
 #include "Parser.h"
 
 Parser::Parser(std::vector<Token> tokens)
-	: tokens(std::move(tokens)), currentToken(0), failed(false)
+		: tokens(std::move(tokens)), currentToken(0), failed(false)
 {
 }
 
@@ -20,7 +20,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 	while (!isAtEnd() && peek().type != TokenType::EOF_TOKEN)
 	{
 		// TODO Error handling for declarations should be done in parseDecl or somewhere else idk
-		statements.push_back(parseStmt());
+		statements.push_back(parseDecl());
 	}
 	return statements;
 }
@@ -30,7 +30,45 @@ bool Parser::fail() const
 	return failed;
 }
 
-std::unique_ptr<Stmt> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
+std::unique_ptr<Stmt> Parser::parseDecl()
+{
+	TypePtr type = parseType();
+	if (peek(1).type == TokenType::OPEN_PAREN)
+	{
+		return parseDeclFunc(type);
+	}
+	else
+	{
+		return parseDeclVar(type, true);
+	}
+}
+
+std::unique_ptr<StmtDeclFunc> Parser::parseDeclFunc(const TypePtr& type)
+{
+	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
+	Token paren = consume(TokenType::OPEN_PAREN, "[DEV] Invalid call to function `parseDeclFunc`.");
+
+	std::vector<std::tuple<TypePtr, Token>> params;
+	std::vector<TypePtr> paramTypes;
+	if (peek().type != TokenType::CLOSE_PAREN)
+	{
+		do
+		{
+			TypePtr paramType = parseType();
+			paramTypes.push_back(paramType);
+			Token paramName = consume(TokenType::IDENTIFIER, "Expected an `identifier` as a function argument name.");
+			params.emplace_back(paramType, paramName);
+		}while (match(TokenType::COMMA));
+	}
+	consume(TokenType::CLOSE_PAREN, "Expected a `)` after the arguments of a call.");
+	auto body = parseStmtBlock();
+
+	auto funcType = TypeFactory::getFunction(type, paramTypes);
+
+	return std::make_unique<StmtDeclFunc>(funcType, name, paren, params, std::move(body));
+}
+
+std::unique_ptr<StmtDeclVar> Parser::parseDeclVar(const TypePtr& type, bool consumeSemi)
 {
 	Token name = consume(TokenType::IDENTIFIER, "Expect an `identifier` after a type for variable declaration.");
 	Token eq;
@@ -80,14 +118,14 @@ std::unique_ptr<Stmt> Parser::parseStmt()
 	return nullptr;
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtExpr()
+std::unique_ptr<StmtExpr> Parser::parseStmtExpr()
 {
 	auto expr = parseExpr();
 	consume(TokenType::SEMI_COLON, "Expected `;` after an expression statement.");
 	return std::make_unique<StmtExpr>(std::move(expr));
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtBlock()
+std::unique_ptr<StmtBlock> Parser::parseStmtBlock()
 {
 	// TODO add expected consume for dev errors
 	Token openBrace = consume(TokenType::OPEN_BRACE, "[DEV] Invalid call to function.");
@@ -129,7 +167,7 @@ std::unique_ptr<Stmt> Parser::parseStmtBlock()
 	return std::make_unique<StmtBlock>(std::move(stmts), openBrace, closeBrace);
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtIf()
+std::unique_ptr<StmtIf> Parser::parseStmtIf()
 {
 	// TODO add expected consume for dev errors
 	consume(TokenType::IF, "[DEV] Invalid call to function.");
@@ -145,7 +183,7 @@ std::unique_ptr<Stmt> Parser::parseStmtIf()
 	return std::make_unique<StmtIf>(std::move(cond), std::move(then), std::move(els), paren);
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtWhile()
+std::unique_ptr<StmtWhile> Parser::parseStmtWhile()
 {
 	// TODO add expected consume for dev errors
 	consume(TokenType::WHILE, "[DEV] Invalid call to function.");
@@ -157,7 +195,7 @@ std::unique_ptr<Stmt> Parser::parseStmtWhile()
 	return std::make_unique<StmtWhile>(std::move(cond), std::move(body), paren);
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtFor()
+std::unique_ptr<StmtFor> Parser::parseStmtFor()
 {
 	// TODO add expected consume for dev errors
 	consume(TokenType::FOR, "[DEV] Invalid call to function.");
@@ -205,10 +243,10 @@ std::unique_ptr<Stmt> Parser::parseStmtFor()
 	std::unique_ptr<Stmt> body = parseStmt();
 
 	return std::make_unique<StmtFor>(std::move(init), std::move(cond),
-		std::move(fin), std::move(body), paren);
+			std::move(fin), std::move(body), paren);
 }
 
-std::unique_ptr<Stmt> Parser::parseStmtReturn()
+std::unique_ptr<StmtReturn> Parser::parseStmtReturn()
 {
 	// TODO add expected consume for dev errors
 	Token ret = consume(TokenType::RETURN, "[DEV] Invalid call to function.");
@@ -373,9 +411,9 @@ TypePtr Parser::parseType()
 	return type;
 }
 
-Token Parser::peek()
+Token Parser::peek(int n)
 {
-	return tokens[currentToken];
+	return tokens[currentToken + n];
 }
 
 Token Parser::advance()
@@ -460,23 +498,24 @@ void Parser::recoverStmt(parser_stmt_err& e)
 		advance();
 	}
 }
+
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {
-	{ TokenType::OR, 1 },
-	{ TokenType::AND, 2 },
-	{ TokenType::BIT_OR, 10 },
-	{ TokenType::BIT_XOR, 11 },
-	{ TokenType::BIT_AND, 12 },
-	{ TokenType::EQUAL_EQUAL, 20 },
-	{ TokenType::BANG_EQUAL, 20 },
-	{ TokenType::LESS, 30 },
-	{ TokenType::LESS_EQUAL, 30 },
-	{ TokenType::GREAT, 30 },
-	{ TokenType::GREAT_EQUAL, 30 },
-	{ TokenType::BITSHIFT_LEFT, 40 },
-	{ TokenType::BITSHIFT_RIGHT, 40 },
-	{ TokenType::PLUS, 50 },
-	{ TokenType::MINUS, 50 },
-	{ TokenType::STAR, 60 },
-	{ TokenType::SLASH, 60 },
-	{ TokenType::MODULUS, 60 },
+		{ TokenType::OR,             1 },
+		{ TokenType::AND,            2 },
+		{ TokenType::BIT_OR,         10 },
+		{ TokenType::BIT_XOR,        11 },
+		{ TokenType::BIT_AND,        12 },
+		{ TokenType::EQUAL_EQUAL,    20 },
+		{ TokenType::BANG_EQUAL,     20 },
+		{ TokenType::LESS,           30 },
+		{ TokenType::LESS_EQUAL,     30 },
+		{ TokenType::GREAT,          30 },
+		{ TokenType::GREAT_EQUAL,    30 },
+		{ TokenType::BITSHIFT_LEFT,  40 },
+		{ TokenType::BITSHIFT_RIGHT, 40 },
+		{ TokenType::PLUS,           50 },
+		{ TokenType::MINUS,          50 },
+		{ TokenType::STAR,           60 },
+		{ TokenType::SLASH,          60 },
+		{ TokenType::MODULUS,        60 },
 };

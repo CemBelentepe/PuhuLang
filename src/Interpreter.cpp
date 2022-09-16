@@ -44,6 +44,11 @@ void Interpreter::visit(StmtDeclVar* stmt)
 	environment->addVariable(stmt->name, initVal);
 }
 
+void Interpreter::visit(StmtDeclFunc* stmt)
+{
+	throw std::runtime_error("Not implemented.");
+}
+
 void Interpreter::visit(StmtExpr* stmt)
 {
 	Value res = stmt->expr->accept(this);
@@ -171,23 +176,19 @@ void Interpreter::visit(ExprVarSet* expr)
 
 void Interpreter::visit(ExprCall* expr)
 {
-	throw std::runtime_error("Not Implemented");
+	Value funcVal = expr->callee->accept(this);
+	std::vector<Value> args;
+	std::transform(expr->args.begin(), expr->args.end(), std::back_inserter(args), [this](auto& arg)
+	{
+	  return arg->accept(this);
+	});
 
-//	Value funcVal = expr->callee->accept(this);
-//	std::vector<Value> args;
-//	std::transform(expr->args.begin(), expr->args.end(), std::back_inserter(args), [this](auto& arg)
-//	{
-//	  return arg->accept(this);
-//	});
-//
-//	// TODO Implement call
-//	// If found in the variables, save the environment, move the program flow then restore the environment
-//	// If nothing found, throw an error
-//
-//	auto prevEnv = std::move(environment);
-//	environment = std::make_unique<Environment<Value>>(nullptr);
-//	funcVal.getDataTyped<std::shared_ptr<Callable>>()->call(this, args);
-//	environment = std::move(prevEnv);
+	this->result = funcVal.getDataTyped<std::shared_ptr<Callable>>()->call(this, args);
+}
+
+Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
+{
+	throw std::runtime_error("Not Implemented");
 }
 
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
@@ -211,6 +212,7 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 	{ return Value::Data(!std::get<bool>(rhs)); }},
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
+
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{

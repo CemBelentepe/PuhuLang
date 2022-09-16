@@ -18,6 +18,7 @@ public:
 	[[nodiscard]] bool fail() const;
 
 	void visit(StmtDeclVar* stmt) override;
+	void visit(StmtDeclFunc* stmt) override;
 
 	void visit(StmtExpr* stmt) override;
 	void visit(StmtBlock* stmt) override;

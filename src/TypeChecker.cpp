@@ -55,6 +55,11 @@ void TypeChecker::visit(StmtDeclVar* stmt)
 	}
 }
 
+void TypeChecker::visit(StmtDeclFunc* stmt)
+{
+	throw std::runtime_error("Not implemented");
+}
+
 void TypeChecker::visit(StmtExpr* stmt)
 {
 	stmt->expr->accept(this);
@@ -161,7 +166,7 @@ void TypeChecker::visit(ExprUnary* expr)
 {
 	auto typeRhs = expr->rhs->accept(this);
 
-	auto resType = TypeFactory::getNull();
+	TypePtr resType = TypeFactory::getNull();
 
 	// TODO assuming everything is primitive
 	if (typeRhs->tag == Type::Tag::PRIMITIVE)

@@ -30,9 +30,16 @@ void AstDebugger::setShowTypes(bool isShow)
 
 void AstDebugger::visit(StmtDeclVar* stmt)
 {
-	os << indented() << "DECL " << stmt->name.lexeme << ": " << stmt->type->toString();
+	os << indented() << "VAR " << stmt->name.lexeme << ": " << stmt->type->toString();
 	if(stmt->init)
 		os << " = " << stmt->init->accept(this);
+	os << "\n";
+}
+
+void AstDebugger::visit(StmtDeclFunc* stmt)
+{
+	os << indented() << "FUNC " << stmt->name.lexeme << ": " << stmt->type->toString() << "\n";
+	stmt->body->accept(this);
 	os << "\n";
 }
 
@@ -87,16 +94,15 @@ void AstDebugger::visit(StmtFor* stmt)
 	stmt->body->accept(this);
 	if (stmt->fin) os << indented() << stmt->fin->accept(this) << "\n";
 	indent--;
-	os << indented() << "END";
+	os << indented() << "END\n";
 	indent--;
-	os << indented() << "ROF";
+	os << indented() << "END FOR\n";
 }
 
 void AstDebugger::visit(StmtReturn* stmt)
 {
 	throw std::runtime_error("Not implemented.");
 }
-
 void AstDebugger::visit(ExprBinary* expr)
 {
 	std::string lhs = expr->lhs->accept(this);
@@ -105,6 +111,7 @@ void AstDebugger::visit(ExprBinary* expr)
 	if (isShowTypes)
 		this->result += ": " + expr->type->toString();
 }
+
 void AstDebugger::visit(ExprUnary* expr)
 {
 	std::string rhs = expr->rhs->accept(this);
@@ -130,6 +137,7 @@ void AstDebugger::visit(ExprVarSet* expr)
 	this->result = "(SET " + expr->name.getLexeme() + ", " + expr->val->accept(this) + ")";
 }
 
+
 void AstDebugger::visit(ExprCall* expr)
 {
 	std::stringstream ss;
@@ -144,7 +152,6 @@ void AstDebugger::visit(ExprCall* expr)
 		ss << ": " << expr->type->toString();
 	this->result = ss.str();
 }
-
 
 std::string AstDebugger::indented() const
 {

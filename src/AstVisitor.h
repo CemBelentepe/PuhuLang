@@ -32,6 +32,7 @@ public:
 	virtual void visit(StmtReturn* stmt) = 0;
 
 	virtual void visit(StmtDeclVar* stmt) = 0;
+	virtual void visit(StmtDeclFunc* stmt) = 0;
 };
 
 template <typename T>
