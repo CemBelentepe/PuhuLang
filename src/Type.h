@@ -21,6 +21,7 @@ public:
 		FUNCTION,
 		ARRAY,
 		USER_DEF,
+		ANY,
 		ERROR = -1
 	};
 	Tag tag;
@@ -47,6 +48,20 @@ class TypeError : public Type
 public:
 	explicit TypeError()
 			: Type(Tag::ERROR, nullptr)
+	{
+	}
+
+	[[nodiscard]] bool isSame(const std::shared_ptr<Type>& other) const override;
+
+protected:
+	std::string toStringHook() override;
+};
+
+class TypeAny: public Type
+{
+public:
+	explicit TypeAny()
+		: Type(Tag::ANY, nullptr)
 	{
 	}
 
@@ -161,6 +176,7 @@ class TypeFactory
 {
 public:
 	static std::shared_ptr<TypeError> 		getNull();
+	static std::shared_ptr<TypeAny> 		getAny();
 	static std::shared_ptr<TypePrimitive> 	getPrimitive(PrimitiveTag tag);
 	static std::shared_ptr<TypeString> 		getString();
 	static std::shared_ptr<TypeArray> 		getArray(const std::shared_ptr<Type>& intrinsicType);

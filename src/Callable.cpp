@@ -39,13 +39,17 @@ std::unordered_map<std::string, FunctionNative::FuncPtr> FunctionNative::getNati
 #define BASIC_NATIVE_TYPE(x, y) TypeFactory::getFunction(TypeFactory::getPrimitive(PrimitiveTag::x), y)
 
 std::unordered_map<std::string, TypePtr> FunctionNative::nativeTypes = {
-	{"print", BASIC_NATIVE_TYPE(VOID, {TypeFactory::getString()})}
+	{"print", BASIC_NATIVE_TYPE(VOID, {TypeFactory::getString()})},
+	{"show", BASIC_NATIVE_TYPE(VOID, {TypeFactory::getAny()})}
 };
 
 std::unordered_map<std::string, FunctionNative::FuncPtr> FunctionNative::nativeFuncs = {
 	{"print", [](Interpreter* interpreter, std::vector<Value> args){
 		std::cout << args[0].getDataTyped<std::string>();
 	  	return Value::getVoid();
+	}},
+	{"show", [](Interpreter* interpreter, std::vector<Value> args){
+	  std::cout << args[0].getInfo();
+	  return Value::getVoid();
 	}}
-
 };

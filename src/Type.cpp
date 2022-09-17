@@ -24,8 +24,20 @@ std::string TypeError::toStringHook()
 	return "Error_t";
 }
 
+bool TypeAny::isSame(const std::shared_ptr<Type>& other) const
+{
+	return true;
+}
+
+std::string TypeAny::toStringHook()
+{
+	return "any";
+}
+
 bool TypePrimitive::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	if (other->tag == Type::Tag::PRIMITIVE)
 	{
 		return std::dynamic_pointer_cast<TypePrimitive>(other)->special_tag == special_tag;
@@ -55,6 +67,8 @@ std::string TypePrimitive::toStringHook()
 
 bool TypePointer::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	if (other->tag == Tag::POINTER)
 	{
 		return intrinsicType && other->intrinsicType && intrinsicType->isSame(other->intrinsicType);
@@ -72,6 +86,8 @@ std::string TypePointer::toStringHook()
 
 bool TypeArray::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	if (other->tag == Tag::POINTER)
 	{
 		return intrinsicType && other->intrinsicType && intrinsicType->isSame(other->intrinsicType);
@@ -86,6 +102,8 @@ std::string TypeArray::toStringHook()
 
 bool TypeString::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	return other->tag == Type::Tag::STRING;
 }
 
@@ -96,6 +114,8 @@ std::string TypeString::toStringHook()
 
 bool TypeFunction::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	if (other->tag == Type::Tag::FUNCTION)
 	{
 		auto other_param_types = std::dynamic_pointer_cast<TypeFunction>(other)->param_types;
@@ -129,6 +149,8 @@ std::string TypeFunction::toStringHook()
 
 bool TypeUserDefined::isSame(const std::shared_ptr<Type>& other) const
 {
+	if(other->tag == Type::Tag::ANY) return true;
+
 	if (other->tag == Type::Tag::USER_DEF)
 	{
 		Token otherName = std::dynamic_pointer_cast<TypeUserDefined>(other)->name;
@@ -146,6 +168,11 @@ std::string TypeUserDefined::toStringHook()
 std::shared_ptr<TypeError> TypeFactory::getNull()
 {
 	return std::make_shared<TypeError>();
+}
+
+std::shared_ptr<TypeAny> TypeFactory::getAny()
+{
+	return std::make_shared<TypeAny>();
 }
 
 std::shared_ptr<TypePrimitive> TypeFactory::getPrimitive(PrimitiveTag tag)
@@ -172,12 +199,10 @@ std::shared_ptr<TypeFunction> TypeFactory::getFunction(const TypePtr& ret_type, 
 {
 	return std::make_shared<TypeFunction>(ret_type, param_types);
 }
-
 std::shared_ptr<TypeUserDefined> TypeFactory::getUserDefined(Token name)
 {
 	return std::make_shared<TypeUserDefined>(name);
 }
-
 TypePtr TypeFactory::fromToken(Token token)
 {
 	switch (token.type)

@@ -5,10 +5,12 @@ void main()
     }
 
     print("Hi\n");
-    print("3 + 9");
-    print(" = 12\n");
+    print("3 + 9 = ");
+    show(3+9);
+    print("\n");
     max(16,17);
-    max(20,10);
+    int k = max(20,10);
+    show(k);
 }
 
 int max(int a, int b)
