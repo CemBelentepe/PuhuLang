@@ -37,6 +37,21 @@ public:
 		}
 	}
 
+	T getVariable(const std::string& name) const
+	{
+		auto it = symbolTable.find(name);
+		if (it != symbolTable.end())
+			return it->second;
+		else if (parent)
+			return parent->getVariable(name);
+		else
+		{
+			std::stringstream ssErr;
+			ssErr << "[DEV] Use of undeclared identifier `" << name << "`.";
+			throw std::runtime_error(ssErr.str());
+		}
+	}
+
 	void addVariable(const Token& nameToken, const T& init)
 	{
 		std::string name = nameToken.getLexeme();

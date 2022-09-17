@@ -30,6 +30,8 @@ public:
 		return std::get<T>(data);
 	}
 
+	static Value getVoid();
+
 private:
 	Data data;
 	TypePtr type;

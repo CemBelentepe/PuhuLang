@@ -8,7 +8,7 @@
 #include <algorithm>
 
 Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
-	: root(root), os(os), failed(false), environment(nullptr)
+	: root(root), os(os), failed(false), environment(std::make_unique<Environment<Value>>(nullptr))
 {
 }
 
@@ -22,6 +22,34 @@ void Interpreter::run()
 		{
 			stmt->accept(this);
 		}
+	}
+	catch (std::runtime_error& e)
+	{
+		failed = true;
+		std::cerr << e.what() << std::endl;
+	}
+
+	try
+	{
+		Value mainFunc;
+		try
+		{
+			mainFunc = environment->getVariable("main");
+		}
+		catch (std::runtime_error& e)
+		{
+			failed = true;
+			std::cerr << "[ERROR] Entry point `main` is not defined on the program." << std::endl;
+		}
+
+		auto mainType = TypeFactory::getFunction(TypeFactory::getPrimitive(PrimitiveTag::VOID), {});
+		if(!mainFunc.getType()->isSame(mainType))
+		{
+			failed = true;
+			std::cerr << "[ERROR] Main function should have a type of `"<< mainType->toString()  << "` but `" << mainFunc.getType()->toString() << "` is provided.";
+		}
+
+		mainFunc.getDataTyped<std::shared_ptr<Callable>>()->call(this, {});
 	}
 	catch (std::runtime_error& e)
 	{
@@ -46,7 +74,8 @@ void Interpreter::visit(StmtDeclVar* stmt)
 
 void Interpreter::visit(StmtDeclFunc* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	auto callable = Value(std::make_shared<FunctionUser>(stmt), stmt->type);
+	environment->addVariable(stmt->name, callable);
 }
 
 void Interpreter::visit(StmtExpr* stmt)
@@ -188,7 +217,27 @@ void Interpreter::visit(ExprCall* expr)
 
 Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 {
-	throw std::runtime_error("Not Implemented");
+	environment = std::make_unique<Environment<Value>>(std::move(environment));
+
+	if (func->params.size() != args.size())
+		throw std::runtime_error("[DEV] Type check failed to check the number of args and params in a call");
+
+	for (size_t i = 0; i < func->params.size(); i++)
+		environment->addVariable(std::get<1>(func->params[i]), args[i]);
+
+	// try
+	// {
+	// 	func->body->accept(this);
+	// }
+	// catch (declaration)
+	// {
+	//
+	// }
+
+	func->body->accept(this);
+	environment = environment->moveParent();
+
+	return Value::getVoid();
 }
 
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {

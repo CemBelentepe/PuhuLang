@@ -15,11 +15,11 @@ public:
 class FunctionUser: public Callable
 {
 public:
-	explicit FunctionUser(std::unique_ptr<StmtDeclFunc> func);
+	explicit FunctionUser(StmtDeclFunc* func);
 	Value call(Interpreter* interpreter, std::vector<Value> args) override;
 
 private:
-	std::unique_ptr<StmtDeclFunc> func;
+	StmtDeclFunc* func;
 };
 
 class FunctionNative: public Callable

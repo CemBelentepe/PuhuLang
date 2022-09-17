@@ -67,3 +67,7 @@ std::string Value::getInfo() const
 	else
 		throw std::runtime_error("Invalid type for a value.");
 }
+Value Value::getVoid()
+{
+	return Value({}, TypeFactory::getPrimitive(PrimitiveTag::VOID));
+}

@@ -4,18 +4,12 @@ void main()
         i;
     }
 
-    // print();
     print(3);
     print(3 + 9);
     print(3);
 }
 
-void print(int x){}
-
-int max(int a, int b)
+void print(int x)
 {
-    if (a > b)
-        a;
-    else
-        b;
+    x;
 }
