@@ -30,6 +30,11 @@ public:
 	explicit FunctionNative(FuncPtr func);
 	Value call(Interpreter* interpreter, std::vector<Value> args) override;
 
+	static std::unordered_map<std::string, TypePtr> getNativeTypes();
+	static std::unordered_map<std::string, FuncPtr> getNativeFuncs();
+
 private:
 	FuncPtr func;
+	static std::unordered_map<std::string, TypePtr> nativeTypes;
+	static std::unordered_map<std::string, FuncPtr> nativeFuncs;
 };

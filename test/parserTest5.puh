@@ -4,16 +4,11 @@ void main()
         i;
     }
 
-    print(3);
-    print(3 + 9);
-    print(3);
+    print("Hi\n");
+    print("3 + 9");
+    print(" = 12\n");
     max(16,17);
     max(20,10);
-}
-
-void print(int x)
-{
-    x;
 }
 
 int max(int a, int b)

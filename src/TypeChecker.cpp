@@ -2,16 +2,22 @@
 // Created by cembelentepe on 08/09/22.
 //
 
+#include "TypeChecker.h"
+#include "Callable.h"
+
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include "TypeChecker.h"
 
 TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unordered_map<std::string, TypePtr> decls)
 	: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
 {
 	this->globalEnvironment = environment.get();
+
+	for(auto& native: FunctionNative::getNativeTypes())
+		this->globalEnvironment->addVariable(native.first, native.second);
+
 	for (auto& decl : decls)
 		this->globalEnvironment->addVariable(decl.first, decl.second);
 }

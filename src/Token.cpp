@@ -135,8 +135,8 @@ std::string Token::readAsString() const
 {
 	std::stringstream ss;
 
-	size_t i = 0;
-	while (i < lexeme.size())
+	size_t i = 1;
+	while (i < lexeme.size()-1)
 	{
 		if (lexeme[i] == '\\')
 		{

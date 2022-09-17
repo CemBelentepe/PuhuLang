@@ -10,6 +10,10 @@
 Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
 	: root(root), os(os), failed(false), environment(std::make_unique<Environment<Value>>(nullptr))
 {
+	auto nativeTypes = FunctionNative::getNativeTypes();
+	for (auto& native : FunctionNative::getNativeFuncs())
+		this->environment->addVariable(native.first,
+			Value(std::make_shared<FunctionNative>(native.second), nativeTypes[native.first]));
 }
 
 Interpreter::~Interpreter() = default;
@@ -43,10 +47,11 @@ void Interpreter::run()
 		}
 
 		auto mainType = TypeFactory::getFunction(TypeFactory::getPrimitive(PrimitiveTag::VOID), {});
-		if(!mainFunc.getType()->isSame(mainType))
+		if (!mainFunc.getType()->isSame(mainType))
 		{
 			failed = true;
-			std::cerr << "[ERROR] Main function should have a type of `"<< mainType->toString()  << "` but `" << mainFunc.getType()->toString() << "` is provided.";
+			std::cerr << "[ERROR] Main function should have a type of `" << mainType->toString() << "` but `"
+					  << mainFunc.getType()->toString() << "` is provided.";
 		}
 
 		mainFunc.getDataTyped<std::shared_ptr<Callable>>()->call(this, {});
@@ -81,8 +86,6 @@ void Interpreter::visit(StmtDeclFunc* stmt)
 void Interpreter::visit(StmtExpr* stmt)
 {
 	Value res = stmt->expr->accept(this);
-	// TODO remove expr printing
-	os << res.getInfo() << std::endl;
 }
 
 void Interpreter::visit(StmtBlock* stmt)
@@ -224,7 +227,6 @@ Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 
 	for (size_t i = 0; i < func->params.size(); i++)
 		environment->addVariable(std::get<1>(func->params[i]), args[i]);
-
 
 	Value retVal = Value::getVoid();
 	try
