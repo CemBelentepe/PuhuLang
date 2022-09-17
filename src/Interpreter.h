@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "Value.h"
 #include "AstVisitor.h"
 #include "Environment.h"
@@ -47,6 +49,18 @@ private:
 	std::ostream& os;
 	std::unique_ptr<Environment<Value>> environment;
 	bool failed;
+
 	static const std::vector<std::tuple<BinaryFuncDef, BinaryFuncDec>> binaryOps;
 	static const std::vector<std::tuple<UnaryFuncDef, UnaryFuncDec>> unaryOps;
+
+	class ret_value : std::exception
+	{
+	public:
+		Value val;
+
+		explicit ret_value(Value val)
+			: val(std::move(val))
+		{
+		}
+	};
 };

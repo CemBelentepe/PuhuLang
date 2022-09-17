@@ -12,7 +12,7 @@ TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unordere
 	: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
 {
 	this->globalEnvironment = environment.get();
-	for(auto& decl : decls)
+	for (auto& decl : decls)
 		this->globalEnvironment->addVariable(decl.first, decl.second);
 }
 
@@ -61,10 +61,12 @@ void TypeChecker::visit(StmtDeclVar* stmt)
 void TypeChecker::visit(StmtDeclFunc* stmt)
 {
 	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
-	for(auto& param : stmt->params)
+	for (auto& param : stmt->params)
 		environment->addVariable(std::get<1>(param), std::get<0>(param));
 
+	currentReturn = stmt->type->intrinsicType;
 	stmt->body->accept(this);
+	currentReturn = nullptr;
 
 	environment = environment->moveParent();
 }
@@ -127,7 +129,14 @@ void TypeChecker::visit(StmtFor* stmt)
 
 void TypeChecker::visit(StmtReturn* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	TypePtr retType = stmt->expr->accept(this);
+	if (!retType->isSame(currentReturn))
+	{
+		std::stringstream ssErr;
+		ssErr << "[ERROR " << stmt->ret.line << ":" << stmt->ret.col << "] Return type `" << retType->toString()
+			  << "` is not the same as the function return type `" << currentReturn->toString() << "`.";
+		throw std::runtime_error(ssErr.str());
+	}
 }
 
 void TypeChecker::visit(ExprBinary* expr)

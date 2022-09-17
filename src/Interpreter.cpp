@@ -121,7 +121,7 @@ void Interpreter::visit(StmtFor* stmt)
 
 void Interpreter::visit(StmtReturn* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	throw ret_value(stmt->expr->accept(this));
 }
 
 void Interpreter::visit(ExprBinary* expr)
@@ -225,19 +225,20 @@ Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 	for (size_t i = 0; i < func->params.size(); i++)
 		environment->addVariable(std::get<1>(func->params[i]), args[i]);
 
-	// try
-	// {
-	// 	func->body->accept(this);
-	// }
-	// catch (declaration)
-	// {
-	//
-	// }
 
-	func->body->accept(this);
+	Value retVal = Value::getVoid();
+	try
+	{
+		func->body->accept(this);
+	}
+	catch (ret_value& e)
+	{
+		retVal = e.val;
+	}
+
 	environment = environment->moveParent();
 
-	return Value::getVoid();
+	return retVal;
 }
 
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {

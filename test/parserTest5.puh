@@ -7,9 +7,17 @@ void main()
     print(3);
     print(3 + 9);
     print(3);
+    max(16,17);
+    max(20,10);
 }
 
 void print(int x)
 {
     x;
+}
+
+int max(int a, int b)
+{
+    if(a > b) return a;
+    return b;
 }

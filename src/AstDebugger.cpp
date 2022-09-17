@@ -101,8 +101,9 @@ void AstDebugger::visit(StmtFor* stmt)
 
 void AstDebugger::visit(StmtReturn* stmt)
 {
-	throw std::runtime_error("Not implemented.");
+	os << indented() << "RETURN " << stmt->expr->accept(this) << "\n";
 }
+
 void AstDebugger::visit(ExprBinary* expr)
 {
 	std::string lhs = expr->lhs->accept(this);
