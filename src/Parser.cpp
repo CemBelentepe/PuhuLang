@@ -325,8 +325,23 @@ std::unique_ptr<Expr> Parser::parseExprUnary()
 	if (match({ TokenType::BANG, TokenType::TILDE }))
 	{
 		Token op = consumed();
-		std::unique_ptr<Expr> rhs = parseExprCall();
+		std::unique_ptr<Expr> rhs = parseExprUnary();
 		return std::make_unique<ExprUnary>(std::move(rhs), op);
+	}
+	else if (match(TokenType::BIT_AND))
+	{
+		Token op = consumed();
+		std::unique_ptr<Expr> rhs = parseExprUnary();
+		if(isRValue(rhs.get()))
+		{
+			return std::make_unique<ExprAddrOf>(std::move(rhs), op);
+		}
+		else
+		{
+			std::stringstream ssErr;
+			ssErr << "[ERROR " << op.line << ":" << op.col << "] Only an rvalue can have an address.";
+			throw parser_stmt_err(ssErr.str());
+		}
 	}
 	else
 	{
@@ -506,6 +521,16 @@ void Parser::recoverStmt(parser_stmt_err& e)
 		}
 		advance();
 	}
+}
+
+bool Parser::isRValue(Expr* expr)
+{
+	static std::vector<Expr::Instance> rvalues = {
+		Expr::Instance::VarGet,
+	};
+
+	auto it = std::find(rvalues.begin(), rvalues.end(), expr->instance);
+	return it != rvalues.end();
 }
 
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {

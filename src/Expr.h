@@ -24,6 +24,7 @@ public:
 		VarGet,
 		VarSet,
 		Call,
+		AddrOf,
 	};
 	const Instance instance;
 	std::shared_ptr<Type> type;
@@ -131,6 +132,21 @@ public:
 
 	explicit ExprCall(std::unique_ptr<Expr> callee, Token paren, std::vector<std::unique_ptr<Expr>> args)
 		: Expr(Instance::Call, TypeFactory::getNull()), callee(std::move(callee)), paren(std::move(paren)), args(std::move(args))
+	{
+	}
+
+private:
+	void doAccept(ExprVisitorBase* visitor) override;
+};
+
+class ExprAddrOf : public Expr
+{
+public:
+	std::unique_ptr<Expr> rvalue;
+	Token ampersand;
+
+	explicit ExprAddrOf(std::unique_ptr<Expr> rvalue, Token ampersand)
+		: Expr(Instance::AddrOf, TypeFactory::getNull()), rvalue(std::move(rvalue)), ampersand(std::move(ampersand))
 	{
 	}
 

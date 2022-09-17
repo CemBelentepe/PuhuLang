@@ -57,8 +57,8 @@ private:
 	std::unique_ptr<Expr> parseExprPrimary();
 
 	TypePtr parseType();
-
 	Token peek(int n = 0);
+
 	Token advance();
 	Token consume(TokenType type, const std::string& errorMessage);
 	[[nodiscard]] static int getPrecedence(TokenType t);
@@ -68,6 +68,7 @@ private:
 	[[nodiscard]] bool isAtEnd() const;
 
 	void recoverStmt(parser_stmt_err& e);
+	static bool isRValue(Expr* expr);
 
 private:
 	std::vector<Token> tokens;

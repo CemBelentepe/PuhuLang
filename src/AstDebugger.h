@@ -32,6 +32,7 @@ public:
 	void visit(ExprVarGet* expr) override;
 	void visit(ExprVarSet* expr) override;
 	void visit(ExprCall* expr) override;
+	void visit(ExprAddrOf* expr) override;
 
 private:
 	[[nodiscard]] std::string indented() const;

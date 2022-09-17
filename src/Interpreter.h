@@ -35,6 +35,7 @@ public:
 	void visit(ExprVarGet* expr) override;
 	void visit(ExprVarSet* expr) override;
 	void visit(ExprCall* expr) override;
+	void visit(ExprAddrOf* expr) override;
 
 	Value runFunction(StmtDeclFunc* func, std::vector<Value> args);
 

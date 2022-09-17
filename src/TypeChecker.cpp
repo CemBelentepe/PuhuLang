@@ -298,6 +298,12 @@ void TypeChecker::visit(ExprCall* expr)
 	this->result = expr->type;
 }
 
+void TypeChecker::visit(ExprAddrOf* expr)
+{
+	TypePtr baseType = expr->accept(this);
+	this->result = TypeFactory::getFunction(baseType);
+}
+
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
 	{{ TokenType::MINUS, PrimitiveTag::FLOAT }, PrimitiveTag::FLOAT },
@@ -310,7 +316,6 @@ const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeCheck
 	{{ TokenType::BANG, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::TILDE, PrimitiveTag::INT }, PrimitiveTag::INT }
 };
-
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
 	{{ TokenType::AND, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },

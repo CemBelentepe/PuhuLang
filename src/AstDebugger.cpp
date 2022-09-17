@@ -138,7 +138,6 @@ void AstDebugger::visit(ExprVarSet* expr)
 	this->result = "(SET " + expr->name.getLexeme() + ", " + expr->val->accept(this) + ")";
 }
 
-
 void AstDebugger::visit(ExprCall* expr)
 {
 	std::stringstream ss;
@@ -151,6 +150,17 @@ void AstDebugger::visit(ExprCall* expr)
 	ss << "))";
 	if(isShowTypes)
 		ss << ": " << expr->type->toString();
+	this->result = ss.str();
+}
+
+void AstDebugger::visit(ExprAddrOf* expr)
+{
+	std::stringstream ss;
+
+	ss << "(ADDR " << expr->rvalue->accept(this) << ")";
+	if(isShowTypes)
+		ss << ": " << expr->type->toString();
+
 	this->result = ss.str();
 }
 

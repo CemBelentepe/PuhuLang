@@ -243,6 +243,11 @@ Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 	return retVal;
 }
 
+void Interpreter::visit(ExprAddrOf* expr)
+{
+	throw NotImplementedException();
+}
+
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {
 	{{ TokenType::MINUS, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(-std::get<int>(rhs)); }},
@@ -264,7 +269,6 @@ const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDe
 	{ return Value::Data(!std::get<bool>(rhs)); }},
 	{{ TokenType::TILDE, PrimitiveTag::INT }, [](Value::Data rhs)
 	{ return Value::Data(~std::get<int>(rhs)); }}};
-
 const std::vector<std::tuple<Interpreter::BinaryFuncDef, Interpreter::BinaryFuncDec>>Interpreter::binaryOps = {
 	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, [](Value::Data lhs, Value::Data rhs)
 	{
