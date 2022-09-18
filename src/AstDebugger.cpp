@@ -130,7 +130,7 @@ void AstDebugger::visit(ExprLiteral* expr)
 
 void AstDebugger::visit(ExprVarGet* expr)
 {
-	this->result = "(GET " + expr->name.getLexeme() + ")";
+	this->result = "(GET " + expr->name.getLexeme() + "): " + expr->type.get()->toString();
 }
 
 void AstDebugger::visit(ExprVarSet* expr)
@@ -158,6 +158,17 @@ void AstDebugger::visit(ExprAddrOf* expr)
 	std::stringstream ss;
 
 	ss << "(ADDR " << expr->lvalue->accept(this) << ")";
+	if(isShowTypes)
+		ss << ": " << expr->type->toString();
+
+	this->result = ss.str();
+}
+
+void AstDebugger::visit(ExprDeref* expr)
+{
+	std::stringstream ss;
+
+	ss << "(DEREF " << expr->expr->accept(this) << ")";
 	if(isShowTypes)
 		ss << ": " << expr->type->toString();
 

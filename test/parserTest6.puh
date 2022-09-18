@@ -1,0 +1,6 @@
+void main()
+{
+    int x = 9;
+    int* ptrX = &x;
+    int y = *ptrX;
+}

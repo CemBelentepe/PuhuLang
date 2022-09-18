@@ -87,7 +87,7 @@ int run(const std::string& filepath)
 		return EXIT_FAILURE;
 	}
 
-	if (false)
+	if (true)
 	{
 		std::cout << "Typed AST: " << std::endl;
 		AstDebugger debugger(statements, std::cout);

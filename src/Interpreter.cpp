@@ -220,16 +220,12 @@ void Interpreter::visit(ExprCall* expr)
 
 void Interpreter::visit(ExprAddrOf* expr)
 {
-	if (expr->lvalue->instance == Expr::Instance::VarGet)
-	{
-		ExprVarGet* lvalue = (ExprVarGet*)expr->lvalue.get();
-		Token* addr = &lvalue->name;
-		this->result = Value(addr, expr->type);
-	}
-	else
-	{
-		throw std::runtime_error("[DEV] Type check failed to check the type of lvalue.");
-	}
+	throw NotImplementedException();
+}
+
+void Interpreter::visit(ExprDeref* expr)
+{
+	throw NotImplementedException();
 }
 
 Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)

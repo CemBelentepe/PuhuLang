@@ -25,6 +25,7 @@ public:
 		VarSet,
 		Call,
 		AddrOf,
+		Deref,
 	};
 	const Instance instance;
 	std::shared_ptr<Type> type;
@@ -147,6 +148,21 @@ public:
 
 	explicit ExprAddrOf(std::unique_ptr<Expr> lvalue, Token ampersand)
 		: Expr(Instance::AddrOf, TypeFactory::getNull()), lvalue(std::move(lvalue)), ampersand(std::move(ampersand))
+	{
+	}
+
+private:
+	void doAccept(ExprVisitorBase* visitor) override;
+};
+
+class ExprDeref : public Expr
+{
+public:
+	std::unique_ptr<Expr> expr;
+	Token star;
+
+	explicit ExprDeref(std::unique_ptr<Expr> expr, Token star)
+		: Expr(Instance::Deref, TypeFactory::getNull()), expr(std::move(expr)), star(std::move(star))
 	{
 	}
 

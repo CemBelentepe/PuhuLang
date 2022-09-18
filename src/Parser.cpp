@@ -343,6 +343,12 @@ std::unique_ptr<Expr> Parser::parseExprUnary()
 			throw parser_stmt_err(ssErr.str());
 		}
 	}
+	else if (match(TokenType::STAR))
+	{
+		Token op = consumed();
+		std::unique_ptr<Expr> rhs = parseExprUnary();
+		return std::make_unique<ExprDeref>(std::move(rhs), op);
+	}
 	else
 	{
 		return parseExprCall();

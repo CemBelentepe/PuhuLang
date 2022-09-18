@@ -300,8 +300,16 @@ void TypeChecker::visit(ExprCall* expr)
 
 void TypeChecker::visit(ExprAddrOf* expr)
 {
-	TypePtr baseType = expr->accept(this);
-	this->result = TypeFactory::getFunction(baseType);
+	TypePtr baseType = expr->lvalue->accept(this);
+	expr->type = TypeFactory::getPointer(baseType);
+	this->result = expr->type;
+}
+
+void TypeChecker::visit(ExprDeref* expr)
+{
+	TypePtr baseType = expr->expr->accept(this);
+	expr->type = baseType->intrinsicType;
+	this->result = expr->type;
 }
 
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
