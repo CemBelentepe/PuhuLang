@@ -218,12 +218,26 @@ void Interpreter::visit(ExprCall* expr)
 	this->result = funcVal.getDataTyped<std::shared_ptr<Callable>>()->call(this, args);
 }
 
+void Interpreter::visit(ExprAddrOf* expr)
+{
+	if (expr->lvalue->instance == Expr::Instance::VarGet)
+	{
+		ExprVarGet* lvalue = (ExprVarGet*)expr->lvalue.get();
+		Token* addr = &lvalue->name;
+		this->result = Value(addr, expr->type);
+	}
+	else
+	{
+		throw std::runtime_error("[DEV] Type check failed to check the type of lvalue.");
+	}
+}
+
 Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 {
 	environment = std::make_unique<Environment<Value>>(std::move(environment));
 
 	if (func->params.size() != args.size())
-		throw std::runtime_error("[DEV] Type check failed to check the number of args and params in a call");
+		throw std::runtime_error("[DEV] Type check failed to check the number of args and params in a call.");
 
 	for (size_t i = 0; i < func->params.size(); i++)
 		environment->addVariable(std::get<1>(func->params[i]), args[i]);
@@ -241,11 +255,6 @@ Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 	environment = environment->moveParent();
 
 	return retVal;
-}
-
-void Interpreter::visit(ExprAddrOf* expr)
-{
-	throw NotImplementedException();
 }
 
 const std::vector<std::tuple<Interpreter::UnaryFuncDef, Interpreter::UnaryFuncDec>> Interpreter::unaryOps = {

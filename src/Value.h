@@ -10,11 +10,12 @@
 #include "Common.h"
 
 class Callable;
+class Token;
 
 class Value
 {
 public:
-	using Data = std::variant<bool, char, int, float, double, std::string, std::shared_ptr<Callable>>;
+	using Data = std::variant<bool, char, int, float, double, std::string, std::shared_ptr<Callable>, Token*>;
 
 	explicit Value();
 	explicit Value(Data data, TypePtr type);
