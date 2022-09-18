@@ -68,7 +68,7 @@ private:
 	[[nodiscard]] bool isAtEnd() const;
 
 	void recoverStmt(parser_stmt_err& e);
-	static bool isRValue(Expr* expr);
+	static bool isLValue(Expr* expr);
 
 private:
 	std::vector<Token> tokens;

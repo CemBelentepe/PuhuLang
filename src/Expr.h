@@ -142,11 +142,11 @@ private:
 class ExprAddrOf : public Expr
 {
 public:
-	std::unique_ptr<Expr> rvalue;
+	std::unique_ptr<Expr> lvalue;
 	Token ampersand;
 
-	explicit ExprAddrOf(std::unique_ptr<Expr> rvalue, Token ampersand)
-		: Expr(Instance::AddrOf, TypeFactory::getNull()), rvalue(std::move(rvalue)), ampersand(std::move(ampersand))
+	explicit ExprAddrOf(std::unique_ptr<Expr> lvalue, Token ampersand)
+		: Expr(Instance::AddrOf, TypeFactory::getNull()), lvalue(std::move(lvalue)), ampersand(std::move(ampersand))
 	{
 	}
 

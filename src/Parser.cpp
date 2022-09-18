@@ -332,14 +332,14 @@ std::unique_ptr<Expr> Parser::parseExprUnary()
 	{
 		Token op = consumed();
 		std::unique_ptr<Expr> rhs = parseExprUnary();
-		if(isRValue(rhs.get()))
+		if(isLValue(rhs.get()))
 		{
 			return std::make_unique<ExprAddrOf>(std::move(rhs), op);
 		}
 		else
 		{
 			std::stringstream ssErr;
-			ssErr << "[ERROR " << op.line << ":" << op.col << "] Only an rvalue can have an address.";
+			ssErr << "[ERROR " << op.line << ":" << op.col << "] Only an lvalue can have an address.";
 			throw parser_stmt_err(ssErr.str());
 		}
 	}
@@ -523,14 +523,14 @@ void Parser::recoverStmt(parser_stmt_err& e)
 	}
 }
 
-bool Parser::isRValue(Expr* expr)
+bool Parser::isLValue(Expr* expr)
 {
-	static std::vector<Expr::Instance> rvalues = {
+	static std::vector<Expr::Instance> lvalues = {
 		Expr::Instance::VarGet,
 	};
 
-	auto it = std::find(rvalues.begin(), rvalues.end(), expr->instance);
-	return it != rvalues.end();
+	auto it = std::find(lvalues.begin(), lvalues.end(), expr->instance);
+	return it != lvalues.end();
 }
 
 const std::unordered_map<TokenType, int> Parser::precedenceTable = {

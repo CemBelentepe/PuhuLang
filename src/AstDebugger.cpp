@@ -157,7 +157,7 @@ void AstDebugger::visit(ExprAddrOf* expr)
 {
 	std::stringstream ss;
 
-	ss << "(ADDR " << expr->rvalue->accept(this) << ")";
+	ss << "(ADDR " << expr->lvalue->accept(this) << ")";
 	if(isShowTypes)
 		ss << ": " << expr->type->toString();
 
