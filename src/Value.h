@@ -18,6 +18,7 @@ public:
 	using Data = std::variant<bool, char, int, float, double, std::string, std::shared_ptr<Callable>, std::shared_ptr<Value>>;
 
 	explicit Value();
+	explicit Value(TypePtr type);
 	explicit Value(Data data, TypePtr type);
 
 	[[nodiscard]] Data getData() const;

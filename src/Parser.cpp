@@ -399,6 +399,11 @@ std::unique_ptr<Expr> Parser::parseExprPrimary()
 	{
 		return std::make_unique<ExprVarGet>(token);
 	}
+	case TokenType::NEW:
+	{
+		TypePtr type = parseType();
+		return std::make_unique<ExprNew>(token, type);
+	}
 	default:
 	{
 		std::stringstream ssErr;

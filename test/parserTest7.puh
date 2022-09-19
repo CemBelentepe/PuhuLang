@@ -1,0 +1,21 @@
+void main()
+{
+    int* ptr = new int;
+    *ptr = 8;
+    printLnInt(*ptr);
+    inc(ptr);
+    printLnInt(*ptr);
+    inc(ptr);
+    printLnInt(*ptr);
+}
+
+void inc(int* x)
+{
+    *x = *x + 1;
+}
+
+void printLnInt(int x)
+{
+    show(x);
+    print("\n");
+}

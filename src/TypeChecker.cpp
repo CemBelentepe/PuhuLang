@@ -336,6 +336,11 @@ void TypeChecker::visit(ExprDeref* expr)
 	this->result = expr->type;
 }
 
+void TypeChecker::visit(ExprNew* expr)
+{
+	this->result = expr->type;
+}
+
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
 		{{ TokenType::MINUS,       PrimitiveTag::INT },    PrimitiveTag::INT },
 		{{ TokenType::MINUS,       PrimitiveTag::FLOAT },  PrimitiveTag::FLOAT },

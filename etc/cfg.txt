@@ -22,7 +22,7 @@ typeName    -> ("void" | "bool" | "char" | "int" | "float" | "double" | "string"
 
 // Expressions
 expression 	-> binary | assignment
-assignment  -> getVariable ASSIGNMENT expression
+assignment  -> expression ASSIGNMENT expression
 binary      -> prefix BIN_OP prefix
 prefix 	-> ("-" | "+" | "++" | "--")? unary
 // `cast` is not implemented
@@ -34,8 +34,7 @@ call        -> primary
 // namespace aware get is not implemented
 // `new` is not implemented
 primary 	-> "true" | "false" | "null" | NUMBER | STRING | CHAR | ("(" expression ")")
-             | getVariable | ("new" typeName ("(" arguments? ")"))
-getVariable -> ("::"? (IDENTIFIER "::")* IDENTIFIER)
+             | ("::"? (IDENTIFIER "::")* IDENTIFIER) | ("new" typeName ("(" arguments? ")"))
 
 cast        -> "(" typeName ")"
 BIN_OP      -> "||" | "&&" | "|" | "^" | "&" | "==" | "!=" | "<" | ">" | "<=" | ">="

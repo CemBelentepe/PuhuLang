@@ -26,6 +26,7 @@ public:
 		Call,
 		AddrOf,
 		Deref,
+		New
 	};
 	const Instance instance;
 	std::shared_ptr<Type> type;
@@ -165,6 +166,19 @@ public:
 		: Expr(Instance::Deref, TypeFactory::getNull()), expr(std::move(expr)), star(std::move(star))
 	{
 	}
+
+private:
+	void doAccept(ExprVisitorBase* visitor) override;
+};
+
+class ExprNew: public Expr
+{
+public:
+	Token newToken;
+
+	explicit ExprNew(Token newToken, const TypePtr& type)
+		:Expr(Instance::New, TypeFactory::getPointer(type)), newToken(std::move(newToken))
+	{}
 
 private:
 	void doAccept(ExprVisitorBase* visitor) override;

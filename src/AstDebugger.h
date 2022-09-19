@@ -34,6 +34,7 @@ public:
 	void visit(ExprCall* expr) override;
 	void visit(ExprAddrOf* expr) override;
 	void visit(ExprDeref* expr) override;
+	void visit(ExprNew* expr) override;
 
 private:
 	[[nodiscard]] std::string indented() const;

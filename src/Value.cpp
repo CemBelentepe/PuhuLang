@@ -15,6 +15,12 @@ Value::Value()
 {
 }
 
+Value::Value(TypePtr type)
+	: data({}), type(std::move(type))
+{
+
+}
+
 Value::Value(Value::Data data, TypePtr type)
 	: data(std::move(data)), type(std::move(type))
 {

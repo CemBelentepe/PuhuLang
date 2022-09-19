@@ -250,6 +250,12 @@ void Interpreter::visit(ExprDeref* expr)
 	this->result = *ptr.getDataTyped<std::shared_ptr<Value>>();
 }
 
+void Interpreter::visit(ExprNew* expr)
+{
+	Value ptr = Value(std::make_shared<Value>(expr->type->intrinsicType), expr->type);
+	this->result = ptr;
+}
+
 Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 {
 	environment = std::make_unique<EnvType>(std::move(environment));

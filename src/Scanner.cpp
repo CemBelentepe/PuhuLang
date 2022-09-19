@@ -11,7 +11,7 @@
 #include <sstream>
 
 Scanner::Scanner(std::string source)
-		: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0), failed(false)
+	: source(std::move(source)), startPos(0), currentPos(0), currentLine(1), currentCol(0), failed(false)
 {
 }
 
@@ -279,26 +279,27 @@ Token Scanner::scanIdentifier()
 	std::string_view lexeme = currentLexeme();
 
 	static const std::unordered_map<std::string, TokenType> lut = {
-			{ "using",     TokenType::USING },
-			{ "namespace", TokenType::NAMESPACE },
-			{ "class",     TokenType::CLASS },
-			{ "var",       TokenType::VAR },
-			{ "const",     TokenType::CONST },
-			{ "if",        TokenType::IF },
-			{ "else",      TokenType::ELSE },
-			{ "int",       TokenType::INT },
-			{ "float",     TokenType::FLOAT },
-			{ "double",    TokenType::DOUBLE },
-			{ "char",      TokenType::CHAR },
-			{ "string",    TokenType::STRING },
-			{ "bool",      TokenType::BOOL },
-			{ "void",      TokenType::VOID },
-			{ "while",     TokenType::WHILE },
-			{ "for",       TokenType::FOR },
-			{ "true",      TokenType::TRUE },
-			{ "false",     TokenType::FALSE },
-			{ "null",      TokenType::NULL_TOKEN },
-			{ "return",    TokenType::RETURN },
+		{ "using", TokenType::USING },
+		{ "namespace", TokenType::NAMESPACE },
+		{ "new", TokenType::NEW },
+		{ "class", TokenType::CLASS },
+		{ "var", TokenType::VAR },
+		{ "const", TokenType::CONST },
+		{ "if", TokenType::IF },
+		{ "else", TokenType::ELSE },
+		{ "int", TokenType::INT },
+		{ "float", TokenType::FLOAT },
+		{ "double", TokenType::DOUBLE },
+		{ "char", TokenType::CHAR },
+		{ "string", TokenType::STRING },
+		{ "bool", TokenType::BOOL },
+		{ "void", TokenType::VOID },
+		{ "while", TokenType::WHILE },
+		{ "for", TokenType::FOR },
+		{ "true", TokenType::TRUE },
+		{ "false", TokenType::FALSE },
+		{ "null", TokenType::NULL_TOKEN },
+		{ "return", TokenType::RETURN },
 	};
 
 	auto it = lut.find(std::string(lexeme));

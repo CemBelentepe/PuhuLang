@@ -178,6 +178,17 @@ void AstDebugger::visit(ExprDeref* expr)
 	this->result = ss.str();
 }
 
+void AstDebugger::visit(ExprNew* expr)
+{
+	std::stringstream ss;
+
+	ss << "(NEW " << expr->type->toString() << ")";
+	if(isShowTypes)
+		ss << ": " << expr->type->toString();
+
+	this->result = ss.str();
+}
+
 std::string AstDebugger::indented() const
 {
 	return std::string(indent, '\t');

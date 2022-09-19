@@ -37,6 +37,7 @@ public:
 	void visit(ExprCall* expr) override;
 	void visit(ExprAddrOf* expr) override;
 	void visit(ExprDeref* expr) override;
+	void visit(ExprNew* expr) override;
 
 	Value runFunction(StmtDeclFunc* func, std::vector<Value> args);
 
