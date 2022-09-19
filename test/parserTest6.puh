@@ -3,9 +3,26 @@ void main()
     int x = 9;
     int* ptrX = &x;
     int y = *ptrX;
+
     show(x);
     print("\n");
-    show(ptrX);
+    show(*ptrX);
+    print("\n");
+    show(y);
+    print("\n\n");
+
+    inc(&y);
+    show(x);
+    print("\n");
+    show(*ptrX);
+    print("\n");
+    show(y);
+    print("\n\n");
+
+    inc(ptrX);
+    show(x);
+    print("\n");
+    show(*ptrX);
     print("\n");
     show(y);
     print("\n");

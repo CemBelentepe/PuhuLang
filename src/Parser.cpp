@@ -268,14 +268,13 @@ std::unique_ptr<StmtReturn> Parser::parseStmtReturn()
 std::unique_ptr<Expr> Parser::parseExpr()
 {
 	auto expr = parseExprBinary();
-	if (expr->instance == Expr::Instance::VarGet)
+	if (expr->instance == Expr::Instance::VarGet || expr->instance == Expr::Instance::Deref)
 	{
-		Token name = ((ExprVarGet*)(expr.get()))->name;
 		if (match(TokenType::EQUAL))
 		{
 			Token op = consumed();
-			auto lhs = parseExpr();
-			expr = std::make_unique<ExprVarSet>(name, op, std::move(lhs));
+			auto rhs = parseExpr();
+			expr = std::make_unique<ExprVarSet>(std::move(expr), op, std::move(rhs));
 		}
 		// TODO add other assignments
 	}

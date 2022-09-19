@@ -203,7 +203,16 @@ void Interpreter::visit(ExprVarGet* expr)
 void Interpreter::visit(ExprVarSet* expr)
 {
 	Value val = expr->val->accept(this);
-	this->environment->setVariable(expr->name, std::make_unique<Value>(val));
+	if(expr->lvalue->instance == Expr::Instance::VarGet)
+	{
+		Token name = ((ExprVarGet*)expr->lvalue.get())->name;
+		this->environment->setVariable(name, std::make_unique<Value>(val));
+	}
+	else if(expr->lvalue->instance == Expr::Instance::Deref)
+	{
+		Value ptr = ((ExprDeref*)expr->lvalue.get())->expr->accept(this);
+		*ptr.getDataTyped<std::shared_ptr<Value>>() = val;
+	}
 	this->result = val;
 }
 

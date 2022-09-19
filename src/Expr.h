@@ -111,12 +111,12 @@ private:
 class ExprVarSet : public Expr
 {
 public:
-	Token name;
+	std::unique_ptr<Expr> lvalue;
 	Token op;
 	std::unique_ptr<Expr> val;
 
-	explicit ExprVarSet(Token name, Token op, std::unique_ptr<Expr> val)
-		: Expr(Instance::VarSet, TypeFactory::getNull()), name(std::move(name)), op(std::move(op)), val(std::move(val))
+	explicit ExprVarSet(std::unique_ptr<Expr> lvalue, Token op, std::unique_ptr<Expr> val)
+		: Expr(Instance::VarSet, TypeFactory::getNull()), lvalue(std::move(lvalue)), op(std::move(op)), val(std::move(val))
 	{
 	}
 

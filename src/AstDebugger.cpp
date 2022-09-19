@@ -135,7 +135,10 @@ void AstDebugger::visit(ExprVarGet* expr)
 
 void AstDebugger::visit(ExprVarSet* expr)
 {
-	this->result = "(SET " + expr->name.getLexeme() + ", " + expr->val->accept(this) + ")";
+	if(expr->lvalue->instance == Expr::Instance::VarGet)
+		this->result = "(SET " + ((ExprVarGet*)expr->lvalue.get())->name.getLexeme() + ", " + expr->val->accept(this) + ")";
+	else if(expr->lvalue->instance == Expr::Instance::Deref)
+		this->result = "(SET " + expr->lvalue->accept(this) + ", " + expr->val->accept(this) + ")";
 }
 
 void AstDebugger::visit(ExprCall* expr)

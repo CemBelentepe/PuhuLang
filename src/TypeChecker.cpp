@@ -11,14 +11,14 @@
 #include <sstream>
 
 TypeChecker::TypeChecker(std::vector<std::unique_ptr<Stmt>>& root, std::unordered_map<std::string, TypePtr> decls)
-	: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
+		: root(root), failed(false), environment(std::make_unique<Environment<TypePtr>>(nullptr))
 {
 	this->globalEnvironment = environment.get();
 
-	for(auto& native: FunctionNative::getNativeTypes())
+	for (auto& native: FunctionNative::getNativeTypes())
 		this->globalEnvironment->addVariable(native.first, native.second);
 
-	for (auto& decl : decls)
+	for (auto& decl: decls)
 		this->globalEnvironment->addVariable(decl.first, decl.second);
 }
 
@@ -26,7 +26,7 @@ TypeChecker::~TypeChecker() = default;
 
 void TypeChecker::check()
 {
-	for (auto& stmt : root)
+	for (auto& stmt: root)
 	{
 		try
 		{
@@ -66,8 +66,9 @@ void TypeChecker::visit(StmtDeclVar* stmt)
 
 void TypeChecker::visit(StmtDeclFunc* stmt)
 {
-	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
-	for (auto& param : stmt->params)
+	environment = std::make_unique<Environment<TypePtr>>
+			(std::move(environment));
+	for (auto& param: stmt->params)
 		environment->addVariable(std::get<1>(param), std::get<0>(param));
 
 	currentReturn = stmt->type->intrinsicType;
@@ -84,8 +85,9 @@ void TypeChecker::visit(StmtExpr* stmt)
 
 void TypeChecker::visit(StmtBlock* stmt)
 {
-	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
-	for (auto& s : stmt->stmts)
+	environment = std::make_unique<Environment<TypePtr>>
+			(std::move(environment));
+	for (auto& s: stmt->stmts)
 	{
 		try
 		{
@@ -121,7 +123,8 @@ void TypeChecker::visit(StmtWhile* stmt)
 
 void TypeChecker::visit(StmtFor* stmt)
 {
-	environment = std::make_unique<Environment<TypePtr>>(std::move(environment));
+	environment = std::make_unique<Environment<TypePtr>>
+			(std::move(environment));
 	if (stmt->init) stmt->init->accept(this);
 	if (stmt->cond) stmt->cond->accept(this);
 	if (stmt->fin) stmt->fin->accept(this);
@@ -161,10 +164,10 @@ void TypeChecker::visit(ExprBinary* expr)
 
 		auto it = std::find_if(binaryOperations.begin(), binaryOperations.end(), [&](auto x)
 		{
-		  auto first = std::get<0>(x);
-		  return std::get<0>(first) == expr->op.type &&
-			  std::get<1>(first) == typeLhsP &&
-			  std::get<2>(first) == typeRhsP;
+			auto first = std::get<0>(x);
+			return std::get<0>(first) == expr->op.type &&
+				   std::get<1>(first) == typeLhsP &&
+				   std::get<2>(first) == typeRhsP;
 		});
 
 		if (it != binaryOperations.end())
@@ -199,9 +202,9 @@ void TypeChecker::visit(ExprUnary* expr)
 
 		auto it = std::find_if(unaryOps.begin(), unaryOps.end(), [&](auto x)
 		{
-		  auto first = std::get<0>(x);
-		  return std::get<0>(first) == expr->op.type &&
-			  std::get<1>(first) == typeRhsP;
+			auto first = std::get<0>(x);
+			return std::get<0>(first) == expr->op.type &&
+				   std::get<1>(first) == typeRhsP;
 		});
 
 		if (it != unaryOps.end())
@@ -237,14 +240,25 @@ void TypeChecker::visit(ExprVarGet* expr)
 
 void TypeChecker::visit(ExprVarSet* expr)
 {
-	expr->type = environment->getVariable(expr->name);
+	if (expr->lvalue->instance == Expr::Instance::VarGet)
+	{
+		Token name = ((ExprVarGet*)expr->lvalue.get())->name;
+		expr->type = environment->getVariable(name);
+
+	}
+	else if (expr->lvalue->instance == Expr::Instance::Deref)
+	{
+		TypePtr ptrType = expr->lvalue->accept(this);
+		expr->type = ptrType;
+	}
+
 	TypePtr valType = expr->val->accept(this);
 	if (expr->type->isConst)
 	{
 		std::stringstream ssErr;
 
-		ssErr << "[ERROR " << expr->name.line << ":" << expr->name.col << "] Cannot assign a to variable `"
-			  << expr->name.lexeme
+		ssErr << "[ERROR " << expr->op.line << ":" << expr->op.col << "] Cannot assign a to variable `"
+			  << expr->op.lexeme
 			  << "` since it is const.";
 
 		throw std::runtime_error(ssErr.str());
@@ -268,7 +282,7 @@ void TypeChecker::visit(ExprCall* expr)
 	std::vector<TypePtr> argTypes;
 	std::transform(expr->args.begin(), expr->args.end(), std::back_inserter(argTypes), [this](auto& arg)
 	{
-	  return arg->accept(this);
+		return arg->accept(this);
 	});
 
 	if (funcType->tag != Type::Tag::FUNCTION)
@@ -308,100 +322,110 @@ void TypeChecker::visit(ExprAddrOf* expr)
 void TypeChecker::visit(ExprDeref* expr)
 {
 	TypePtr baseType = expr->expr->accept(this);
+	if (baseType->tag != Type::Tag::POINTER)
+	{
+		std::stringstream ssErr;
+
+		ssErr << "[ERROR " << expr->star.line << ":" << expr->star.col
+			  << "] Only a type of `pointer` can be dereferenced but provided `" << baseType->toString() << "`.";
+
+		throw std::runtime_error(ssErr.str());
+	}
+
 	expr->type = baseType->intrinsicType;
 	this->result = expr->type;
 }
 
 const std::vector<std::tuple<TypeChecker::UnaryFuncDef, PrimitiveTag>> TypeChecker::unaryOps = {
-	{{ TokenType::MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::MINUS, PrimitiveTag::FLOAT }, PrimitiveTag::FLOAT },
-	{{ TokenType::MINUS, PrimitiveTag::DOUBLE }, PrimitiveTag::DOUBLE },
-	{{ TokenType::PLUS, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::PLUS, PrimitiveTag::FLOAT }, PrimitiveTag::FLOAT },
-	{{ TokenType::PLUS, PrimitiveTag::DOUBLE }, PrimitiveTag::DOUBLE },
-	{{ TokenType::PLUS_PLUS, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::MINUS_MINUS, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::BANG, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
-	{{ TokenType::TILDE, PrimitiveTag::INT }, PrimitiveTag::INT }
+		{{ TokenType::MINUS,       PrimitiveTag::INT },    PrimitiveTag::INT },
+		{{ TokenType::MINUS,       PrimitiveTag::FLOAT },  PrimitiveTag::FLOAT },
+		{{ TokenType::MINUS,       PrimitiveTag::DOUBLE }, PrimitiveTag::DOUBLE },
+		{{ TokenType::PLUS,        PrimitiveTag::INT },    PrimitiveTag::INT },
+		{{ TokenType::PLUS,        PrimitiveTag::FLOAT },  PrimitiveTag::FLOAT },
+		{{ TokenType::PLUS,        PrimitiveTag::DOUBLE }, PrimitiveTag::DOUBLE },
+		{{ TokenType::PLUS_PLUS,   PrimitiveTag::INT },    PrimitiveTag::INT },
+		{{ TokenType::MINUS_MINUS, PrimitiveTag::INT },    PrimitiveTag::INT },
+		{{ TokenType::BANG,        PrimitiveTag::BOOL },   PrimitiveTag::BOOL },
+		{{ TokenType::TILDE,       PrimitiveTag::INT },    PrimitiveTag::INT }
 };
 const std::vector<std::tuple<TypeChecker::BinaryFuncDef, PrimitiveTag>>TypeChecker::binaryOperations = {
-	{{ TokenType::OR, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
-	{{ TokenType::AND, PrimitiveTag::BOOL, PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
-	{{ TokenType::BIT_OR, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::BIT_XOR, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::BIT_AND, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::BITSHIFT_LEFT, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::INT },
-	{{ TokenType::BITSHIFT_RIGHT, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::INT },
-	{{ TokenType::MODULUS, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::EQUAL_EQUAL, PrimitiveTag::BOOL, PrimitiveTag::BOOL },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::EQUAL_EQUAL, PrimitiveTag::CHAR, PrimitiveTag::CHAR },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::EQUAL_EQUAL, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::EQUAL_EQUAL, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::EQUAL_EQUAL, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::BANG_EQUAL, PrimitiveTag::BOOL, PrimitiveTag::BOOL },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::BANG_EQUAL, PrimitiveTag::CHAR, PrimitiveTag::CHAR },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::BANG_EQUAL, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::BANG_EQUAL, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::BANG_EQUAL, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS, PrimitiveTag::CHAR, PrimitiveTag::CHAR }, PrimitiveTag::BOOL },
-	{{ TokenType::LESS, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::BOOL },
-	{{ TokenType::LESS, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS_EQUAL, PrimitiveTag::CHAR, PrimitiveTag::CHAR },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS_EQUAL, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS_EQUAL, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::LESS_EQUAL, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT, PrimitiveTag::CHAR, PrimitiveTag::CHAR },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::BOOL },
-	{{ TokenType::GREAT, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT_EQUAL, PrimitiveTag::CHAR, PrimitiveTag::CHAR },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT_EQUAL, PrimitiveTag::INT, PrimitiveTag::INT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT_EQUAL, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::GREAT_EQUAL, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::BOOL },
-	{{ TokenType::PLUS, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::PLUS, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::FLOAT },
-	{{ TokenType::PLUS, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::DOUBLE },
-	{{ TokenType::MINUS, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::MINUS, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::FLOAT },
-	{{ TokenType::MINUS, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::DOUBLE },
-	{{ TokenType::STAR, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::STAR, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::FLOAT },
-	{{ TokenType::STAR, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::DOUBLE },
-	{{ TokenType::SLASH, PrimitiveTag::INT, PrimitiveTag::INT }, PrimitiveTag::INT },
-	{{ TokenType::SLASH, PrimitiveTag::FLOAT, PrimitiveTag::FLOAT },
-	 PrimitiveTag::FLOAT },
-	{{ TokenType::SLASH, PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
-	 PrimitiveTag::DOUBLE }
+		{{ TokenType::OR,             PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
+		{{ TokenType::AND,            PrimitiveTag::BOOL,   PrimitiveTag::BOOL }, PrimitiveTag::BOOL },
+		{{ TokenType::BIT_OR,         PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::BIT_XOR,        PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::BIT_AND,        PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::BITSHIFT_LEFT,  PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::INT },
+		{{ TokenType::BITSHIFT_RIGHT, PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::INT },
+		{{ TokenType::MODULUS,        PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::EQUAL_EQUAL,    PrimitiveTag::BOOL,   PrimitiveTag::BOOL },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::EQUAL_EQUAL,    PrimitiveTag::CHAR,   PrimitiveTag::CHAR },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::EQUAL_EQUAL,    PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::EQUAL_EQUAL,    PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::EQUAL_EQUAL,    PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::BANG_EQUAL,     PrimitiveTag::BOOL,   PrimitiveTag::BOOL },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::BANG_EQUAL,     PrimitiveTag::CHAR,   PrimitiveTag::CHAR },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::BANG_EQUAL,     PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::BANG_EQUAL,     PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::BANG_EQUAL,     PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS,           PrimitiveTag::CHAR,   PrimitiveTag::CHAR }, PrimitiveTag::BOOL },
+		{{ TokenType::LESS,           PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::BOOL },
+		{{ TokenType::LESS,           PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS,           PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS_EQUAL,     PrimitiveTag::CHAR,   PrimitiveTag::CHAR },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS_EQUAL,     PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS_EQUAL,     PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::LESS_EQUAL,     PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT,          PrimitiveTag::CHAR,   PrimitiveTag::CHAR },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT,          PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT,          PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT,          PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT_EQUAL,    PrimitiveTag::CHAR,   PrimitiveTag::CHAR },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT_EQUAL,    PrimitiveTag::INT,    PrimitiveTag::INT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT_EQUAL,    PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::GREAT_EQUAL,    PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::BOOL },
+		{{ TokenType::PLUS,           PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::PLUS,           PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::FLOAT },
+		{{ TokenType::PLUS,           PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::DOUBLE },
+		{{ TokenType::MINUS,          PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::MINUS,          PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::FLOAT },
+		{{ TokenType::MINUS,          PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::DOUBLE },
+		{{ TokenType::STAR,           PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::STAR,           PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::FLOAT },
+		{{ TokenType::STAR,           PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::DOUBLE },
+		{{ TokenType::SLASH,          PrimitiveTag::INT,    PrimitiveTag::INT },  PrimitiveTag::INT },
+		{{ TokenType::SLASH,          PrimitiveTag::FLOAT,  PrimitiveTag::FLOAT },
+																				  PrimitiveTag::FLOAT },
+		{{ TokenType::SLASH,          PrimitiveTag::DOUBLE, PrimitiveTag::DOUBLE },
+																				  PrimitiveTag::DOUBLE }
 };
