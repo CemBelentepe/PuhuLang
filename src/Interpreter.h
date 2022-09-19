@@ -41,6 +41,7 @@ public:
 	Value runFunction(StmtDeclFunc* func, std::vector<Value> args);
 
 private:
+	using EnvType = Environment<std::shared_ptr<Value>>;
 	using BinaryFuncDef = std::tuple<TokenType, PrimitiveTag, PrimitiveTag>;
 	using BinaryFuncDec = auto (*)(Value::Data, Value::Data) -> Value::Data;
 	using UnaryFuncDef = std::tuple<TokenType, PrimitiveTag>;
@@ -49,7 +50,7 @@ private:
 private:
 	std::vector<std::unique_ptr<Stmt>>& root;
 	std::ostream& os;
-	std::unique_ptr<Environment<Value>> environment;
+	std::unique_ptr<EnvType> environment;
 	bool failed;
 
 	static const std::vector<std::tuple<BinaryFuncDef, BinaryFuncDec>> binaryOps;

@@ -3,4 +3,15 @@ void main()
     int x = 9;
     int* ptrX = &x;
     int y = *ptrX;
+    show(x);
+    print("\n");
+    show(ptrX);
+    print("\n");
+    show(y);
+    print("\n");
+}
+
+void inc(int* x)
+{
+    *x = *x + 1;
 }

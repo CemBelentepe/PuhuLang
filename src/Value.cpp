@@ -36,6 +36,12 @@ std::string Value::getInfo() const
 	{
 		return std::get<std::string>(data);
 	}
+	else if (type->tag == Type::Tag::POINTER)
+	{
+		std::stringstream ss;
+		ss << std::hex << std::get<std::shared_ptr<Value>>(data);
+		return ss.str();
+	}
 	else if(type->tag == Type::Tag::PRIMITIVE)
 	{
 		PrimitiveTag tag = ((TypePrimitive*)type.get())->special_tag;

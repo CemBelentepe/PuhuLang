@@ -15,7 +15,7 @@ class Token;
 class Value
 {
 public:
-	using Data = std::variant<bool, char, int, float, double, std::string, std::shared_ptr<Callable>, Token*>;
+	using Data = std::variant<bool, char, int, float, double, std::string, std::shared_ptr<Callable>, std::shared_ptr<Value>>;
 
 	explicit Value();
 	explicit Value(Data data, TypePtr type);

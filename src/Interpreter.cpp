@@ -8,12 +8,13 @@
 #include <algorithm>
 
 Interpreter::Interpreter(std::vector<std::unique_ptr<Stmt>>& root, std::ostream& os)
-	: root(root), os(os), failed(false), environment(std::make_unique<Environment<Value>>(nullptr))
+	: root(root), os(os), failed(false), environment(std::make_unique<EnvType>(nullptr))
 {
 	auto nativeTypes = FunctionNative::getNativeTypes();
 	for (auto& native : FunctionNative::getNativeFuncs())
-		this->environment->addVariable(native.first,
-			Value(std::make_shared<FunctionNative>(native.second), nativeTypes[native.first]));
+	{
+		this->environment->addVariable(native.first, std::make_shared<Value>(std::make_shared<FunctionNative>(native.second), nativeTypes[native.first]));
+	}
 }
 
 Interpreter::~Interpreter() = default;
@@ -38,7 +39,7 @@ void Interpreter::run()
 		Value mainFunc;
 		try
 		{
-			mainFunc = environment->getVariable("main");
+			mainFunc = *environment->getVariable("main");
 		}
 		catch (std::runtime_error& e)
 		{
@@ -74,12 +75,12 @@ void Interpreter::visit(StmtDeclVar* stmt)
 	if (stmt->init)
 		initVal = stmt->init->accept(this);
 
-	environment->addVariable(stmt->name, initVal);
+	environment->addVariable(stmt->name, std::make_shared<Value>(initVal));
 }
 
 void Interpreter::visit(StmtDeclFunc* stmt)
 {
-	auto callable = Value(std::make_shared<FunctionUser>(stmt), stmt->type);
+	auto callable = std::make_shared<Value>(std::make_shared<FunctionUser>(stmt), stmt->type);
 	environment->addVariable(stmt->name, callable);
 }
 
@@ -90,7 +91,7 @@ void Interpreter::visit(StmtExpr* stmt)
 
 void Interpreter::visit(StmtBlock* stmt)
 {
-	environment = std::make_unique<Environment<Value>>(std::move(environment));
+	environment = std::make_unique<EnvType>(std::move(environment));
 	for (auto& s : stmt->stmts)
 		s->accept(this);
 	environment = environment->moveParent();
@@ -196,13 +197,13 @@ void Interpreter::visit(ExprLiteral* expr)
 
 void Interpreter::visit(ExprVarGet* expr)
 {
-	this->result = environment->getVariable(expr->name);
+	this->result = *environment->getVariable(expr->name);
 }
 
 void Interpreter::visit(ExprVarSet* expr)
 {
 	Value val = expr->val->accept(this);
-	this->environment->setVariable(expr->name, val);
+	this->environment->setVariable(expr->name, std::make_unique<Value>(val));
 	this->result = val;
 }
 
@@ -220,23 +221,35 @@ void Interpreter::visit(ExprCall* expr)
 
 void Interpreter::visit(ExprAddrOf* expr)
 {
-	throw NotImplementedException();
+	if (expr->lvalue->instance == Expr::Instance::VarGet)
+	{
+		ExprVarGet* lvalue = (ExprVarGet*)expr->lvalue.get();
+		std::shared_ptr<Value> addr = environment->getVariable(lvalue->name);
+		this->result = Value(addr, expr->type);
+	}
+	else
+	{
+		throw std::runtime_error("[DEV] Type check failed to check the type of lvalue.");
+	}
 }
 
 void Interpreter::visit(ExprDeref* expr)
 {
-	throw NotImplementedException();
+	Value ptr = expr->expr->accept(this);
+	if (ptr.getType()->tag != Type::Tag::POINTER)
+		throw std::runtime_error("[DEV] Type check failed to check the type of lvalue.");
+	this->result = *ptr.getDataTyped<std::shared_ptr<Value>>();
 }
 
 Value Interpreter::runFunction(StmtDeclFunc* func, std::vector<Value> args)
 {
-	environment = std::make_unique<Environment<Value>>(std::move(environment));
+	environment = std::make_unique<EnvType>(std::move(environment));
 
 	if (func->params.size() != args.size())
 		throw std::runtime_error("[DEV] Type check failed to check the number of args and params in a call.");
 
 	for (size_t i = 0; i < func->params.size(); i++)
-		environment->addVariable(std::get<1>(func->params[i]), args[i]);
+		environment->addVariable(std::get<1>(func->params[i]), std::make_unique<Value>(args[i]));
 
 	Value retVal = Value::getVoid();
 	try
